@@ -95,13 +95,20 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
     if (!audioContext.current) return;
     ensureAudioNodes();
     if (!oscillatorRef.current || !gainRef.current) return;
+    // Hard-cut any previous envelope just before this cue to avoid overlap/interference
+    const epsilon = 0.0005; // 0.5 ms safety margin
+    const cutTime = Math.max(0, when - epsilon);
+    try {
+      gainRef.current.gain.cancelScheduledValues(cutTime);
+      gainRef.current.gain.setValueAtTime(0.0001, cutTime);
+    } catch {}
     let frequency = 800;
     let duration = 0.2;
     let amplitude = 1.0 * volume;
     const attack = 0.005;
     if (phase === 'pattern') {
       frequency = direction === 'left' ? 400 : 800;
-      duration = 0.1;
+      duration = 0.15;
       amplitude = 1.0 * volume;
     } else if (phase === 'end') {
       frequency = 1500;

@@ -7,9 +7,9 @@ export const guns: Gun[] = [
     category: 'ar',
     image: '/weapons/ar/R-301_Carbine_Icon.svg',
     strafePattern: [
-      { direction: 'right', duration: 800 },
-      { direction: 'left', duration: 200 },
-      { direction: 'right', duration: 800 },
+      { direction: 'right', duration: 810 },
+      { direction: 'left', duration: 600 },
+      { direction: 'right', duration: 890 },
 
     ],
   },
@@ -19,14 +19,10 @@ export const guns: Gun[] = [
     category: 'ar',
     image: '/weapons/ar/VK-47_Flatline_Icon.svg',
     strafePattern: [
-      { direction: 'left', duration: 300 },
-      { direction: 'right', duration: 300 },
-      { direction: 'left', duration: 300 },
-      { direction: 'right', duration: 300 },
-      { direction: 'left', duration: 300 },
-      { direction: 'right', duration: 300 },
-      { direction: 'left', duration: 300 },
-      { direction: 'right', duration: 300 },
+      { direction: 'left', duration: 500 },
+      { direction: 'right', duration: 500 },
+      { direction: 'left', duration: 1100 },
+      { direction: 'right', duration: 800 },
     ],
   },
   {
@@ -65,11 +61,11 @@ export const guns: Gun[] = [
     category: 'smg',
     image: '/weapons/smg/R-99_SMG_Icon.svg',
     strafePattern: [
-      { direction: 'right', duration: 1040 },
-      { direction: 'left', duration: 90 },
-      { direction: 'right', duration: 150 },
-      { direction: 'left', duration: 140 },
-      { direction: 'right', duration: 250 },
+      { direction: 'right', duration: 610 },
+      { direction: 'left', duration: 167 },
+      { direction: 'right', duration: 278 },
+      { direction: 'left', duration: 222 },
+      { direction: 'right', duration: 222 },
     ],
   },
   {

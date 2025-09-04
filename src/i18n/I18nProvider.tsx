@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 export type Locale = 'en' | 'ja' | 'ko' | 'zh';
 
@@ -24,6 +24,17 @@ const allMessages: Record<Locale, Messages> = { en, ja, ko, zh };
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<Locale>('en');
+
+  useEffect(() => {
+    // Initialize from URL ?lang= if present
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const lang = params.get('lang') as Locale | null;
+      if (lang && ['en', 'ja', 'ko', 'zh'].includes(lang)) {
+        setLocale(lang as Locale);
+      }
+    }
+  }, []);
 
   const t = useCallback((key: string, vars?: Record<string, string | number>) => {
     const msg = (allMessages[locale] && allMessages[locale][key]) ?? key;

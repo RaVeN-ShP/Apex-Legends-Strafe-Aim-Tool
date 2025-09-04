@@ -19,20 +19,33 @@ const categoryLabel: Record<Gun['category'], string> = {
   sniper: 'Sniper',
 };
 
+const enabledGunIds = new Set<string>(['r301', 'flatline', 'r99']);
+
 export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false }: GunSelectorProps) {
   if (listMode) {
     return (
       <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)]">
         {guns.map((gun) => {
+          const isComingSoon = !enabledGunIds.has(gun.id);
           const isActive = selectedGun?.id === gun.id;
           return (
             <button
               key={gun.id}
-              onClick={() => onGunSelect(gun)}
-              className={`w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors ${
+              type="button"
+              disabled={isComingSoon}
+              onClick={() => {
+                if (isComingSoon) return;
+                onGunSelect(gun);
+              }}
+              className={`relative overflow-hidden w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors ${
                 isActive ? 'bg-red-600/20 border border-red-500/40' : 'hover:bg-white/5'
-              }`}
+              } ${isComingSoon ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
+              {isComingSoon && (
+                <div className="absolute inset-0 z-10 grid place-items-center bg-black/60">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-white">Coming soon</span>
+                </div>
+              )}
               <div className="relative w-10 h-10 shrink-0">
                 <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
               </div>
@@ -53,14 +66,27 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
       
       <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {guns.map((gun) => {
+          const isComingSoon = !enabledGunIds.has(gun.id);
           const isActive = selectedGun?.id === gun.id;
           return (
             <button
               key={gun.id}
-              onClick={() => onGunSelect(gun)}
+              type="button"
+              disabled={isComingSoon}
+              onClick={() => {
+                if (isComingSoon) return;
+                onGunSelect(gun);
+              }}
               className={`group relative p-4 rounded-lg border transition-all text-left overflow-hidden
-                ${isActive ? 'border-red-500 bg-red-600/10 shadow-[0_0_0_1px_rgba(239,68,68,.4)]' : 'border-white/10 hover:border-white/20 hover:bg-white/5'}`}
+                ${isActive ? 'border-red-500 bg-red-600/10 shadow-[0_0_0_1px_rgba(239,68,68,.4)]' : 'border-white/10 hover:border-white/20 hover:bg-white/5'} ${
+                  isComingSoon ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             >
+              {isComingSoon && (
+                <div className="absolute inset-0 z-10 grid place-items-center bg-black/60">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-white">Coming soon</span>
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="relative w-16 h-16 shrink-0">
                   <Image

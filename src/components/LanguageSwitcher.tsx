@@ -24,7 +24,19 @@ export default function LanguageSwitcher() {
       <div className="relative">
         <select
           value={locale}
-          onChange={(e) => setLocale(e.target.value as Locale)}
+          onChange={(e) => {
+            const newLocale = e.target.value as Locale;
+            setLocale(newLocale);
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              if (newLocale === 'en') {
+                url.searchParams.delete('lang');
+              } else {
+                url.searchParams.set('lang', newLocale);
+              }
+              window.history.replaceState({}, '', url.toString());
+            }
+          }}
           className="appearance-none pr-7 bg-black/30 border border-white/10 text-white text-xs rounded px-2 py-1 outline-none hover:bg-black/40"
         >
           {options.map((opt) => (

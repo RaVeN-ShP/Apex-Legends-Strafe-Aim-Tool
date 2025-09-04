@@ -14,7 +14,7 @@ export default function PatternVisualizer({ gun }: PatternVisualizerProps) {
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
         <div className="text-white/90 font-semibold tracking-wide">{t('main.pattern')}</div>
-        <div className="text-xs text-white/60">{gun.strafePattern.length} {t('timer.info.steps').replace(':', '')}</div>
+        <div className="text-xs text-white/60">{gun.strafePattern.length} {t('timer.info.stepsShort')}</div>
       </div>
       <div className="h-4 w-full rounded-md overflow-hidden bg-white/10 border border-white/10">
         <div className="flex h-full w-full">
@@ -32,6 +32,19 @@ export default function PatternVisualizer({ gun }: PatternVisualizerProps) {
                 <span className="absolute inset-0 grid place-items-center text-[10px] text-white/90">
                   {step.direction === 'left' ? '◄' : '►'}
                 </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {/* Duration labels under each bar segment */}
+      <div className="mt-1 w-full">
+        <div className="flex w-full">
+          {gun.strafePattern.map((step, idx) => {
+            const widthPct = (step.duration / total) * 100;
+            return (
+              <div key={`dur-${idx}`} className="px-0.5 text-center" style={{ width: `${widthPct}%` }}>
+                <span className="block text-[10px] leading-tight text-white/70">{step.duration}ms</span>
               </div>
             );
           })}

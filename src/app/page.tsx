@@ -77,6 +77,12 @@ export default function Home() {
                   <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
                   <div className="space-y-3">
                     <div>
+                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q0.question')}</h3>
+                      <p className="text-white/70 text-xs">
+                        {t('faq.q0.answer')} <a href="https://www.youtube.com/watch?v=fPLSisfQGlE" target="_blank" rel="noreferrer" className="underline hover:text-white/80">YouTube</a>
+                      </p>
+                    </div>
+                    <div>
                       <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q1.question')}</h3>
                       <p className="text-white/70 text-xs">{t('faq.q1.answer')}</p>
                     </div>
