@@ -1,103 +1,112 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Gun } from "@/types/gun";
+import { guns } from "@/data/guns";
+import GunSelector from "@/components/GunSelector";
+import StrafeTimer from "@/components/StrafeTimer";
+import GlobalSettings from "@/components/GlobalSettings";
+import PatternVisualizer from "@/components/PatternVisualizer";
+import { useI18n } from "@/i18n/I18nProvider";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
+  const [waitTimeSeconds, setWaitTimeSeconds] = useState(2);
+  const [volume, setVolume] = useState(0.8);
+  const { t } = useI18n();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{t('app.title')}</h1>
+              <p className="text-white/80 mt-2 text-sm md:text-base">
+            {t('app.subtitle.before')}
+            <a href="https://x.com/ahn99fps" target="_blank" rel="noreferrer" className="underline hover:text-white">
+              ahn99
+            </a>
+            {t('app.subtitle.after')}
+              </p>
+            </div>
+            <div className="shrink-0">
+              <div className="rounded-md border border-white/10 bg-black/20 px-3 py-2">
+                <LanguageSwitcher />
+              </div>
+            </div>
+          </div>
+          <p className="text-white/60 mt-2 text-xs md:text-sm">
+            References: {" "}
+            <a href="https://docs.google.com/document/d/1olISc98UQ2ucUlvm3pGEt5sqG7Qf4LC7I2HnmTOB7w4/edit?tab=t.0" target="_blank" rel="noreferrer" className="underline hover:text-white/80">
+              {t('refs.doc')}
+            </a>{" "}•{" "}
+            <a href="https://www.youtube.com/watch?v=fPLSisfQGlE" target="_blank" rel="noreferrer" className="underline hover:text-white/80">
+              {t('refs.video')}
+            </a>
+          </p>
+        </header>
+
+        {/* Content */}
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
+          {/* Left Sidebar */}
+          <aside>
+            <GunSelector guns={guns} selectedGun={selectedGun} onGunSelect={setSelectedGun} listMode />
+            <div className="mt-4">
+              <GlobalSettings waitTimeSeconds={waitTimeSeconds} onWaitTimeChange={setWaitTimeSeconds} volume={volume} onVolumeChange={setVolume} />
+            </div>
+          </aside>
+
+        {/* Main Section */}
+          <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+            {selectedGun ? (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="text-xl font-bold tracking-wide">{selectedGun.name}</div>
+                  <div className="text-xs text-white/60">{t('main.pattern')}</div>
+                </div>
+                <PatternVisualizer gun={selectedGun} />
+                <div className="pt-2">
+                  <StrafeTimer gun={selectedGun} waitTimeSeconds={waitTimeSeconds} volume={volume} />
+                </div>
+                
+                {/* FAQ Section inside main panel */}
+                <div className="pt-4 border-t border-white/10">
+                  <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q1.question')}</h3>
+                      <p className="text-white/70 text-xs">{t('faq.q1.answer')}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q2.question')}</h3>
+                      <p className="text-white/70 text-xs">{t('faq.q2.answer')}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q3.question')}</h3>
+                      <p className="text-white/70 text-xs">{t('faq.q3.answer')}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q4.question')}</h3>
+                      <p className="text-white/70 text-xs">{t('faq.q4.answer')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-white/70">{t('main.selectPrompt')}</div>
+            )}
+          </section>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+
+        {/* Footer */}
+        <footer className="mt-8 text-center text-xs text-white/50">
+          {t('footer.credit', { name: 'RaVeN_ShP' })}
+        </footer>
+      </div>
+    </main>
   );
 }

@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Apex Strafe Control Timer
+
+A web application designed to help Apex Legends players master strafe recoil control through audio cues and beat matching. Practice weapon-specific patterns in the firing range with perfect timing.
+
+## Features
+
+- **Weapon Selection**: Choose from popular Apex Legends weapons
+- **Audio Cues**: Different tones for left (A) and right (D) movements
+- **Startup Beats**: Audio cues to time your magazine start
+- **Pattern Visualization**: Real-time display of current movement direction
+- **Progress Tracking**: Visual progress bar and timing information
+- **Responsive Design**: Works on desktop and mobile devices
+
+## How It Works
+
+1. **Startup Phase**: Listen to the startup beats to time when to start your magazine
+2. **Pattern Execution**: Follow the audio cues to move left (A) and right (D) in sequence
+3. **Beat Matching**: Each weapon has unique timing patterns optimized for recoil control
+4. **Practice Loop**: Patterns repeat automatically for continuous practice
+
+## Supported Weapons
+
+- **R-301 Carbine**: Fast, alternating pattern with 3 startup beats
+- **VK-47 Flatline**: Medium-paced pattern with 4 startup beats  
+- **HAVOC Rifle**: Balanced pattern with 3 startup beats
+- **Spitfire**: Slower, deliberate pattern with 2 startup beats
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd apex-strafe-control-timer
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Learn More
+### Building for Production
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technical Details
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
+- **Audio**: Web Audio API for tone generation
+- **Deployment**: Static export ready for cost-effective hosting
 
-## Deploy on Vercel
+## Usage Tips
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Practice in Firing Range**: Use this tool while practicing in Apex Legends firing range
+- **Headphones Recommended**: Audio cues are essential for timing
+- **Start Slow**: Begin with weapons that have fewer pattern steps
+- **Consistent Practice**: Regular practice will build muscle memory
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+This is a fun, open-source project. Feel free to contribute by:
+- Adding new weapons and patterns
+- Improving the audio system
+- Enhancing the UI/UX
+- Reporting bugs or suggesting features
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Disclaimer
+
+This tool is for educational and practice purposes only. It is not affiliated with Electronic Arts or Respawn Entertainment.
