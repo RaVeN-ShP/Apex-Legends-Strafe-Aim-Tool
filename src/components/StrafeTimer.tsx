@@ -75,7 +75,14 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
       osc.type = 'sine';
       gain.gain.setValueAtTime(0, audioContext.current.currentTime);
       osc.connect(gain);
-      gain.connect(audioContext.current.destination);
+      // iOS Safari requires a DynamicsCompressor for stable output in some cases
+      try {
+        const compressor = audioContext.current.createDynamicsCompressor();
+        gain.connect(compressor);
+        compressor.connect(audioContext.current.destination);
+      } catch {
+        gain.connect(audioContext.current.destination);
+      }
       const startAt = audioContext.current.currentTime + 0.01;
       osc.start(startAt);
       oscillatorRef.current = osc;
@@ -115,12 +122,29 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
       duration = 1.0;
       amplitude = 1.0 * volume;
     }
-    oscillatorRef.current.frequency.setValueAtTime(frequency, when);
-    gainRef.current.gain.cancelScheduledValues(when);
-    gainRef.current.gain.setValueAtTime(0.0001, when);
-    gainRef.current.gain.linearRampToValueAtTime(amplitude, when + attack);
+    try {
+      // Safari/iOS sometimes throws if setValueAtTime is scheduled in the past
+      oscillatorRef.current.frequency.cancelScheduledValues(when);
+      const ctxNow = (audioContext.current ? audioContext.current.currentTime : when);
+      oscillatorRef.current.frequency.setValueAtTime(frequency, Math.max(when, ctxNow));
+    } catch {
+      oscillatorRef.current.frequency.setValueAtTime(frequency, when);
+    }
+    try {
+      gainRef.current.gain.cancelScheduledValues(when);
+      const ctxNow = (audioContext.current ? audioContext.current.currentTime : when);
+      const startAt = Math.max(when, ctxNow);
+      gainRef.current.gain.setValueAtTime(0.0001, startAt);
+      gainRef.current.gain.linearRampToValueAtTime(amplitude, startAt + attack);
+    } catch {
+      gainRef.current.gain.setValueAtTime(amplitude, when + attack);
+    }
     // Use exponential decay for smooth tail
-    gainRef.current.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+    try {
+      const ctxNow = (audioContext.current ? audioContext.current.currentTime : when);
+      const startAt = Math.max(when, ctxNow);
+      gainRef.current.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+    } catch {}
   };
 
   const scheduleWindow = (fromSec: number, toSec: number) => {
@@ -142,10 +166,31 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
     scheduledUntilSecRef.current = Math.max(scheduledUntilSecRef.current, toSec);
   };
 
-  const startTimer = () => {
+  const startTimer = async () => {
     if (!audioContext.current) {
-      audioContext.current = new AudioContext();
+      const Ctx: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+      audioContext.current = new Ctx();
     }
+    // iOS Safari requires an explicit resume inside a user gesture
+    try {
+      const ctx = audioContext.current;
+      if (ctx) {
+        await ctx.resume();
+      }
+    } catch {}
+    // iOS unlock: play a one-sample silent buffer to prime the audio graph
+    try {
+      const ctx = audioContext.current;
+      if (ctx && ctx.state === 'running') {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(ctx.destination);
+        const when = ctx.currentTime + 0.001;
+        src.start(when);
+        src.stop(when + 0.001);
+      }
+    } catch {}
     
     setIsPlaying(true);
     isPlayingRef.current = true;
@@ -160,7 +205,14 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
       try { osc.stop(); } catch {}
     });
     scheduledNodesRef.current = [];
-    const now = audioContext.current.currentTime;
+    const ctxNowForStart = audioContext.current;
+    if (!ctxNowForStart) {
+      // If context is unexpectedly unavailable, abort cleanly
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      return;
+    }
+    const now = ctxNowForStart.currentTime;
     const headroom = 0.05;
     baseAudioStartRef.current = now + headroom;
     ensureAudioNodes();
