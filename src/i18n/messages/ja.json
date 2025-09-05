@@ -8,7 +8,7 @@
   "sidebar.selectWeapon": "武器を選択",
   "sidebar.selected": "選択済み:",
   "settings.title": "設定",
-  "settings.wait": "パターン後の待機時間（秒）",
+  "settings.wait": "リロード後の遅延",
   "settings.volume": "音量",
   "settings.hint": "次のサイクルが始まるまでの待機時間。",
   "main.pattern": "ストレイフパターン",

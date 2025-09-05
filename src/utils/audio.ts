@@ -21,10 +21,11 @@ export function buildTimeline(gun: Gun, waitTimeSeconds: number): Timeline {
   }
   phases.push({ id: 'pattern', name: 'Pattern', startTime: patternStartTime, endTime: currentTime, cues: patternCues });
 
-  // End: single cue + wait
+  // End: single cue + reload + extra wait
   const endStartTime = currentTime;
   const endCues: AudioCue[] = [{ direction: 'left', timestamp: currentTime, phase: 'end' }];
-  currentTime += waitTimeSeconds * 1000;
+  const reloadMs = Math.round((gun.reloadTimeSeconds ?? 1) * 1000);
+  currentTime += reloadMs + waitTimeSeconds * 1000;
   phases.push({ id: 'end', name: 'End', startTime: endStartTime, endTime: currentTime, cues: endCues });
 
   return { phases, totalDurationMs: currentTime };

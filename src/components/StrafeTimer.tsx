@@ -540,8 +540,9 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
                 symbol: step.direction === 'left' ? '◄' : '►',
               });
             }
-            // End/wait
-            segments.push({ color: 'bg-green-600', duration: waitTimeSeconds * 1000, title: 'Finish' });
+            // End: reload + extra wait
+            const reloadMs = Math.round(((gun.reloadTimeSeconds ?? 1)) * 1000);
+            segments.push({ color: 'bg-green-600', duration: reloadMs + waitTimeSeconds * 1000, title: 'Reload+Wait' });
 
             const renderCycle = (keyPrefix: string) => (
               <>
@@ -720,7 +721,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
           <div className="flex items-center gap-2">
             <input
               type="range"
-              min="1"
+              min="0"
               max="3.5"
               step="0.1"
               value={waitTimeSeconds}

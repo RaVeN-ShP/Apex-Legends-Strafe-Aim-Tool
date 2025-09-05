@@ -9,9 +9,10 @@ import StrafeTimer from "@/components/StrafeTimer";
 import PatternVisualizer from "@/components/PatternVisualizer";
 import { useI18n } from "@/i18n/I18nProvider";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Listbox, Transition } from "@headlessui/react";
+import { Listbox, Transition, Disclosure } from "@headlessui/react";
 import { Fragment } from "react";
 import Image from "next/image";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 type CustomProfile = {
   id: string;
@@ -57,7 +58,7 @@ function generateId(): string {
 
 export default function Home() {
   const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
-  const [waitTimeSeconds, setWaitTimeSeconds] = useState(2);
+  const [waitTimeSeconds, setWaitTimeSeconds] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const { t } = useI18n();
   const [profiles, setProfiles] = useState<CustomProfile[]>([]);
@@ -351,33 +352,22 @@ export default function Home() {
                 {/* FAQ Section inside main panel */}
                 <div className="pt-4 border-t border-white/10">
                   <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q0.question')}</h3>
-                      <p className="text-white/70 text-xs">
-                        {t('faq.q0.answer')} <a href="https://www.youtube.com/watch?v=fPLSisfQGlE" target="_blank" rel="noreferrer" className="underline hover:text-white/80">YouTube</a>
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q1.question')}</h3>
-                      <p className="text-white/70 text-xs">{t('faq.q1.answer')}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q2.question')}</h3>
-                      <p className="text-white/70 text-xs">{t('faq.q2.answer')}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q3.question')}</h3>
-                      <p className="text-white/70 text-xs">{t('faq.q3.answer')}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q4.question')}</h3>
-                      <p className="text-white/70 text-xs">{t('faq.q4.answer')}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q5.question')}</h3>
-                      <p className="text-white/70 text-xs">{t('faq.q5.answer')}</p>
-                    </div>
+                  <div className="space-y-2">
+                    {['q0','q1','q2','q3','q4','q5','q6','q7'].map((k) => (
+                      <Disclosure key={k}>
+                        {({ open }) => (
+                          <div className="rounded-md border border-white/10 bg-white/5">
+                            <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
+                              <span className="text-sm font-semibold text-white/90">{t(`faq.${k}.question`)}</span>
+                              <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
+                            </Disclosure.Button>
+                            <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
+                              {t(`faq.${k}.answer`)}
+                            </Disclosure.Panel>
+                          </div>
+                        )}
+                      </Disclosure>
+                    ))}
                   </div>
                 </div>
               </div>

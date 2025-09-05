@@ -8,7 +8,7 @@
   "sidebar.selectWeapon": "选择武器",
   "sidebar.selected": "已选择：",
   "settings.title": "全局设置",
-  "settings.wait": "模式结束后的等待时间（秒）",
+  "settings.wait": "换弹后的延迟",
   "settings.volume": "音量",
   "settings.hint": "下一轮开始前的等待时间。",
   "main.pattern": "横移模式",

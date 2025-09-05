@@ -13,6 +13,7 @@ export interface Gun {
   image: string; // public path to svg icon
   ammo?: 'light' | 'heavy' | 'energy' | 'shotgun' | 'sniper' | 'arrow' | 'care';
   remarks?: string[];
+  reloadTimeSeconds?: number; // base reload duration for this weapon
 }
 
 export type PhaseId = 'start' | 'pattern' | 'end';
