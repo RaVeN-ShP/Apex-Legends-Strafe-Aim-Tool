@@ -109,7 +109,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
       gainRef.current.gain.cancelScheduledValues(cutTime);
       gainRef.current.gain.setValueAtTime(0.0001, cutTime);
     } catch {}
-    let frequency = 800;
+    let frequency = 500;
     let duration = 0.2;
     let amplitude = 1.0 * volume;
     const attack = 0.005;
