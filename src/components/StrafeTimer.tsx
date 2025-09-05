@@ -415,7 +415,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
     <div className="text-white">
       {/* Progress Bar */}
       <div className="mb-4">
-        <div className="w-full bg-white/10 rounded-full h-2 border border-white/10">
+        {/* <div className="w-full bg-white/10 rounded-full h-2 border border-white/10">
           <div 
             className="bg-red-500 h-2 rounded-full"
             style={{ width: `${progress}%` }}
@@ -424,7 +424,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
         <div className="flex justify-between text-xs text-white/60 mt-1">
           <span>{(currentTime / 1000).toFixed(1)}</span>
           <span>{formatTime(totalDuration)}</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Large Central Display to utilize vertical space */}
@@ -439,7 +439,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
             ? 'from-rose-500/20 to-rose-500/5'
             : 'from-white/10 to-transparent')
         }
-        style={{ minHeight: isPopped ? '120px' : '250px' }}
+        style={{ minHeight: isPopped ? '135px' : '250px' }}
         ref={centralRef}
       >
         {/* Phase header */}
@@ -463,6 +463,74 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
               </div>
             )}
           </div>
+        </div>
+
+        {/* Sliding timeline bar at bottom (start → pattern → end), endless loop */}
+        <div className="absolute left-0 right-0 bottom-2 px-3">
+          {(() => {
+            const totalMs = Math.max(1, totalDuration);
+            const progressPct = ((currentTime % totalMs) / totalMs) * 100; // 0..100 within a cycle
+            const anchorPct = 10; // cursor position from the left
+            // We render three cycles (prev|curr|next) -> content width = 300% of container
+            // Convert container offset (in %) to element offset by dividing by 3
+            const containerOffsetPct = (100 - anchorPct) + progressPct; // prev cycle (100%) + progress - anchor
+            const elementTranslatePct = (containerOffsetPct % 100) / 3; // percentage of 300%-width element
+            const translateStyle = `translateX(-${elementTranslatePct.toFixed(2)}%)`;
+
+            const segments: Array<{ color: string; duration: number; title: string; symbol?: string }> = [];
+            // Start phase: 3 beats (500ms each)
+            for (let i = 0; i < 3; i++) {
+              segments.push({ color: 'bg-amber-500', duration: 500, title: 'Start' });
+            }
+            // Pattern steps with arrows
+            for (const step of gun.strafePattern) {
+              segments.push({
+                color: step.direction === 'left' ? 'bg-blue-500' : 'bg-rose-500',
+                duration: step.duration,
+                title: step.direction === 'left' ? 'Left' : 'Right',
+                symbol: step.direction === 'left' ? '◄' : '►',
+              });
+            }
+            // End/wait
+            segments.push({ color: 'bg-green-600', duration: waitTimeSeconds * 1000, title: 'Finish' });
+
+            const renderCycle = (keyPrefix: string) => (
+              <>
+                {segments.map((s, idx) => (
+                  <div
+                    key={`${keyPrefix}-${idx}`}
+                    className={`${s.color} relative h-full`}
+                    style={{ width: `${(s.duration / totalMs) * 100}%` }}
+                    title={`${s.title} • ${s.duration}ms`}
+                  >
+                    {s.symbol && (
+                      <span className="absolute inset-0 grid place-items-center text-[9px] leading-none text-white/90">
+                        {s.symbol}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </>
+            );
+
+            return (
+              <div className="relative">
+                <div className="h-3 w-full rounded-md overflow-hidden bg-white/10 border border-white/10">
+                  <div className="h-full flex" style={{ width: '300%', transform: translateStyle, willChange: 'transform' }}>
+                    {renderCycle('prev')}
+                    {renderCycle('curr')}
+                    {renderCycle('next')}
+
+                  </div>
+                </div>
+                {/* Now-pointer at 10% */}
+                <div className="pointer-events-none absolute inset-0">
+                  <div className="absolute left-[10%] -translate-x-1/2 -top-3 text-white/80 text-xs select-none">▼</div>
+                  <div className="absolute left-[10%] -translate-x-1/2 top-0 h-3 w-[2px] bg-white/80" />
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
