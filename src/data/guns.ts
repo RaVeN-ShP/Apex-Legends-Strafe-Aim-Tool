@@ -6,6 +6,8 @@ export const guns: Gun[] = [
     name: 'R-301 Carbine',
     category: 'ar',
     image: '/weapons/ar/R-301_Carbine_Icon.svg',
+    ammo: 'light',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'right', duration: 800 },
       { direction: 'left', duration: 530 },
@@ -18,6 +20,8 @@ export const guns: Gun[] = [
     name: 'R-99 SMG',
     category: 'smg',
     image: '/weapons/smg/R-99_SMG_Icon.svg',
+    ammo: 'light',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'right', duration: 390 },
       { direction: 'left', duration: 270 },
@@ -31,6 +35,8 @@ export const guns: Gun[] = [
     name: 'M600 Spitfire',
     category: 'lmg',
     image: '/weapons/lmg/M600_Spitfire_Icon.svg',
+    ammo: 'light',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 430 },
       { direction: 'right', duration: 670 },
@@ -45,6 +51,8 @@ export const guns: Gun[] = [
     name: 'Alternator SMG',
     category: 'smg',
     image: '/weapons/smg/Alternator_SMG_Icon.svg',
+    ammo: 'light',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 600 },
       { direction: 'right', duration: 700 },
@@ -57,6 +65,8 @@ export const guns: Gun[] = [
     name: 'HAVOC Rifle',
     category: 'ar',
     image: '/weapons/ar/HAVOC_Rifle_Icon.svg',
+    ammo: 'energy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'right', duration: 370 },
       { direction: 'left', duration: 350 },
@@ -69,6 +79,8 @@ export const guns: Gun[] = [
     name: 'Volt SMG',
     category: 'smg',
     image: '/weapons/smg/Volt_SMG_Icon.svg',
+    ammo: 'energy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'right', duration: 750 },
       { direction: 'left', duration: 420 },
@@ -81,6 +93,8 @@ export const guns: Gun[] = [
     name: 'Devotion LMG',
     category: 'lmg',
     image: '/weapons/lmg/Devotion_LMG_Icon.svg',
+    ammo: 'energy',
+    remarks: ['Use a purple magazine', 'Pattern takes into account slow ramp up'],
     strafePattern: [
       { direction: 'right', duration: 500 },
       { direction: 'left', duration: 1190 },
@@ -93,6 +107,8 @@ export const guns: Gun[] = [
     name: 'L-STAR EMG',
     category: 'lmg',
     image: '/weapons/lmg/L-STAR_EMG_Icon.svg',
+    ammo: 'energy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 300 },
       { direction: 'right', duration: 2400 },
@@ -103,6 +119,8 @@ export const guns: Gun[] = [
     name: 'Nemesis Burst AR',
     category: 'ar',
     image: '/weapons/ar/Nemesis_Burst_AR_Icon.svg',
+    ammo: 'energy',
+    remarks: ['Use a purple magazine', 'Pattern works for fully charged Nemesis'],
     strafePattern: [
       { direction: 'right', duration: 330 },
       { direction: 'left', duration: 330 },
@@ -119,6 +137,8 @@ export const guns: Gun[] = [
     name: 'RE-45 Burst',
     category: 'pistol',
     image: '/weapons/pistol/RE-45_Auto_Icon.svg',
+    ammo: 'energy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 250 },
       { direction: 'left', duration: 250 },
@@ -136,6 +156,8 @@ export const guns: Gun[] = [
     name: 'VK-47 Flatline',
     category: 'ar',
     image: '/weapons/ar/VK-47_Flatline_Icon.svg',
+    ammo: 'heavy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 600 },
       { direction: 'right', duration: 500  },
@@ -148,6 +170,8 @@ export const guns: Gun[] = [
     name: 'C.A.R. SMG',
     category: 'smg',
     image: '/weapons/smg/C.A.R._SMG_Icon.svg',
+    ammo: 'heavy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 470 },
       { direction: 'right', duration: 380 },
@@ -161,6 +185,8 @@ export const guns: Gun[] = [
     name: 'Prowler (Auto)',
     category: 'smg',
     image: '/weapons/smg/Prowler_Burst_PDW_Icon.svg',
+    ammo: 'heavy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 990 },
       { direction: 'right', duration: 660 },
@@ -173,6 +199,8 @@ export const guns: Gun[] = [
     name: 'Rampage LMG',
     category: 'lmg',
     image: '/weapons/lmg/Rampage_LMG_Icon.svg',
+    ammo: 'heavy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 450 },
       { direction: 'right', duration: 940 },
@@ -184,6 +212,8 @@ export const guns: Gun[] = [
     name: 'Prowler (Burst)',
     category: 'smg',
     image: '/weapons/smg/Prowler_Burst_PDW_Icon.svg',
+    ammo: 'heavy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 450 },
       { direction: 'left', duration: 450 },
@@ -200,6 +230,8 @@ export const guns: Gun[] = [
     name: 'Hemlok Burst AR',
     category: 'ar',
     image: '/weapons/ar/Hemlok_Burst_AR_Icon.svg',
+    ammo: 'heavy',
+    remarks: ['Use a purple magazine'],
     strafePattern: [
       { direction: 'left', duration: 370 },
       { direction: 'left', duration: 370 },

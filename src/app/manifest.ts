@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Apex Legends Strafe Aiming Tool',
-    short_name: 'Apex Strafe Aim Tool',
+    name: 'Recoil Strafing Trainer',
+    short_name: 'Recoil Trainer',
     description:
       'Dial in your strafe aim for Apex with clean audio cues and clear A/D direction visuals. Practice tool inspired by ahn99.',
     start_url: '/',

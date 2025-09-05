@@ -11,6 +11,8 @@ export interface Gun {
   strafePattern: StrafePattern[];
   category: WeaponCategory;
   image: string; // public path to svg icon
+  ammo?: 'light' | 'heavy' | 'energy' | 'shotgun' | 'sniper' | 'arrow' | 'care';
+  remarks?: string[];
 }
 
 export type PhaseId = 'start' | 'pattern' | 'end';

@@ -8,14 +8,14 @@ const inter = Inter({ subsets: ["latin"] });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const isProd = process.env.NODE_ENV === 'production';
-const defaultTitle = "Apex Legends Strafe Aiming Tool";
-const defaultDescription = "Master strafe aiming techniques in Apex Legends with audio cues and perfect timing. Learn weapon-specific patterns for the firing range.";
+const defaultTitle = "Recoil Strafing Trainer";
+const defaultDescription = "Dial in your strafe aim for Apex with clean audio cues and slick visuals. Practice weapon-specific patterns right in the range.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: defaultTitle,
-    template: "%s | Apex Legends Strafe Aiming Tool",
+    template: "%s | Recoil Strafing Trainer",
   },
   description: defaultDescription,
   keywords: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "gaming",
     "fps",
   ],
-  authors: [{ name: "Apex Legends Strafe Aiming Tool" }],
+  authors: [{ name: "Recoil Strafing Trainer" }],
   alternates: {
     canonical: '/',
     languages: {

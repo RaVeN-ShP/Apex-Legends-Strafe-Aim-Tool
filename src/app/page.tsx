@@ -5,12 +5,13 @@ import { Gun, StrafePattern } from "@/types/gun";
 import { guns } from "@/data/guns";
 import GunSelector from "@/components/GunSelector";
 import StrafeTimer from "@/components/StrafeTimer";
-import GlobalSettings from "@/components/GlobalSettings";
+// import GlobalSettings from "@/components/GlobalSettings";
 import PatternVisualizer from "@/components/PatternVisualizer";
 import { useI18n } from "@/i18n/I18nProvider";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Listbox, Transition } from "@headlessui/react";
 import { Fragment } from "react";
+import Image from "next/image";
 
 type CustomProfile = {
   id: string;
@@ -68,6 +69,16 @@ export default function Home() {
 
   useEffect(() => {
     setProfiles(loadProfiles());
+  }, []);
+
+  // expose setters so StrafeTimer inline controls can update parent state
+  useEffect(() => {
+    (window as any).__setWaitTime = (v: number) => setWaitTimeSeconds(v);
+    (window as any).__setVolume = (v: number) => setVolume(v);
+    return () => {
+      try { delete (window as any).__setWaitTime; } catch {}
+      try { delete (window as any).__setVolume; } catch {}
+    };
   }, []);
 
   useEffect(() => {
@@ -213,9 +224,7 @@ export default function Home() {
               }}
               listMode
             />
-            <div className="mt-4">
-              <GlobalSettings waitTimeSeconds={waitTimeSeconds} onWaitTimeChange={setWaitTimeSeconds} volume={volume} onVolumeChange={setVolume} />
-            </div>
+            {/* Global settings moved into main StrafeTimer UI */}
           </aside>
 
         {/* Main Section */}
@@ -315,9 +324,24 @@ export default function Home() {
               </div>
             ) : selectedGun ? (
               <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="text-xl font-bold tracking-wide">{selectedGun.name}</div>
-                  <div className="text-xs text-white/60">{t('main.pattern')}</div>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
+                      <Image src={selectedGun.image} alt={selectedGun.name} fill className="object-contain invert" sizes="48px" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xl font-bold tracking-wide truncate">{selectedGun.name}</div>
+                      {selectedGun.remarks && selectedGun.remarks.length > 0 && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          {selectedGun.remarks.map((r, i) => (
+                            <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <PatternVisualizer gun={selectedGun} />
                 <div className="pt-2">
@@ -367,6 +391,14 @@ export default function Home() {
         {/* Footer */}
         <footer className="mt-8 text-center text-xs text-white/50">
           {t('footer.credit', { name: 'RaVeN_ShP' })}
+          <div className="mt-1">
+            <span className="text-white/60">{t('footer.contributors')}</span>
+            <span className="ml-1 inline-flex gap-2">
+              <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className="underline hover:text-white/80">Ahn99</a>
+              <span>•</span>
+              <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className="underline hover:text-white/80">MokeySniper</a>
+            </span>
+          </div>
         </footer>
       </div>
     </main>

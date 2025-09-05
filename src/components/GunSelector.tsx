@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState, Fragment } from 'react';
 import { Gun } from '@/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
-import { Menu, Transition } from '@headlessui/react';
+import { Menu, Transition, Portal } from '@headlessui/react';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 
 interface GunSelectorProps {
@@ -28,91 +28,134 @@ const categoryLabel: Record<Gun['category'], string> = {
 
 export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom }: GunSelectorProps) {
   const { t } = useI18n();
+  const [menuPos, setMenuPos] = useState<{ id: string; top: number; left: number } | null>(null);
+  // Background accents removed per request
   if (listMode) {
+    const ammoOrder: Gun['ammo'][] = ['light', 'heavy', 'energy', 'shotgun', 'sniper', 'arrow', 'care'];
+    const ammoLabel: Record<string, string> = {
+      light: 'Light Ammo',
+      heavy: 'Heavy Ammo',
+      energy: 'Energy Ammo',
+      shotgun: 'Shotgun Ammo',
+      sniper: 'Sniper Ammo',
+      arrow: 'Arrows',
+      care: 'Care Package',
+      other: 'Other',
+    };
+    const ammoIcon: Record<string, string | undefined> = {
+      light: '/ammo/Light_Rounds.svg',
+      heavy: '/ammo/Heavy_Rounds.svg',
+      energy: '/ammo/Energy_Ammo.svg',
+      shotgun: '/ammo/Shotgun_Shells.svg',
+      sniper: '/ammo/Sniper_Ammo.svg',
+      arrow: '/ammo/Arrows.svg',
+      care: undefined,
+      other: undefined,
+    };
+    const groups: Array<{ key: string; items: Gun[] }> = [];
+    for (const key of ammoOrder) {
+      groups.push({ key: key as string, items: guns.filter(g => g.ammo === key) });
+    }
+    groups.push({ key: 'other', items: guns.filter(g => !g.ammo) });
+
     return (
-      <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)]">
-        {guns.map((gun) => {
-          const isComingSoon = false;
-          const isActive = selectedGun?.id === gun.id;
-          return (
-            <div
-              key={gun.id}
-              onClick={() => {
-                if (isComingSoon) return;
-                onGunSelect(gun);
-              }}
-              className={`relative overflow-visible w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors ${
-                isActive ? 'bg-red-600/20 border border-red-500/40' : 'hover:bg-white/5'
-              } ${isComingSoon ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              {gun.category === 'custom' && (onDeleteCustom || onEditCustom) && (
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20">
-                  <Menu as="div" className="relative inline-block text-left">
-                    <div>
-                      <Menu.Button
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center justify-center w-7 h-7 rounded border border-white/20 bg-white/10 hover:bg-white/20"
-                        title="More"
-                      >
-                        <EllipsisVerticalIcon className="w-4 h-4 text-white" />
-                      </Menu.Button>
-                    </div>
-                    <Transition
-                      as={Fragment}
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
-                      <Menu.Items className="absolute right-0 mt-1 w-36 origin-top-right rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                        {onEditCustom && (
-                          <Menu.Item>
-                            {({ active }) => (
-                              <button
-                                type="button"
-                                className={`w-full text-left px-3 py-2 text-xs ${active ? 'bg-white/10' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); onEditCustom(gun); }}
-                              >
-                                {t('custom.edit')}
-                              </button>
-                            )}
-                          </Menu.Item>
-                        )}
-                        {onDeleteCustom && (
-                          <Menu.Item>
-                            {({ active }) => (
-                              <button
-                                type="button"
-                                className={`w-full text-left px-3 py-2 text-xs ${active ? 'bg-white/10' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); onDeleteCustom(gun); }}
-                              >
-                                {t('custom.delete')}
-                              </button>
-                            )}
-                          </Menu.Item>
-                        )}
-                      </Menu.Items>
-                    </Transition>
-                  </Menu>
+      <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)] custom-scroll">
+        {groups.map((group, gi) => (
+          group.items.length > 0 && (
+            <div key={group.key} className={gi > 0 ? 'mt-4' : ''}>
+              <div>
+                <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center gap-2 px-2 py-2">
+                  {ammoIcon[group.key] && (
+                    <span className="relative inline-block w-4 h-4">
+                      <Image src={ammoIcon[group.key]!} alt={group.key} fill className="object-contain" sizes="16px" />
+                    </span>
+                  )}
+                  <span>{ammoLabel[group.key] || 'Other'}</span>
                 </div>
-              )}
-              {isComingSoon && (
-                <div className="absolute inset-0 z-10 grid place-items-center bg-black/60">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-white">Coming soon</span>
-                </div>
-              )}
-              <div className="relative w-10 h-10 shrink-0">
-                <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
               </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium truncate">{gun.name}</div>
-                <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
+              <div className="mt-1">
+                {group.items.sort((a, b) => a.name.localeCompare(b.name)).map((gun) => {
+                  const isActive = selectedGun?.id === gun.id;
+                  return (
+                    <div
+                      key={gun.id}
+                      onClick={() => onGunSelect(gun)}
+                      className={`relative overflow-hidden w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors border ${
+                        isActive ? 'bg-red-600/20 border-red-500/40' : 'border-transparent hover:bg-white/5'
+                      }`}
+                    >
+                      {/* Background ammo accents removed */}
+                      {gun.category === 'custom' && (onDeleteCustom || onEditCustom) && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20">
+                          <Menu as="div" className="relative inline-block text-left">
+                            <div>
+                              <Menu.Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                  const top = rect.top + window.scrollY - 4; // anchor at top of button
+                                  const menuWidth = 144; // w-36
+                                  const left = rect.right + window.scrollX - menuWidth;
+                                  setMenuPos({ id: gun.id, top, left });
+                                }}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded border border-white/20 bg-white/10 hover:bg-white/20"
+                                title="More"
+                              >
+                                <EllipsisVerticalIcon className="w-4 h-4 text-white" />
+                              </Menu.Button>
+                            </div>
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Portal>
+                              <Menu.Items
+                                className="fixed z-[100] w-36 origin-top-right rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none"
+                                style={menuPos && menuPos.id === gun.id ? { top: menuPos.top, left: menuPos.left, transform: 'translateY(-100%)' } : undefined}
+                              >
+                                {onEditCustom && (
+                                  <Menu.Item>
+                                    {({ active }) => (
+                                      <button type="button" className={`w-full text-left px-3 py-2 text-xs ${active ? 'bg-white/10' : ''}`} onClick={(e) => { e.stopPropagation(); onEditCustom(gun); }}>
+                                        {t('custom.edit')}
+                                      </button>
+                                    )}
+                                  </Menu.Item>
+                                )}
+                                {onDeleteCustom && (
+                                  <Menu.Item>
+                                    {({ active }) => (
+                                      <button type="button" className={`w-full text-left px-3 py-2 text-xs ${active ? 'bg-white/10' : ''}`} onClick={(e) => { e.stopPropagation(); onDeleteCustom(gun); }}>
+                                        {t('custom.delete')}
+                                      </button>
+                                    )}
+                                  </Menu.Item>
+                                )}
+                              </Menu.Items>
+                              </Portal>
+                            </Transition>
+                          </Menu>
+                        </div>
+                      )}
+                      <div className="relative z-10 w-10 h-10 shrink-0">
+                        <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
+                      </div>
+                      <div className="min-w-0 relative z-10">
+                        <div className="text-sm font-medium truncate">{gun.name}</div>
+                        <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
+          )
+        ))}
       </div>
     );
   }

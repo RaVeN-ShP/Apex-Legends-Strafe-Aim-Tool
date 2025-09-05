@@ -34,6 +34,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
   const schedulerIntervalRef = useRef<number | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const masterGainRef = useRef<GainNode | null>(null);
   const scheduledUntilSecRef = useRef<number>(0);
   const centralRef = useRef<HTMLDivElement | null>(null);
   const placeholderRef = useRef<HTMLDivElement | null>(null);
@@ -89,19 +90,35 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
 
   const ensureAudioNodes = () => {
     if (!audioContext.current) return;
+    // Create a master gain to allow real-time volume control
+    if (!masterGainRef.current) {
+      try {
+        masterGainRef.current = audioContext.current.createGain();
+        masterGainRef.current.gain.setValueAtTime(Math.max(0, Math.min(1, volume)), audioContext.current.currentTime);
+        masterGainRef.current.connect(audioContext.current.destination);
+      } catch {}
+    }
     if (!oscillatorRef.current || !gainRef.current) {
       const osc = audioContext.current.createOscillator();
       const gain = audioContext.current.createGain();
       osc.type = 'sine';
       gain.gain.setValueAtTime(0, audioContext.current.currentTime);
       osc.connect(gain);
-      // iOS Safari requires a DynamicsCompressor for stable output in some cases
+      // Route through master gain
       try {
-        const compressor = audioContext.current.createDynamicsCompressor();
-        gain.connect(compressor);
-        compressor.connect(audioContext.current.destination);
+        if (masterGainRef.current) {
+          const compressor = audioContext.current.createDynamicsCompressor();
+          gain.connect(compressor);
+          compressor.connect(masterGainRef.current);
+        } else {
+          gain.connect(audioContext.current.destination);
+        }
       } catch {
-        gain.connect(audioContext.current.destination);
+        if (masterGainRef.current) {
+          gain.connect(masterGainRef.current);
+        } else {
+          gain.connect(audioContext.current.destination);
+        }
       }
       const startAt = audioContext.current.currentTime + 0.01;
       osc.start(startAt);
@@ -131,16 +148,16 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
     } catch {}
     let frequency = 500;
     let duration = 0.2;
-    let amplitude = 1.0 * volume;
+    let amplitude = 1.0;
     const attack = 0.005;
     if (phase === 'pattern') {
       frequency = direction === 'left' ? 400 : 800;
       duration = 0.15;
-      amplitude = 1.0 * volume;
+      amplitude = 1.0;
     } else if (phase === 'end') {
       frequency = 1500;
-      duration = 1.0;
-      amplitude = 1.0 * volume;
+      duration = 0.9;
+      amplitude = 1.0;
     }
     try {
       // Safari/iOS sometimes throws if setValueAtTime is scheduled in the past
@@ -348,6 +365,11 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
           gainRef.current.gain.setTargetAtTime(0.0001, now, 0.01);
         } catch {}
       }
+      if (masterGainRef.current) {
+        try {
+          masterGainRef.current.gain.cancelScheduledValues(now);
+        } catch {}
+      }
       if (oscillatorRef.current) {
         try { oscillatorRef.current.stop(now + 0.02); } catch {}
         try { oscillatorRef.current.disconnect(); } catch {}
@@ -356,6 +378,10 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
       if (gainRef.current) {
         try { gainRef.current.disconnect(); } catch {}
         gainRef.current = null;
+      }
+      if (masterGainRef.current) {
+        try { masterGainRef.current.disconnect(); } catch {}
+        masterGainRef.current = null;
       }
     }
     if (animationFrame.current) {
@@ -411,6 +437,20 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
 
   const phaseDisplay = getPhaseDisplay();
 
+  // Live volume updates via master gain
+  useEffect(() => {
+    const ctx = audioContext.current;
+    const mg = masterGainRef.current;
+    if (ctx && mg) {
+      try {
+        mg.gain.cancelScheduledValues(ctx.currentTime);
+        mg.gain.setTargetAtTime(Math.max(0, Math.min(1, volume)), ctx.currentTime, 0.01);
+      } catch {
+        try { mg.gain.setValueAtTime(Math.max(0, Math.min(1, volume)), ctx.currentTime); } catch {}
+      }
+    }
+  }, [volume]);
+
   return (
     <div className="text-white">
       {/* Progress Bar */}
@@ -425,6 +465,12 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
           <span>{(currentTime / 1000).toFixed(1)}</span>
           <span>{formatTime(totalDuration)}</span>
         </div> */}
+        {isPopped && (
+          <div className="mt-1 relative overflow-hidden rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-100 px-3 py-2 text-center text-[13px] md:text-sm font-medium">
+            <span className="absolute left-0 top-0 h-full w-1 bg-amber-400/80" />
+            {t('timer.popoutActive')}
+          </div>
+        )}
       </div>
 
       {/* Large Central Display to utilize vertical space */}
@@ -446,8 +492,11 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
         <div className={`absolute left-3 font-semibold text-white/80 ${isPopped ? 'top-2 text-[10px]' : 'top-3 text-xs'}`}>
           {phaseDisplay.title}
         </div>
-        <div className={`absolute right-3 text-white/60 ${isPopped ? 'top-2 text-[9px]' : 'top-3 text-[11px]'}`}>
-          {phaseDisplay.subtitle}
+        <div className={`absolute right-3 flex items-center gap-2 ${isPopped ? 'top-2' : 'top-3'}`}>
+          <span className={`${isPopped ? 'text-[9px]' : 'text-[11px]'} text-white/80 max-w-[50vw] truncate`}>{gun.name}</span>
+          <div className={`${isPopped ? 'w-4 h-4' : 'w-5 h-5'} relative opacity-80`}>
+            <Image src={gun.image} alt={gun.name} fill className="object-contain invert drop-shadow" sizes="20px" />
+          </div>
         </div>
 
         {/* Centered big indicator */}
@@ -535,18 +584,18 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
       </div>
 
       {/* Controls */}
-      <div className="flex gap-3 items-center">
+      <div className="grid grid-cols-2 gap-3 items-stretch">
         {!isPlaying ? (
           <button
             onClick={startTimer}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-md transition-colors"
+            className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 rounded-md transition-colors"
           >
             {t('timer.start')}
           </button>
         ) : (
           <button
             onClick={stopTimer}
-            className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 px-4 rounded-md transition-colors"
+            className="w-full h-12 bg-rose-500 hover:bg-rose-600 text-white font-semibold px-4 rounded-md transition-colors"
           >
             {t('timer.stop')}
           </button>
@@ -554,7 +603,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
 
         {/* Popout / Return buttons */}
         {!isPopped ? (
-          <div className="relative group flex-1">
+          <div className="relative group w-full">
             {/* Hover tooltip with image */}
             <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-30 w-72">
               <div className="rounded-md border border-white/15 bg-black/90 p-2 shadow-lg">
@@ -636,7 +685,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
                 alert('Failed to open popout.');
               }
             }}
-              className="w-full py-3 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
+              className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
               title="Pop out the display (Document Picture-in-Picture)"
             >
               {t('timer.popout')}
@@ -656,12 +705,66 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
                 }
               } catch {}
             }}
-            className="flex-1 py-3 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
+            className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
             title="Return the display to the page"
           >
             {t('timer.return')}
           </button>
         )}
+      </div>
+
+      {/* Inline settings below buttons */}
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
+          <label className="block text-[10px] uppercase tracking-wider text-white/60 mb-1">{t('settings.wait')}</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="1"
+              max="3.5"
+              step="0.1"
+              value={waitTimeSeconds}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                // update timeline immediately
+                timeline.current = buildTimeline(gun, v);
+                setCurrentPhase(null);
+                setBeatCount(0);
+                setCurrentDirection(null);
+                if (isPlayingRef.current) {
+                  stopTimer();
+                }
+                // lift state via custom event; parent passes setter through props? Not available here, so we rely on parent prop.
+                // As StrafeTimer doesn't control parent state, expose a custom event on window for now.
+                try { (window as any).__setWaitTime?.(v); } catch {}
+              }}
+              className="flex-1 h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
+            />
+            <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{waitTimeSeconds}s</span>
+          </div>
+        </div>
+        <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
+          <label className="block text-[10px] uppercase tracking-wider text-white/60 mb-1">{t('settings.volume')}</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                try {
+                  // Adjust in-place volume by updating gain envelope amplitude factor
+                  // We do not store locally here; parent controls prop. Notify parent if available.
+                  (window as any).__setVolume?.(v);
+                } catch {}
+              }}
+              className="flex-1 h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
+            />
+            <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{(volume * 100).toFixed(0)}%</span>
+          </div>
+        </div>
       </div>
     </div>
   );
