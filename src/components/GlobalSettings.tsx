@@ -35,9 +35,6 @@ export default function GlobalSettings({ waitTimeSeconds, onWaitTimeChange, volu
               {waitTimeSeconds}s
             </span>
           </div>
-          <p className="text-[11px] text-white/50 mt-1">
-            {t('settings.hint')}
-          </p>
         </div>
 
         <div>

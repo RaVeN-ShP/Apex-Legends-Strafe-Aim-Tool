@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Gun, Phase, Timeline } from '@/types/gun';
 import { buildTimeline, formatTime } from '@/utils/audio';
 import { useI18n } from '@/i18n/I18nProvider';
+import Image from 'next/image';
 
 interface StrafeTimerProps {
   gun: Gun;
@@ -485,8 +486,18 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
 
         {/* Popout / Return buttons */}
         {!isPopped ? (
-          <button
-            onClick={async () => {
+          <div className="relative group flex-1">
+            {/* Hover tooltip with image */}
+            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-30 w-72">
+              <div className="rounded-md border border-white/15 bg-black/90 p-2 shadow-lg">
+                <div className="text-[11px] text-white/80 mb-2">{t('timer.popoutHint')}</div>
+                <div className="relative w-full h-52 overflow-hidden rounded">
+                  <Image src="/overlay_example.png" alt="Overlay example" fill className="object-cover" />
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={async () => {
               try {
                 type DocumentPictureInPicture = {
                   requestWindow: (options?: { initialAspectRatio?: number; width?: number; height?: number }) => Promise<Window>;
@@ -557,11 +568,12 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
                 alert('Failed to open popout.');
               }
             }}
-            className="flex-1 py-3 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
-            title="Pop out the display (Document Picture-in-Picture)"
-          >
-            {t('timer.popout')}
-          </button>
+              className="w-full py-3 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
+              title="Pop out the display (Document Picture-in-Picture)"
+            >
+              {t('timer.popout')}
+            </button>
+          </div>
         ) : (
           <button
             onClick={() => {

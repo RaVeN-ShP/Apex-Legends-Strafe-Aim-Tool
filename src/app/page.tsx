@@ -350,6 +350,10 @@ export default function Home() {
                       <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q4.question')}</h3>
                       <p className="text-white/70 text-xs">{t('faq.q4.answer')}</p>
                     </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-1 text-sm">{t('faq.q5.question')}</h3>
+                      <p className="text-white/70 text-xs">{t('faq.q5.answer')}</p>
+                    </div>
                   </div>
                 </div>
               </div>

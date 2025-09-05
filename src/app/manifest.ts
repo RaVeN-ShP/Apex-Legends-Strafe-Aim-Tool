@@ -3,9 +3,9 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Apex Legends Strafe Aiming Tool',
-    short_name: 'Strafe Tool',
+    short_name: 'Apex Strafe Aim Tool',
     description:
-      'Master strafe aiming techniques in Apex Legends with audio cues and perfect timing. Learn weapon-specific patterns for the firing range.',
+      'Dial in your strafe aim for Apex with clean audio cues and clear A/D direction visuals. Practice tool inspired by ahn99.',
     start_url: '/',
     display: 'standalone',
     background_color: '#111827',

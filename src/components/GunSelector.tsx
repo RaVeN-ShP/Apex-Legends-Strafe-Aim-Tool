@@ -26,15 +26,13 @@ const categoryLabel: Record<Gun['category'], string> = {
   custom: 'Custom',
 };
 
-const enabledGunIds = new Set<string>(['re45', 'prowler-burst', 'hemlok', 'nemesis']);
-
 export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom }: GunSelectorProps) {
   const { t } = useI18n();
   if (listMode) {
     return (
       <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)]">
         {guns.map((gun) => {
-          const isComingSoon = gun.category !== 'custom' && enabledGunIds.has(gun.id);
+          const isComingSoon = false;
           const isActive = selectedGun?.id === gun.id;
           return (
             <div
@@ -125,7 +123,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
       
       <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {guns.map((gun) => {
-          const isComingSoon = gun.category !== 'custom' && !enabledGunIds.has(gun.id);
+          const isComingSoon = false;
           const isActive = selectedGun?.id === gun.id;
           return (
             <button
