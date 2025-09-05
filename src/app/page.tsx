@@ -64,6 +64,7 @@ export default function Home() {
   const [draftName, setDraftName] = useState("");
   const [draftSteps, setDraftSteps] = useState<StrafePattern[]>([{ direction: 'left', duration: 200 }]);
   const [editResetToken, setEditResetToken] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     setProfiles(loadProfiles());
@@ -84,12 +85,14 @@ export default function Home() {
     setIsCreating(true);
     setDraftName("");
     setDraftSteps([{ direction: 'left', duration: 200 }]);
+    setEditingId(null);
   };
 
   const cancelCreate = () => {
     setIsCreating(false);
     setDraftName("");
     setDraftSteps([{ direction: 'left', duration: 200 }]);
+    setEditingId(null);
   };
 
   const addStep = () => {
@@ -111,12 +114,26 @@ export default function Home() {
 
   const saveDraft = () => {
     if (!isDraftValid) return;
-    const id = generateId();
-    const profile: CustomProfile = { id, name: draftName.trim(), strafePattern: draftSteps.map((s) => ({ ...s, duration: Math.round(s.duration) })) };
-    setProfiles((prev) => [profile, ...prev]);
-    const gun = makeGunFromProfile(profile);
-    setSelectedGun(gun);
-    setIsCreating(false);
+    if (editingId) {
+      const updated: CustomProfile = { id: editingId, name: draftName.trim(), strafePattern: draftSteps.map((s) => ({ ...s, duration: Math.round(s.duration) })) };
+      setProfiles((prev) => {
+        const idx = prev.findIndex((p) => p.id === editingId);
+        if (idx === -1) return [updated, ...prev];
+        const copy = prev.slice();
+        copy[idx] = updated;
+        return copy;
+      });
+      setSelectedGun(makeGunFromProfile(updated));
+      setIsCreating(false);
+      setEditingId(null);
+    } else {
+      const id = generateId();
+      const profile: CustomProfile = { id, name: draftName.trim(), strafePattern: draftSteps.map((s) => ({ ...s, duration: Math.round(s.duration) })) };
+      setProfiles((prev) => [profile, ...prev]);
+      const gun = makeGunFromProfile(profile);
+      setSelectedGun(gun);
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -190,6 +207,7 @@ export default function Home() {
                 setDraftName(p.name);
                 setDraftSteps(p.strafePattern.map((s) => ({ ...s })));
                 setEditResetToken((v) => v + 1);
+                setEditingId(id);
                 // When saving, this will create a new profile currently; optionally replace existing
                 // If you want replace behavior, we can add an editId state and update instead of add
               }}
