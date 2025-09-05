@@ -384,9 +384,9 @@ export default function Home() {
           <div className="mt-1">
             <span className="text-white/60">{t('footer.contributors')}</span>
             <span className="ml-1 inline-flex gap-2">
-              <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className="underline hover:text-white/80">Ahn99</a>
+              <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className="underline hover:text-white/80">ahn99</a>
               <span>•</span>
-              <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className="underline hover:text-white/80">MokeySniper</a>
+              <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className="underline hover:text-white/80">Mokeysniper</a>
             </span>
           </div>
         </footer>
