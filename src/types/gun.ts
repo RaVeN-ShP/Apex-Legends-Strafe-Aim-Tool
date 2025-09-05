@@ -3,7 +3,7 @@ export interface StrafePattern {
   duration: number; // in milliseconds
 }
 
-export type WeaponCategory = 'ar' | 'lmg' | 'smg' | 'pistol' | 'marksman' | 'sniper';
+export type WeaponCategory = 'ar' | 'lmg' | 'smg' | 'pistol' | 'marksman' | 'sniper' | 'custom';
 
 export interface Gun {
   id: string;

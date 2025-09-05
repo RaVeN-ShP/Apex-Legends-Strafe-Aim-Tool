@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Gun } from "@/types/gun";
+import { useEffect, useMemo, useState } from "react";
+import { Gun, StrafePattern } from "@/types/gun";
 import { guns } from "@/data/guns";
 import GunSelector from "@/components/GunSelector";
 import StrafeTimer from "@/components/StrafeTimer";
@@ -10,11 +10,112 @@ import PatternVisualizer from "@/components/PatternVisualizer";
 import { useI18n } from "@/i18n/I18nProvider";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+type CustomProfile = {
+  id: string;
+  name: string;
+  strafePattern: StrafePattern[];
+};
+
+const STORAGE_KEY = "customPatterns";
+
+function loadProfiles(): CustomProfile[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((p) => p && typeof p.id === "string" && typeof p.name === "string" && Array.isArray(p.strafePattern));
+  } catch {
+    return [];
+  }
+}
+
+function saveProfiles(profiles: CustomProfile[]) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+  } catch {}
+}
+
+function makeGunFromProfile(profile: CustomProfile): Gun {
+  return {
+    id: `custom:${profile.id}`,
+    name: profile.name,
+    category: 'custom',
+    image: '/favicon.ico',
+    strafePattern: profile.strafePattern,
+  };
+}
+
+function generateId(): string {
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${Date.now().toString(36)}-${rand}`;
+}
+
 export default function Home() {
   const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
   const [waitTimeSeconds, setWaitTimeSeconds] = useState(2);
   const [volume, setVolume] = useState(0.8);
   const { t } = useI18n();
+  const [profiles, setProfiles] = useState<CustomProfile[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftSteps, setDraftSteps] = useState<StrafePattern[]>([{ direction: 'left', duration: 200 }]);
+  const [editResetToken, setEditResetToken] = useState(0);
+
+  useEffect(() => {
+    setProfiles(loadProfiles());
+  }, []);
+
+  useEffect(() => {
+    saveProfiles(profiles);
+  }, [profiles]);
+
+  const allGuns: Gun[] = useMemo(() => {
+    return [
+      ...profiles.map(makeGunFromProfile),
+      ...guns,
+    ];
+  }, [profiles]);
+
+  const startCreate = () => {
+    setIsCreating(true);
+    setDraftName("");
+    setDraftSteps([{ direction: 'left', duration: 200 }]);
+  };
+
+  const cancelCreate = () => {
+    setIsCreating(false);
+    setDraftName("");
+    setDraftSteps([{ direction: 'left', duration: 200 }]);
+  };
+
+  const addStep = () => {
+    setDraftSteps((prev) => [...prev, { direction: 'left', duration: 200 }]);
+    setEditResetToken((v) => v + 1);
+  };
+
+  const removeStep = (idx: number) => {
+    setDraftSteps((prev) => prev.filter((_, i) => i !== idx));
+    setEditResetToken((v) => v + 1);
+  };
+
+  const updateStep = (idx: number, step: Partial<StrafePattern>) => {
+    setDraftSteps((prev) => prev.map((s, i) => (i === idx ? { direction: step.direction ?? s.direction, duration: step.duration ?? s.duration } : s)));
+    setEditResetToken((v) => v + 1);
+  };
+
+  const isDraftValid = draftName.trim().length > 0 && draftSteps.length > 0 && draftSteps.every((s) => Number.isFinite(s.duration) && s.duration > 0);
+
+  const saveDraft = () => {
+    if (!isDraftValid) return;
+    const id = generateId();
+    const profile: CustomProfile = { id, name: draftName.trim(), strafePattern: draftSteps.map((s) => ({ ...s, duration: Math.round(s.duration) })) };
+    setProfiles((prev) => [profile, ...prev]);
+    const gun = makeGunFromProfile(profile);
+    setSelectedGun(gun);
+    setIsCreating(false);
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4">
@@ -53,7 +154,33 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
           {/* Left Sidebar */}
           <aside>
-            <GunSelector guns={guns} selectedGun={selectedGun} onGunSelect={setSelectedGun} listMode />
+            <div className="mb-2">
+              <button
+                type="button"
+                onClick={startCreate}
+                className="w-full text-sm font-semibold px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white"
+              >
+                {t('custom.createTop', { defaultValue: 'Create Custom' })}
+              </button>
+            </div>
+            <GunSelector
+              guns={allGuns}
+              selectedGun={selectedGun}
+              onGunSelect={(g) => { setSelectedGun(g); setIsCreating(false); }}
+              onDeleteCustom={(g) => {
+                if (g.category !== 'custom') return;
+                const ok = window.confirm(t('custom.confirmDelete', { defaultValue: 'Delete this custom pattern?' }));
+                if (!ok) return;
+                const id = g.id.startsWith('custom:') ? g.id.slice('custom:'.length) : g.id;
+                setProfiles((prev) => prev.filter((p) => p.id !== id));
+                if (selectedGun?.id === g.id) {
+                  // Fallback to first available gun
+                  const next = allGuns.find((x) => x.id !== g.id) || guns[0] || null;
+                  setSelectedGun(next);
+                }
+              }}
+              listMode
+            />
             <div className="mt-4">
               <GlobalSettings waitTimeSeconds={waitTimeSeconds} onWaitTimeChange={setWaitTimeSeconds} volume={volume} onVolumeChange={setVolume} />
             </div>
@@ -61,7 +188,91 @@ export default function Home() {
 
         {/* Main Section */}
           <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
-            {selectedGun ? (
+            {isCreating ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-xl font-bold tracking-wide">{t('custom.createTitle', { defaultValue: 'Create Custom Pattern' })}</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={cancelCreate}
+                      className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/10"
+                    >
+                      {t('custom.cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!isDraftValid}
+                      onClick={saveDraft}
+                      className={`text-sm px-3 py-1.5 rounded ${isDraftValid ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 text-white/40 cursor-not-allowed'}`}
+                    >
+                      {t('custom.save')}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                    <div className="mb-2">
+                      <label className="block text-[11px] text-white/60 mb-1">{t('custom.name')}</label>
+                      <input
+                        value={draftName}
+                        onChange={(e) => setDraftName(e.target.value)}
+                        className="w-full px-2 py-1 text-sm rounded bg-white/5 border border-white/10 outline-none focus:border-white/30"
+                        placeholder={t('custom.name')}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[11px] text-white/60">{t('custom.steps')}</div>
+                      <button
+                        type="button"
+                        onClick={addStep}
+                        className="text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/10"
+                      >
+                        {t('custom.addStep')}
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {draftSteps.map((s, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <select
+                            value={s.direction}
+                            onChange={(e) => updateStep(idx, { direction: e.target.value as StrafePattern['direction'] })}
+                            className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5"
+                          >
+                            <option value="left">{t('custom.left')}</option>
+                            <option value="right">{t('custom.right')}</option>
+                          </select>
+                          <div className="text-[11px] text-white/60">{t('custom.durationMs')}</div>
+                          <input
+                            type="number"
+                            min={1}
+                            value={s.duration}
+                            onChange={(e) => updateStep(idx, { duration: Number(e.target.value) })}
+                            className="w-24 px-2 py-1 text-xs rounded bg-white/5 border border-white/10 outline-none focus:border-white/30"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeStep(idx)}
+                            className="ml-auto text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/10"
+                          >
+                            {t('custom.delete')}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                    <div className="text-sm font-semibold mb-2">{t('custom.preview', { defaultValue: 'Preview' })}</div>
+                    <PatternVisualizer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', strafePattern: draftSteps }} />
+                    <div className="mt-3">
+                      <StrafeTimer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', strafePattern: draftSteps }} waitTimeSeconds={waitTimeSeconds} volume={volume} resetToken={editResetToken} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : selectedGun ? (
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="text-xl font-bold tracking-wide">{selectedGun.name}</div>

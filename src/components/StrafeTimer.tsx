@@ -9,9 +9,10 @@ interface StrafeTimerProps {
   gun: Gun;
   waitTimeSeconds: number;
   volume?: number;
+  resetToken?: string | number; // when this changes, stop the timer
 }
 
-export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetToken }: StrafeTimerProps) {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -66,6 +67,24 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8 }: Stra
       stopTimer();
     }
   }, [gun.id]);
+
+  // Stop when reset token changes (e.g., pattern edited)
+  useEffect(() => {
+    if (isPlayingRef.current) {
+      stopTimer();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetToken]);
+
+  // Ensure audio and timers stop on unmount
+  useEffect(() => {
+    return () => {
+      if (isPlayingRef.current) {
+        try { stopTimer(); } catch {}
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const ensureAudioNodes = () => {
     if (!audioContext.current) return;

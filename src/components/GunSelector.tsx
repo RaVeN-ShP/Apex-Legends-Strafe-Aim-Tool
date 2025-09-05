@@ -2,12 +2,14 @@
 
 import Image from 'next/image';
 import { Gun } from '@/types/gun';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface GunSelectorProps {
   guns: Gun[];
   selectedGun: Gun | null;
   onGunSelect: (gun: Gun) => void;
   listMode?: boolean; // when true, render compact vertical list (sidebar)
+  onDeleteCustom?: (gun: Gun) => void;
 }
 
 const categoryLabel: Record<Gun['category'], string> = {
@@ -17,16 +19,18 @@ const categoryLabel: Record<Gun['category'], string> = {
   pistol: 'Pistol',
   marksman: 'Marksman',
   sniper: 'Sniper',
+  custom: 'Custom',
 };
 
 const enabledGunIds = new Set<string>(['r301', 'flatline', 'r99']);
 
-export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false }: GunSelectorProps) {
+export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom }: GunSelectorProps) {
+  const { t } = useI18n();
   if (listMode) {
     return (
       <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)]">
         {guns.map((gun) => {
-          const isComingSoon = !enabledGunIds.has(gun.id);
+          const isComingSoon = gun.category !== 'custom' && !enabledGunIds.has(gun.id);
           const isActive = selectedGun?.id === gun.id;
           return (
             <button
@@ -41,6 +45,16 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                 isActive ? 'bg-red-600/20 border border-red-500/40' : 'hover:bg-white/5'
               } ${isComingSoon ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
+              {gun.category === 'custom' && !!onDeleteCustom && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onDeleteCustom(gun); }}
+                  className="absolute right-2 top-2 z-20 text-[10px] px-1.5 py-0.5 rounded border border-white/20 bg-white/10 hover:bg-white/20"
+                  title={t('custom.delete')}
+                >
+                  {t('custom.delete')}
+                </button>
+              )}
               {isComingSoon && (
                 <div className="absolute inset-0 z-10 grid place-items-center bg-black/60">
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-white">Coming soon</span>
@@ -66,7 +80,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
       
       <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {guns.map((gun) => {
-          const isComingSoon = !enabledGunIds.has(gun.id);
+          const isComingSoon = gun.category !== 'custom' && !enabledGunIds.has(gun.id);
           const isActive = selectedGun?.id === gun.id;
           return (
             <button
