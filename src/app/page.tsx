@@ -9,6 +9,8 @@ import GlobalSettings from "@/components/GlobalSettings";
 import PatternVisualizer from "@/components/PatternVisualizer";
 import { useI18n } from "@/i18n/I18nProvider";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Listbox, Transition } from "@headlessui/react";
+import { Fragment } from "react";
 
 type CustomProfile = {
   id: string;
@@ -179,6 +181,18 @@ export default function Home() {
                   setSelectedGun(next);
                 }
               }}
+              onEditCustom={(g) => {
+                if (g.category !== 'custom') return;
+                const id = g.id.startsWith('custom:') ? g.id.slice('custom:'.length) : g.id;
+                const p = profiles.find((x) => x.id === id);
+                if (!p) return;
+                setIsCreating(true);
+                setDraftName(p.name);
+                setDraftSteps(p.strafePattern.map((s) => ({ ...s })));
+                setEditResetToken((v) => v + 1);
+                // When saving, this will create a new profile currently; optionally replace existing
+                // If you want replace behavior, we can add an editId state and update instead of add
+              }}
               listMode
             />
             <div className="mt-4">
@@ -235,14 +249,23 @@ export default function Home() {
                     <div className="space-y-2">
                       {draftSteps.map((s, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          <select
-                            value={s.direction}
-                            onChange={(e) => updateStep(idx, { direction: e.target.value as StrafePattern['direction'] })}
-                            className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5"
-                          >
-                            <option value="left">{t('custom.left')}</option>
-                            <option value="right">{t('custom.right')}</option>
-                          </select>
+                          <Listbox value={s.direction} onChange={(v: StrafePattern['direction']) => updateStep(idx, { direction: v })}>
+                            <div className="relative">
+                              <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[80px] text-left">
+                                {s.direction === 'left' ? t('custom.left') : t('custom.right')}
+                              </Listbox.Button>
+                              <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                                <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                                  <Listbox.Option value="left" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                    {t('custom.left')}
+                                  </Listbox.Option>
+                                  <Listbox.Option value="right" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                    {t('custom.right')}
+                                  </Listbox.Option>
+                                </Listbox.Options>
+                              </Transition>
+                            </div>
+                          </Listbox>
                           <div className="text-[11px] text-white/60">{t('custom.durationMs')}</div>
                           <input
                             type="number"
