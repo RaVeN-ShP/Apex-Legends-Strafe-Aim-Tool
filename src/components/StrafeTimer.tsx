@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { Gun, Phase, Timeline, Pattern, AudioCue } from '@/types/gun';
 import { buildTimeline, formatTime } from '@/utils/audio';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -559,8 +559,16 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
             const endPhaseMs = Math.max(0, reloadMs - 1500 + waitTimeSeconds * 1000);
             segments.push({ color: 'bg-green-600', duration: endPhaseMs, title: 'Reload+Wait' });
 
+            // Pre-calc for hatch overlay (reload window across end -> next start)
+            const patternTotalMs = pattern.reduce((acc, s) => acc + s.duration, 0);
+            const endPhaseFromTimeline = timeline.current.phases.find(p => p.id === 'end');
+            const startPhaseFromTimeline = timeline.current.phases.find(p => p.id === 'start');
+            const endPhaseStartMs = endPhaseFromTimeline?.startTime ?? (startPhaseFromTimeline?.endTime ?? 1500) + patternTotalMs;
+            const endPhaseStartPct = (endPhaseStartMs / totalMs) * 100;
+            const reloadPct = (reloadMs / totalMs) * 100;
+
             const renderCycle = (keyPrefix: string) => (
-              <>
+              <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
                 {segments.map((s, idx) => (
                   <div
                     key={`${keyPrefix}-${idx}`}
@@ -575,25 +583,79 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
                     )}
                   </div>
                 ))}
-              </>
+                {/* Per-cycle hatch overlays */}
+                {(() => {
+                  const endPct = (endPhaseMs / totalMs) * 100;
+                  const startPhase = timeline.current.phases.find(p => p.id === 'start');
+                  const startDurationMs = startPhase ? (startPhase.endTime - startPhase.startTime) : 1500;
+                  const startPct = (startDurationMs / totalMs) * 100;
+                  const tailPct = Math.max(0, Math.min(reloadPct, endPct));
+                  const headPctRaw = Math.max(0, reloadPct - endPct);
+                  const headPct = Math.min(headPctRaw, startPct);
+                  return (
+                    <>
+                      {tailPct > 0 && (
+                        <div
+                          className="absolute top-0 bottom-0 z-10 cursor-help"
+                          title="reloading"
+                          style={{
+                            left: `${endPhaseStartPct}%`,
+                            width: `${tailPct}%`,
+                            backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                            backgroundBlendMode: 'overlay',
+                          }}
+                        />
+                      )}
+                      {headPct > 0 && (
+                        <div
+                          className="absolute top-0 bottom-0 z-10 cursor-help"
+                          title="reloading"
+                          style={{
+                            left: `0%`,
+                            width: `${headPct}%`,
+                            backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                            backgroundBlendMode: 'overlay',
+                          }}
+                        />
+                      )}
+                      {/* End-of-reload marker (thicker, rounded) */}
+                      {(() => {
+                        const markerLeftPct = headPct > 0 ? headPct : (endPhaseStartPct + tailPct);
+                        if ((headPct > 0) || (tailPct > 0)) {
+                          return (
+                            <div
+                              className="pointer-events-none absolute z-20 top-0 bottom-0"
+                              style={{ left: `${markerLeftPct}%` }}
+                            >
+                              <div className="absolute -translate-x-1/2 top-0 bottom-0 w-[3px] bg-white rounded-full" />
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </>
+                  );
+                })()}
+              </div>
             );
 
             return (
-              <div className="relative">
-                <div className="h-3 w-full rounded-md overflow-hidden bg-white/10 border border-white/10">
-                  <div className="h-full flex" style={{ width: '300%', transform: translateStyle, willChange: 'transform' }}>
-                    {renderCycle('prev')}
-                    {renderCycle('curr')}
-                    {renderCycle('next')}
-
+              <Fragment>
+                <div className="relative">
+                  <div className="h-3 w-full rounded-md overflow-hidden bg-white/10 border border-white/10">
+                    <div className="h-full flex relative" style={{ width: '300%', transform: translateStyle, willChange: 'transform' }}>
+                      {renderCycle('prev')}
+                      {renderCycle('curr')}
+                      {renderCycle('next')}
+                    </div>
+                  </div>
+                  {/* Now-pointer at 10% */}
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute left-[10%] -translate-x-1/2 -top-3 text-white/80 text-xs select-none">▼</div>
+                    <div className="absolute left-[10%] -translate-x-1/2 top-0 h-3 w-[2px] bg-white/80" />
                   </div>
                 </div>
-                {/* Now-pointer at 10% */}
-                <div className="pointer-events-none absolute inset-0">
-                  <div className="absolute left-[10%] -translate-x-1/2 -top-3 text-white/80 text-xs select-none">▼</div>
-                  <div className="absolute left-[10%] -translate-x-1/2 top-0 h-3 w-[2px] bg-white/80" />
-                </div>
-              </div>
+              </Fragment>
             );
           })()}
         </div>
@@ -773,7 +835,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
                 className="uniform-slider relative z-10 w-full h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
               />
               {/* Markers overlay (account for 14px thumb: 7px inset on both sides) */}
-              <div className="pointer-events-none absolute top-0 bottom-0 z-0 left-[7px] right-[7px]">
+              <div className="pointer-events-none absolute top-1 bottom-0 z-0 left-[7px] right-[7px]">
                 {/* Recommended 0.5s marker (gray) */}
                 <div
                   className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[3px] h-5 bg-gray-300/90 rounded-full"
@@ -816,14 +878,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
           </div>
         </div>
       </div>
-      {/* Ensure both sliders look consistent across browsers */}
-      <style jsx global>{`
-        input.uniform-slider { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.1); }
-        input.uniform-slider::-webkit-slider-runnable-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
-        input.uniform-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: #111827; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; margin-top: -3px; }
-        input.uniform-slider::-moz-range-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
-        input.uniform-slider::-moz-range-thumb { width: 14px; height: 14px; background: #111827; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; }
-      `}</style>
+      {/* Slider styles are defined globally in globals.css to avoid initial flash */}
     </div>
   );
 }
