@@ -26,11 +26,23 @@ export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: num
   }
   phases.push({ id: 'pattern', name: 'Pattern', startTime: patternStartTime, endTime: currentTime, cues: patternCues });
 
-  // End: single cue + reload + extra wait
+  // End phase: duration = reload - 1.5s + user delay (clamped to 0)
   const endStartTime = currentTime;
-  const endCues: AudioCue[] = [{ type: 'end', direction: 'left', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: 0.9, amplitude: 1.0 }];
   const reloadMs = Math.round((gun.reloadTimeSeconds ?? 1) * 1000);
-  currentTime += reloadMs + waitTimeSeconds * 1000;
+  const countdownMs = 1500; // 1.5s countdown
+  const userDelayMs = Math.round(waitTimeSeconds * 1000);
+  const endPhaseMs = Math.max(0, reloadMs - countdownMs + userDelayMs);
+  const endCues: AudioCue[] = [];
+  if (endPhaseMs > 0) {
+    // Shorten end cue length if end phase is short to avoid spillover
+    const safetyTailMs = 10; // keep a tiny tail before phase end
+    const maxCueLenSec = Math.max(0, (endPhaseMs - safetyTailMs) / 1000);
+    const endCueLenSec = Math.min(0.9, maxCueLenSec);
+    if (endCueLenSec > 0) {
+      endCues.push({ type: 'end', direction: 'left', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: endCueLenSec, amplitude: 1.0 });
+    }
+  }
+  currentTime += endPhaseMs;
   phases.push({ id: 'end', name: 'End', startTime: endStartTime, endTime: currentTime, cues: endCues });
 
   return { phases, totalDurationMs: currentTime };

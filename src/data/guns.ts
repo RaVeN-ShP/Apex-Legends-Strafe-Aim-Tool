@@ -80,7 +80,7 @@ export const guns: Gun[] = [
     reloadTimeSeconds: 2.88,
     remarks: ['Use a purple stock & magazine'],
     pattern: {
-      default: [
+      normal: [
         { type: 'shoot', duration: 350 },
         { type: 'direction', direction: 'right', duration: 370 },
         { type: 'direction', direction: 'left', duration: 350 },
@@ -121,13 +121,13 @@ export const guns: Gun[] = [
     reloadTimeSeconds: 3.27,
     remarks: ['Use a purple stock & magazine', 'Pattern takes into account slow ramp up'],
     pattern: {
-      default: [
+      normal: [
         { type: 'direction', direction: 'right', duration: 500 },
         { type: 'direction', direction: 'left', duration: 1190 },
         { type: 'direction', direction: 'right', duration: 1450 },
         { type: 'direction', direction: 'left', duration: 530 },
       ],
-      turbocharged: [
+      Turbocharged: [
         { type: 'direction', direction: 'right', duration: 270 },
         { type: 'direction', direction: 'left', duration: 1080 },
         { type: 'direction', direction: 'right', duration: 1400 },

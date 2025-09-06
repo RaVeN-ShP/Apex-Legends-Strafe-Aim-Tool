@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Gun, Pattern } from "@/types/gun";
+import { DELAY_SLIDER_MAX_SECONDS, DEFAULT_DELAY_SECONDS } from "@/config/constants";
 import { guns } from "@/data/guns";
 import GunSelector from "@/components/GunSelector";
 import StrafeTimer from "@/components/StrafeTimer";
@@ -58,7 +59,7 @@ function generateId(): string {
 export default function Home() {
   const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
   const [selectedModeId, setSelectedModeId] = useState<string | null>(null);
-  const [waitTimeSeconds, setWaitTimeSeconds] = useState(0);
+  const [waitTimeSeconds, setWaitTimeSeconds] = useState(DEFAULT_DELAY_SECONDS);
   const [volume, setVolume] = useState(0.8);
   const { t } = useI18n();
   const [profiles, setProfiles] = useState<CustomProfile[]>([]);
@@ -74,12 +75,10 @@ export default function Home() {
     setProfiles(loadProfiles());
   }, []);
 
-  // expose setters so StrafeTimer inline controls can update parent state
+  // expose volume only
   useEffect(() => {
-    (window as any).__setWaitTime = (v: number) => setWaitTimeSeconds(v);
     (window as any).__setVolume = (v: number) => setVolume(v);
     return () => {
-      try { delete (window as any).__setWaitTime; } catch {}
       try { delete (window as any).__setVolume; } catch {}
     };
   }, []);
@@ -111,6 +110,9 @@ export default function Home() {
     } else {
       setSelectedModeId(null);
     }
+    // Initialize slider default to current gun reload time (clamped to slider bounds)
+    const reload = Math.max(0, Math.min(DELAY_SLIDER_MAX_SECONDS, selectedGun.reloadTimeSeconds ?? 0));
+    setWaitTimeSeconds(DEFAULT_DELAY_SECONDS);
   }, [selectedGun]);
 
   // Effective selections
@@ -462,7 +464,7 @@ export default function Home() {
                     <div className="text-sm font-semibold mb-2">{t('custom.preview', { defaultValue: 'Preview' })}</div>
                     <PatternVisualizer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} />
                     <div className="mt-3">
-                      <StrafeTimer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} waitTimeSeconds={waitTimeSeconds} volume={volume} resetToken={editResetToken} />
+                      <StrafeTimer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} volume={volume} resetToken={editResetToken} />
                     </div>
                   </div>
                 </div>
@@ -499,7 +501,7 @@ export default function Home() {
                           key={key}
                           type="button"
                           onClick={() => setSelectedModeId(key)}
-                          className={`text-xs px-2 py-1 rounded border ${active ? 'border-red-500 bg-red-600/20 text-red-200' : 'border-white/15 bg-white/5 text-white/90 hover:bg-white/10'}`}
+                          className={`text-xs px-2 py-1 rounded border capitalize ${active ? 'border-red-500 bg-red-600/20 text-red-200' : 'border-white/15 bg-white/5 text-white/90 hover:bg-white/10'}`}
                           title={label}
                         >
                           {label}
@@ -510,7 +512,7 @@ export default function Home() {
                 )}
                 <PatternVisualizer gun={selectedGun} pattern={selectedPattern} />
                 <div className="pt-2">
-                  <StrafeTimer gun={selectedGun} pattern={selectedPattern} waitTimeSeconds={waitTimeSeconds} volume={volume} resetToken={selectedPatternKey ?? undefined} />
+                  <StrafeTimer gun={selectedGun} pattern={selectedPattern} volume={volume} resetToken={selectedPatternKey ?? undefined} />
                 </div>
                 
                 {/* FAQ Section inside main panel */}
@@ -526,7 +528,12 @@ export default function Home() {
                               <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
                             </Disclosure.Button>
                             <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
-                              {t(`faq.${k}.answer`)}
+                              {k === 'q7' ? (
+                                <div>
+                                  <div>{t(`faq.${k}.answer`, { weapon: selectedGun?.name ?? '-' })}</div>
+                                  <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: selectedGun?.name ?? '-' })}</div>
+                                </div>
+                              ) : t(`faq.${k}.answer`)}
                             </Disclosure.Panel>
                           </div>
                         )}

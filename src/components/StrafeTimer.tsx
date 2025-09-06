@@ -5,17 +5,18 @@ import { Gun, Phase, Timeline, Pattern, AudioCue } from '@/types/gun';
 import { buildTimeline, formatTime } from '@/utils/audio';
 import { useI18n } from '@/i18n/I18nProvider';
 import Image from 'next/image';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { getStepStyle, getPhaseStyle } from '@/config/styles';
+import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS } from '@/config/constants';
 
 interface StrafeTimerProps {
   gun: Gun;
   pattern: Pattern[];
-  waitTimeSeconds: number;
   volume?: number;
   resetToken?: string | number; // when this changes, stop the timer
 }
 
-export default function StrafeTimer({ gun, pattern, waitTimeSeconds, volume = 0.8, resetToken }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: StrafeTimerProps) {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -23,6 +24,8 @@ export default function StrafeTimer({ gun, pattern, waitTimeSeconds, volume = 0.
   const [currentPhase, setCurrentPhase] = useState<Phase | null>(null);
   const [beatCount, setBeatCount] = useState(0);
   const [justShot, setJustShot] = useState<boolean>(false);
+  const [waitTimeSeconds, setWaitTimeSeconds] = useState<number>(DEFAULT_DELAY_SECONDS);
+  const [waitInfoOpen, setWaitInfoOpen] = useState<boolean>(false);
 
   const timeline = useRef<Timeline>({ phases: [], totalDurationMs: 0 });
   const startTime = useRef<number>(0);
@@ -550,9 +553,10 @@ export default function StrafeTimer({ gun, pattern, waitTimeSeconds, volume = 0.
                 symbol: symbol || undefined,
               });
             }
-            // End: reload + extra wait
+            // End phase: reload - countdown(1.5s) + user delay
             const reloadMs = Math.round(((gun.reloadTimeSeconds ?? 1)) * 1000);
-            segments.push({ color: 'bg-green-600', duration: reloadMs + waitTimeSeconds * 1000, title: 'Reload+Wait' });
+            const endPhaseMs = Math.max(0, reloadMs - 1500 + waitTimeSeconds * 1000);
+            segments.push({ color: 'bg-green-600', duration: endPhaseMs, title: 'Reload+Wait' });
 
             const renderCycle = (keyPrefix: string) => (
               <>
@@ -726,56 +730,99 @@ export default function StrafeTimer({ gun, pattern, waitTimeSeconds, volume = 0.
       {/* Inline settings below buttons */}
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-          <label className="block text-[10px] uppercase tracking-wider text-white/60 mb-1">{t('settings.wait')}</label>
+          <label className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
+            {t('settings.wait')}
+            <Popover className="relative inline-block align-middle">
+              <div
+                className="inline-block ml-1"
+                onMouseEnter={() => setWaitInfoOpen(true)}
+                onMouseLeave={() => setWaitInfoOpen(false)}
+              >
+                <PopoverButton className="text-white/50 hover:text-white/80 cursor-help">
+                  <span className="text-[13px] md:text-[14px] leading-none">🛈</span>
+                </PopoverButton>
+                {waitInfoOpen && (
+                  <PopoverPanel static className="absolute left-0 mt-1 z-30 whitespace-nowrap rounded-md border border-white/10 bg-black px-2 py-1 text-[11px] text-white/80 shadow-lg">
+                    {t('settings.waitInfo')}
+                  </PopoverPanel>
+                )}
+              </div>
+            </Popover>
+          </label>
           <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="3.5"
-              step="0.1"
-              value={waitTimeSeconds}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                // update timeline immediately
-                timeline.current = buildTimeline(pattern, gun, v);
-                setCurrentPhase(null);
-                setBeatCount(0);
-                setCurrentDirection(null);
-                if (isPlayingRef.current) {
-                  stopTimer();
-                }
-                // lift state via custom event; parent passes setter through props? Not available here, so we rely on parent prop.
-                // As StrafeTimer doesn't control parent state, expose a custom event on window for now.
-                try { (window as any).__setWaitTime?.(v); } catch {}
-              }}
-              className="flex-1 h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
-            />
+            <div className="relative flex-1">
+              <input
+                type="range"
+                min="0"
+                max={DELAY_SLIDER_MAX_SECONDS}
+                step={DELAY_SLIDER_STEP_SECONDS}
+                value={waitTimeSeconds}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  setWaitTimeSeconds(v);
+                  // update timeline immediately
+                  timeline.current = buildTimeline(pattern, gun, v);
+                  setCurrentPhase(null);
+                  setBeatCount(0);
+                  setCurrentDirection(null);
+                  if (isPlayingRef.current) {
+                    stopTimer();
+                  }
+                }}
+                className="uniform-slider relative z-10 w-full h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
+              />
+              {/* Markers overlay (account for 14px thumb: 7px inset on both sides) */}
+              <div className="pointer-events-none absolute top-0 bottom-0 z-0 left-[7px] right-[7px]">
+                {/* Recommended 0.5s marker (gray) */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[3px] h-5 bg-gray-300/90 rounded-full"
+                  style={{ left: `${(RECOMMENDED_DELAY_SECONDS / DELAY_SLIDER_MAX_SECONDS) * 100}%` }}
+                />
+                {/* Default 1.5s marker (amber) */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[4px] h-6 bg-amber-300 rounded-full"
+                  style={{ left: `${(DEFAULT_DELAY_SECONDS / DELAY_SLIDER_MAX_SECONDS) * 100}%` }}
+                />
+              </div>
+            </div>
             <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{waitTimeSeconds}s</span>
           </div>
         </div>
         <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-          <label className="block text-[10px] uppercase tracking-wider text-white/60 mb-1">{t('settings.volume')}</label>
+          <label className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
+            {t('settings.volume')}
+          </label>
           <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                try {
-                  // Adjust in-place volume by updating gain envelope amplitude factor
-                  // We do not store locally here; parent controls prop. Notify parent if available.
-                  (window as any).__setVolume?.(v);
-                } catch {}
-              }}
-              className="flex-1 h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
-            />
+            <div className="relative flex-1">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  try {
+                    // Adjust in-place volume by updating gain envelope amplitude factor
+                    // We do not store locally here; parent controls prop. Notify parent if available.
+                    (window as any).__setVolume?.(v);
+                  } catch {}
+                }}
+                className="uniform-slider relative z-10 w-full h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
+              />
+            </div>
             <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{(volume * 100).toFixed(0)}%</span>
           </div>
         </div>
       </div>
+      {/* Ensure both sliders look consistent across browsers */}
+      <style jsx global>{`
+        input.uniform-slider { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.1); }
+        input.uniform-slider::-webkit-slider-runnable-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        input.uniform-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: #111827; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; margin-top: -3px; }
+        input.uniform-slider::-moz-range-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        input.uniform-slider::-moz-range-thumb { width: 14px; height: 14px; background: #111827; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; }
+      `}</style>
     </div>
   );
 }

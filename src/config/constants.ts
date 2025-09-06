@@ -1,0 +1,5 @@
+export const DELAY_SLIDER_MAX_SECONDS = 3;
+export const DELAY_SLIDER_STEP_SECONDS = 0.1;
+export const RECOMMENDED_DELAY_SECONDS = 0.5;
+export const DEFAULT_DELAY_SECONDS = 1.5;
+
