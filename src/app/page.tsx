@@ -194,7 +194,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4">
+    <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4 text-white">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <header className="mb-6">
@@ -479,7 +479,7 @@ export default function Home() {
                     <div className="min-w-0">
                       <div className="text-xl font-bold tracking-wide truncate">{selectedGun.name}</div>
                       {selectedGun.remarks && selectedGun.remarks.length > 0 && (
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 pr-28 md:pr-0">
                           {selectedGun.remarks.map((r, i) => (
                             <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
                               {r}
@@ -490,9 +490,9 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                {/* Pattern key buttonset at top-right corner of the main section */}
+                {/* Pattern key buttonset: responsive placement to avoid overlap on small screens */}
                 {selectedGun.pattern && Object.keys(selectedGun.pattern).length > 1 && (
-                  <div className="absolute right-6 top-6 flex flex-wrap items-center gap-2 z-10">
+                  <div className="relative mt-2 flex flex-wrap items-center gap-2 z-10 md:absolute md:right-6 md:top-6 md:mt-0">
                     {Object.keys(selectedGun.pattern).map((key) => {
                       const label = key === 'default' ? 'Default' : key;
                       const active = key === selectedPatternKey;

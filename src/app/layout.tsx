@@ -87,7 +87,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="bg-gray-900 text-white" style={{ colorScheme: 'dark' }}>
       <Analytics/>
       <body className={inter.className}>
         <I18nProvider>

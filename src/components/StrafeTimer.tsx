@@ -6,6 +6,7 @@ import { buildTimeline, formatTime } from '@/utils/audio';
 import { useI18n } from '@/i18n/I18nProvider';
 import Image from 'next/image';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { getStepStyle, getPhaseStyle } from '@/config/styles';
 import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS } from '@/config/constants';
 
@@ -620,7 +621,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
         {!isPopped ? (
           <div className="relative group w-full">
             {/* Hover tooltip with image */}
-            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-30 w-72">
+            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-30 w-72 max-w-[calc(100vw-2rem)]">
               <div className="rounded-md border border-white/15 bg-black/90 p-2 shadow-lg">
                 <div className="text-[11px] text-white/80 mb-2">{t('timer.popoutHint')}</div>
                 <div className="relative w-full h-52 overflow-hidden rounded">
@@ -738,8 +739,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
                 onMouseEnter={() => setWaitInfoOpen(true)}
                 onMouseLeave={() => setWaitInfoOpen(false)}
               >
-                <PopoverButton className="text-white/50 hover:text-white/80 cursor-help">
-                  <span className="text-[13px] md:text-[14px] leading-none">🛈</span>
+                <PopoverButton className="text-white/50 hover:text-white/80 cursor-help inline-flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 md:w-5 md:h-5" aria-hidden="true" />
                 </PopoverButton>
                 {waitInfoOpen && (
                   <PopoverPanel static className="absolute left-0 mt-1 z-30 whitespace-nowrap rounded-md border border-white/10 bg-black px-2 py-1 text-[11px] text-white/80 shadow-lg">

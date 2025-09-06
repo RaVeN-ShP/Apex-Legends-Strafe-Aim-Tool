@@ -42,7 +42,7 @@ export default function LanguageSwitcher() {
             <span className="ml-1">{options.find(o => o.value === locale)?.label ?? locale.toUpperCase()}</span>
             <span className="ml-1 text-white/60 text-[10px]">▼</span>
           </Listbox.Button>
-          <Listbox.Options className="absolute right-0 mt-1 z-20 min-w-[140px] rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+          <Listbox.Options className="absolute right-0 mt-1 z-20 min-w-[140px] rounded-md border border-white/15 bg-black/90 text-white shadow-lg focus:outline-none">
             {options.map((opt) => (
               <Listbox.Option key={opt.value} value={opt.value} className={({ active }) => `px-2 py-1.5 text-xs flex items-center gap-2 ${active ? 'bg-white/10' : ''}`}>
                 <span className="text-base leading-none">{flag[opt.value]}</span>

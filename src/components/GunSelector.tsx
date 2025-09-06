@@ -126,7 +126,7 @@ function GunActionsMenu({
       <Portal>
         <MenuItems
           ref={(el) => { (containerRef as any).current = el; reposition(); }}
-          className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 w-40 rounded-md border border-white/10 bg-black/80 shadow-md backdrop-blur-sm"
+          className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 w-40 rounded-md border border-white/10 bg-black/80 text-white shadow-md backdrop-blur-sm"
         >
           <div className="py-1">
             {gun.category === 'custom' && onEditCustom && (

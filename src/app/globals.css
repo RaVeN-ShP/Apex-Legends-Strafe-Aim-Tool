@@ -22,6 +22,7 @@
   background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
 }
 
+/* Fix root selector to ensure CSS variables apply in light mode */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -45,4 +46,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+html, body {
+  overflow-x: hidden;
 }
