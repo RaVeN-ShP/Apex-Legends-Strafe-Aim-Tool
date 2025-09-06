@@ -61,5 +61,8 @@
   "custom.createTop": "创建自定义",
   "custom.createTitle": "创建自定义模式",
   "custom.preview": "预览",
-  "custom.confirmDelete": "删除这个自定义模式？"
+  "custom.confirmDelete": "删除这个自定义模式？",
+  "gun.copyCustomize": "复制并自定义",
+  "menu.more": "更多",
+  "gun.selectedLabel": "已选择："
 }

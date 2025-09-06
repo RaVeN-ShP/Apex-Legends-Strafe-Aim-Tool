@@ -61,5 +61,8 @@
   "custom.createTop": "커스텀 만들기",
   "custom.createTitle": "커스텀 패턴 만들기",
   "custom.preview": "미리보기",
-  "custom.confirmDelete": "이 커스텀 패턴을 삭제할까요?"
+  "custom.confirmDelete": "이 커스텀 패턴을 삭제할까요?",
+  "gun.copyCustomize": "복사 후 사용자 지정",
+  "menu.more": "더보기",
+  "gun.selectedLabel": "선택됨:"
 }

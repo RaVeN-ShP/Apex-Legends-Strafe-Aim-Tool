@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Gun, StrafePattern } from "@/types/gun";
+import { Gun, Pattern } from "@/types/gun";
 import { guns } from "@/data/guns";
 import GunSelector from "@/components/GunSelector";
 import StrafeTimer from "@/components/StrafeTimer";
-// import GlobalSettings from "@/components/GlobalSettings";
 import PatternVisualizer from "@/components/PatternVisualizer";
 import { useI18n } from "@/i18n/I18nProvider";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -17,7 +16,7 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 type CustomProfile = {
   id: string;
   name: string;
-  strafePattern: StrafePattern[];
+  strafePattern: Pattern[];
 };
 
 const STORAGE_KEY = "customPatterns";
@@ -47,7 +46,7 @@ function makeGunFromProfile(profile: CustomProfile): Gun {
     name: profile.name,
     category: 'custom',
     image: '/favicon.ico',
-    strafePattern: profile.strafePattern,
+    pattern: { default: profile.strafePattern },
   };
 }
 
@@ -58,15 +57,18 @@ function generateId(): string {
 
 export default function Home() {
   const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
+  const [selectedModeId, setSelectedModeId] = useState<string | null>(null);
   const [waitTimeSeconds, setWaitTimeSeconds] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const { t } = useI18n();
   const [profiles, setProfiles] = useState<CustomProfile[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [draftName, setDraftName] = useState("");
-  const [draftSteps, setDraftSteps] = useState<StrafePattern[]>([{ direction: 'left', duration: 200 }]);
+  const [draftSteps, setDraftSteps] = useState<Pattern[]>([{ type: 'direction', direction: 'left', duration: 200 }]);
   const [editResetToken, setEditResetToken] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [importGunId, setImportGunId] = useState<string | null>(null);
+  const [importVariantKey, setImportVariantKey] = useState<string | null>(null);
 
   useEffect(() => {
     setProfiles(loadProfiles());
@@ -93,22 +95,56 @@ export default function Home() {
     ];
   }, [profiles]);
 
+  // Reset/initialize mode when switching guns
+  useEffect(() => {
+    if (!selectedGun) {
+      setSelectedModeId(null);
+      return;
+    }
+    const keys = Object.keys(selectedGun.pattern ?? {});
+    if (keys.length > 1) {
+      setSelectedModeId((prev) => {
+        if (prev && keys.includes(prev)) return prev;
+        // prefer 'default' if present, else first key
+        return keys.includes('default') ? 'default' : keys[0];
+      });
+    } else {
+      setSelectedModeId(null);
+    }
+  }, [selectedGun]);
+
+  // Effective selections
+  const selectedPatternKey: string | null = useMemo(() => {
+    if (!selectedGun) return null;
+    const keys = Object.keys(selectedGun.pattern ?? {});
+    if (keys.length <= 1) return keys[0] ?? 'default';
+    if (selectedModeId && keys.includes(selectedModeId)) return selectedModeId;
+    return keys.includes('default') ? 'default' : keys[0];
+  }, [selectedGun, selectedModeId]);
+
+  const selectedPattern: Pattern[] = useMemo(() => {
+    if (!selectedGun) return [];
+    const all = selectedGun.pattern ?? {};
+    const key = selectedPatternKey ?? (Object.keys(all)[0] ?? 'default');
+    return all[key] ?? [];
+  }, [selectedGun, selectedPatternKey]);
+
   const startCreate = () => {
     setIsCreating(true);
     setDraftName("");
-    setDraftSteps([{ direction: 'left', duration: 200 }]);
+    setDraftSteps([{ type: 'direction', direction: 'left', duration: 200 }]);
     setEditingId(null);
   };
 
   const cancelCreate = () => {
     setIsCreating(false);
     setDraftName("");
-    setDraftSteps([{ direction: 'left', duration: 200 }]);
+    setDraftSteps([{ type: 'direction', direction: 'left', duration: 200 }]);
     setEditingId(null);
   };
 
   const addStep = () => {
-    setDraftSteps((prev) => [...prev, { direction: 'left', duration: 200 }]);
+    setDraftSteps((prev) => [...prev, { type: 'direction', direction: 'left', duration: 200 }]);
     setEditResetToken((v) => v + 1);
   };
 
@@ -117,8 +153,15 @@ export default function Home() {
     setEditResetToken((v) => v + 1);
   };
 
-  const updateStep = (idx: number, step: Partial<StrafePattern>) => {
-    setDraftSteps((prev) => prev.map((s, i) => (i === idx ? { direction: step.direction ?? s.direction, duration: step.duration ?? s.duration } : s)));
+  const updateStep = (idx: number, step: Partial<Pattern>) => {
+    setDraftSteps((prev) => prev.map((s, i) => {
+      if (i !== idx) return s;
+      const base: any = { ...s };
+      if (step.type) base.type = step.type;
+      if ('direction' in step && (step as any).direction !== undefined) base.direction = (step as any).direction;
+      if ('duration' in step && step.duration !== undefined) base.duration = step.duration as number;
+      return base as Pattern;
+    }));
     setEditResetToken((v) => v + 1);
   };
 
@@ -217,11 +260,25 @@ export default function Home() {
                 if (!p) return;
                 setIsCreating(true);
                 setDraftName(p.name);
+                // For custom profiles we still work with a linear pattern editor
                 setDraftSteps(p.strafePattern.map((s) => ({ ...s })));
                 setEditResetToken((v) => v + 1);
                 setEditingId(id);
                 // When saving, this will create a new profile currently; optionally replace existing
                 // If you want replace behavior, we can add an editId state and update instead of add
+              }}
+              onCopyCustomize={(g) => {
+                // Determine source variant from current selection if available, else default
+                const keys = Object.keys(g.pattern ?? {});
+                const variantKey = (selectedGun?.id === g.id && selectedPatternKey && keys.includes(selectedPatternKey))
+                  ? selectedPatternKey
+                  : (keys.includes('default') ? 'default' : keys[0]);
+                const steps = (g.pattern?.[variantKey] ?? []).map((s) => ({ ...s }));
+                setIsCreating(true);
+                setDraftName(`${g.name} - Copy`);
+                setDraftSteps(steps);
+                setEditResetToken((v) => v + 1);
+                setEditingId(null);
               }}
               listMode
             />
@@ -229,7 +286,7 @@ export default function Home() {
           </aside>
 
         {/* Main Section */}
-          <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+          <section className="relative rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
             {isCreating ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -255,6 +312,74 @@ export default function Home() {
 
                 <div className="space-y-4">
                   <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                    {/* Import from existing gun + variant */}
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <div className="text-[11px] text-white/60 mr-2">Import from</div>
+                      <Listbox value={importGunId} onChange={(v: string | null) => { setImportGunId(v); setImportVariantKey(null); }}>
+                        <div className="relative">
+                          <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[160px] text-left">
+                            {(() => {
+                              const gun = allGuns.find(x => x.id === importGunId);
+                              return gun ? gun.name : 'Select gun';
+                            })()}
+                          </Listbox.Button>
+                          <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                            <Listbox.Options className="absolute z-20 mt-1 max-h-56 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                              {allGuns.map((g) => (
+                                <Listbox.Option key={g.id} value={g.id} className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                  {g.name}
+                                </Listbox.Option>
+                              ))}
+                            </Listbox.Options>
+                          </Transition>
+                        </div>
+                      </Listbox>
+                      <Listbox
+                        value={importVariantKey}
+                        onChange={(v: string | null) => setImportVariantKey(v)}
+                        disabled={!importGunId}
+                      >
+                        <div className="relative">
+                          <Listbox.Button className={`text-xs px-2 py-1 rounded border border-white/15 ${importGunId ? 'bg-white/5' : 'bg-white/5 opacity-50'} min-w-[120px] text-left`}>
+                            {(() => {
+                              if (!importGunId) return 'Variant';
+                              const g = allGuns.find(x => x.id === importGunId);
+                              const keys = g ? Object.keys(g.pattern ?? {}) : [];
+                              const key = importVariantKey && keys.includes(importVariantKey) ? importVariantKey : (keys.includes('default') ? 'default' : keys[0]);
+                              return key || 'Variant';
+                            })()}
+                          </Listbox.Button>
+                          <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                            <Listbox.Options className="absolute z-20 mt-1 max-h-48 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                              {(() => {
+                                const g = allGuns.find(x => x.id === importGunId);
+                                const keys = g ? Object.keys(g.pattern ?? {}) : [];
+                                return keys.map((k) => (
+                                  <Listbox.Option key={k} value={k} className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                    {k}
+                                  </Listbox.Option>
+                                ));
+                              })()}
+                            </Listbox.Options>
+                          </Transition>
+                        </div>
+                      </Listbox>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const g = allGuns.find(x => x.id === importGunId);
+                          if (!g) return;
+                          const keys = Object.keys(g.pattern ?? {});
+                          const key = (importVariantKey && keys.includes(importVariantKey)) ? importVariantKey : (keys.includes('default') ? 'default' : keys[0]);
+                          const steps = (g.pattern?.[key] ?? []).map((s) => ({ ...s }));
+                          setDraftSteps(steps);
+                          setEditResetToken((v) => v + 1);
+                        }}
+                        className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10"
+                      >
+                        Copy
+                      </button>
+                    </div>
                     <div className="mb-2">
                       <label className="block text-[11px] text-white/60 mb-1">{t('custom.name')}</label>
                       <input
@@ -277,29 +402,48 @@ export default function Home() {
                     <div className="space-y-2">
                       {draftSteps.map((s, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          <Listbox value={s.direction} onChange={(v: StrafePattern['direction']) => updateStep(idx, { direction: v })}>
+                          <Listbox value={s.type} onChange={(v: Pattern['type']) => updateStep(idx, { type: v })}>
                             <div className="relative">
-                              <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[80px] text-left">
-                                {s.direction === 'left' ? t('custom.left') : t('custom.right')}
+                              <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[100px] text-left">
+                                {s.type === 'direction' ? 'Direction' : 'Shoot'}
                               </Listbox.Button>
                               <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                                 <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                                  <Listbox.Option value="left" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                    {t('custom.left')}
+                                  <Listbox.Option value="direction" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                    Direction
                                   </Listbox.Option>
-                                  <Listbox.Option value="right" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                    {t('custom.right')}
+                                  <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                    Shoot
                                   </Listbox.Option>
                                 </Listbox.Options>
                               </Transition>
                             </div>
                           </Listbox>
+                          {s.type === 'direction' && (
+                            <Listbox value={s.direction} onChange={(v: any) => updateStep(idx, { direction: v } as any)}>
+                              <div className="relative">
+                                <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[80px] text-left">
+                                  {s.type === 'direction' ? (s.direction === 'left' ? t('custom.left') : t('custom.right')) : '-'}
+                                </Listbox.Button>
+                                <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                                  <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                                    <Listbox.Option value="left" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                      {t('custom.left')}
+                                    </Listbox.Option>
+                                    <Listbox.Option value="right" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                      {t('custom.right')}
+                                    </Listbox.Option>
+                                  </Listbox.Options>
+                                </Transition>
+                              </div>
+                            </Listbox>
+                          )}
                           <div className="text-[11px] text-white/60">{t('custom.durationMs')}</div>
                           <input
                             type="number"
                             min={1}
                             value={s.duration}
-                            onChange={(e) => updateStep(idx, { duration: Number(e.target.value) })}
+                            onChange={(e) => updateStep(idx, { duration: Number(e.target.value) } as any)}
                             className="w-24 px-2 py-1 text-xs rounded bg-white/5 border border-white/10 outline-none focus:border-white/30"
                           />
                           <button
@@ -316,9 +460,9 @@ export default function Home() {
 
                   <div className="rounded-lg border border-white/10 bg-black/30 p-3">
                     <div className="text-sm font-semibold mb-2">{t('custom.preview', { defaultValue: 'Preview' })}</div>
-                    <PatternVisualizer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', strafePattern: draftSteps }} />
+                    <PatternVisualizer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} />
                     <div className="mt-3">
-                      <StrafeTimer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', strafePattern: draftSteps }} waitTimeSeconds={waitTimeSeconds} volume={volume} resetToken={editResetToken} />
+                      <StrafeTimer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} waitTimeSeconds={waitTimeSeconds} volume={volume} resetToken={editResetToken} />
                     </div>
                   </div>
                 </div>
@@ -344,9 +488,29 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <PatternVisualizer gun={selectedGun} />
+                {/* Pattern key buttonset at top-right corner of the main section */}
+                {selectedGun.pattern && Object.keys(selectedGun.pattern).length > 1 && (
+                  <div className="absolute right-6 top-6 flex flex-wrap items-center gap-2 z-10">
+                    {Object.keys(selectedGun.pattern).map((key) => {
+                      const label = key === 'default' ? 'Default' : key;
+                      const active = key === selectedPatternKey;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setSelectedModeId(key)}
+                          className={`text-xs px-2 py-1 rounded border ${active ? 'border-red-500 bg-red-600/20 text-red-200' : 'border-white/15 bg-white/5 text-white/90 hover:bg-white/10'}`}
+                          title={label}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <PatternVisualizer gun={selectedGun} pattern={selectedPattern} />
                 <div className="pt-2">
-                  <StrafeTimer gun={selectedGun} waitTimeSeconds={waitTimeSeconds} volume={volume} />
+                  <StrafeTimer gun={selectedGun} pattern={selectedPattern} waitTimeSeconds={waitTimeSeconds} volume={volume} resetToken={selectedPatternKey ?? undefined} />
                 </div>
                 
                 {/* FAQ Section inside main panel */}

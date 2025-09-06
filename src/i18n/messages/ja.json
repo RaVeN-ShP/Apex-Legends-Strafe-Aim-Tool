@@ -61,5 +61,8 @@
   "custom.createTop": "カスタム作成",
   "custom.createTitle": "カスタムパターンの作成",
   "custom.preview": "プレビュー",
-  "custom.confirmDelete": "このカスタムパターンを削除しますか？"
+  "custom.confirmDelete": "このカスタムパターンを削除しますか？",
+  "gun.copyCustomize": "コピーしてカスタマイズ",
+  "menu.more": "その他",
+  "gun.selectedLabel": "選択済み:"
 }

@@ -65,5 +65,8 @@
   "custom.createTop": "Create Custom",
   "custom.createTitle": "Create Custom Pattern",
   "custom.preview": "Preview",
-  "custom.confirmDelete": "Delete this custom pattern?"
+  "custom.confirmDelete": "Delete this custom pattern?",
+  "gun.copyCustomize": "Copy & Customize",
+  "menu.more": "More",
+  "gun.selectedLabel": "Selected:"
 }

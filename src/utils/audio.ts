@@ -1,13 +1,13 @@
-import { Gun, AudioCue, Phase, Timeline } from '@/types/gun';
+import { Gun, AudioCue, Phase, Timeline, Pattern } from '@/types/gun';
 
-export function buildTimeline(gun: Gun, waitTimeSeconds: number): Timeline {
+export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: number): Timeline {
   const phases: Phase[] = [];
   let currentTime = 0;
 
   // Start: 3 beats (500ms apart)
   const startCues: AudioCue[] = [];
   for (let i = 0; i < 3; i++) {
-    startCues.push({ direction: i % 2 === 0 ? 'left' : 'right', timestamp: currentTime, phase: 'start' });
+    startCues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
     currentTime += 500;
   }
   phases.push({ id: 'start', name: 'Start', startTime: 0, endTime: currentTime, cues: startCues });
@@ -15,15 +15,20 @@ export function buildTimeline(gun: Gun, waitTimeSeconds: number): Timeline {
   // Pattern: immediate after start
   const patternStartTime = currentTime;
   const patternCues: AudioCue[] = [];
-  for (const step of gun.strafePattern) {
-    patternCues.push({ direction: step.direction, timestamp: currentTime, phase: 'pattern' });
-    currentTime += step.duration;
+  for (const step of pattern) {
+    if (step.type === 'shoot') {
+      patternCues.push({ type: 'shoot', timestamp: currentTime, phase: 'pattern', frequencyHz: 1500, lengthSec: 0.15, amplitude: 1.0 });
+      currentTime += Math.max(0, step.duration);
+    } else if (step.type === 'direction') {
+      patternCues.push({ type: 'direction', direction: step.direction, timestamp: currentTime, phase: 'pattern', frequencyHz: step.direction === 'left' ? 400 : 800, lengthSec: 0.15, amplitude: 1.0 });
+      currentTime += step.duration;
+    }
   }
   phases.push({ id: 'pattern', name: 'Pattern', startTime: patternStartTime, endTime: currentTime, cues: patternCues });
 
   // End: single cue + reload + extra wait
   const endStartTime = currentTime;
-  const endCues: AudioCue[] = [{ direction: 'left', timestamp: currentTime, phase: 'end' }];
+  const endCues: AudioCue[] = [{ type: 'end', direction: 'left', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: 0.9, amplitude: 1.0 }];
   const reloadMs = Math.round((gun.reloadTimeSeconds ?? 1) * 1000);
   currentTime += reloadMs + waitTimeSeconds * 1000;
   phases.push({ id: 'end', name: 'End', startTime: endStartTime, endTime: currentTime, cues: endCues });

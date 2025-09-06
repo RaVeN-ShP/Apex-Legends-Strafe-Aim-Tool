@@ -9,12 +9,13 @@ export const guns: Gun[] = [
     ammo: 'light',
     reloadTimeSeconds: 2.4,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'right', duration: 800 },
-      { direction: 'left', duration: 530 },
-      { direction: 'right', duration: 880 },
-
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'right', duration: 800 },
+        { type: 'direction', direction: 'left', duration: 530 },
+        { type: 'direction', direction: 'right', duration: 880 },
+      ],
+    },
   },
   {
     id: 'r99',
@@ -24,13 +25,15 @@ export const guns: Gun[] = [
     ammo: 'light',
     reloadTimeSeconds: 2.21,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'right', duration: 390 },
-      { direction: 'left', duration: 270 },
-      { direction: 'right', duration: 290 },
-      { direction: 'left', duration: 220 },
-      { direction: 'right', duration: 280 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'right', duration: 390 },
+        { type: 'direction', direction: 'left', duration: 270 },
+        { type: 'direction', direction: 'right', duration: 290 },
+        { type: 'direction', direction: 'left', duration: 220 },
+        { type: 'direction', direction: 'right', duration: 280 },
+      ],
+    },
   },
   {
     id: 'spitfire',
@@ -40,14 +43,16 @@ export const guns: Gun[] = [
     ammo: 'light',
     reloadTimeSeconds: 3.78,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 430 },
-      { direction: 'right', duration: 670 },
-      { direction: 'left', duration: 1110 },
-      { direction: 'right', duration: 1440 },
-      { direction: 'left', duration: 1330 },
-      { direction: 'right', duration: 460 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 430 },
+        { type: 'direction', direction: 'right', duration: 670 },
+        { type: 'direction', direction: 'left', duration: 1110 },
+        { type: 'direction', direction: 'right', duration: 1440 },
+        { type: 'direction', direction: 'left', duration: 1330 },
+        { type: 'direction', direction: 'right', duration: 460 },
+      ],
+    },
   },
   {
     id: 'alternator',
@@ -57,12 +62,14 @@ export const guns: Gun[] = [
     ammo: 'light',
     reloadTimeSeconds: 2.01,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 600 },
-      { direction: 'right', duration: 700 },
-      { direction: 'left', duration: 800 },
-      { direction: 'right', duration: 710 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 600 },
+        { type: 'direction', direction: 'right', duration: 700 },
+        { type: 'direction', direction: 'left', duration: 800 },
+        { type: 'direction', direction: 'right', duration: 710 },
+      ],
+    },
   },
   {
     id: 'havoc',
@@ -72,12 +79,21 @@ export const guns: Gun[] = [
     ammo: 'energy',
     reloadTimeSeconds: 2.88,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'right', duration: 370 },
-      { direction: 'left', duration: 350 },
-      { direction: 'right', duration: 630 },
-      { direction: 'left', duration: 1150 },
-    ],
+    pattern: {
+      default: [
+        { type: 'shoot', duration: 350 },
+        { type: 'direction', direction: 'right', duration: 370 },
+        { type: 'direction', direction: 'left', duration: 350 },
+        { type: 'direction', direction: 'right', duration: 630 },
+        { type: 'direction', direction: 'left', duration: 1150 },
+      ],
+      turbocharged: [
+        { type: 'direction', direction: 'right', duration: 370 },
+        { type: 'direction', direction: 'left', duration: 350 },
+        { type: 'direction', direction: 'right', duration: 630 },
+        { type: 'direction', direction: 'left', duration: 1150 },
+      ]
+    },
   },
   {
     id: 'volt',
@@ -87,12 +103,14 @@ export const guns: Gun[] = [
     ammo: 'energy',
     reloadTimeSeconds: 1.83,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'right', duration: 750 },
-      { direction: 'left', duration: 420 },
-      { direction: 'right', duration: 250 },
-      { direction: 'left', duration: 750 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'right', duration: 750 },
+        { type: 'direction', direction: 'left', duration: 420 },
+        { type: 'direction', direction: 'right', duration: 250 },
+        { type: 'direction', direction: 'left', duration: 750 },
+      ],
+    },
   },
   {
     id: 'devotion',
@@ -102,12 +120,20 @@ export const guns: Gun[] = [
     ammo: 'energy',
     reloadTimeSeconds: 3.27,
     remarks: ['Use a purple stock & magazine', 'Pattern takes into account slow ramp up'],
-    strafePattern: [
-      { direction: 'right', duration: 500 },
-      { direction: 'left', duration: 1190 },
-      { direction: 'right', duration: 1450 },
-      { direction: 'left', duration: 530 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'right', duration: 500 },
+        { type: 'direction', direction: 'left', duration: 1190 },
+        { type: 'direction', direction: 'right', duration: 1450 },
+        { type: 'direction', direction: 'left', duration: 530 },
+      ],
+      turbocharged: [
+        { type: 'direction', direction: 'right', duration: 270 },
+        { type: 'direction', direction: 'left', duration: 1080 },
+        { type: 'direction', direction: 'right', duration: 1400 },
+        { type: 'direction', direction: 'left', duration: 7600 },
+      ],
+    },
   },
   {
     id: 'lstar',
@@ -117,10 +143,12 @@ export const guns: Gun[] = [
     ammo: 'energy',
     reloadTimeSeconds: 2.21,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 300 },
-      { direction: 'right', duration: 2400 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 300 },
+        { type: 'direction', direction: 'right', duration: 2400 },
+      ],
+    },
   },
   {
     id: 'nemesis',
@@ -130,16 +158,18 @@ export const guns: Gun[] = [
     ammo: 'energy',
     reloadTimeSeconds: 2.43,
     remarks: ['Use a purple stock & magazine', 'Pattern works for fully charged Nemesis'],
-    strafePattern: [
-      { direction: 'right', duration: 330 },
-      { direction: 'left', duration: 330 },
-      { direction: 'left', duration: 330 },
-      { direction: 'right', duration: 330 },
-      { direction: 'left', duration: 330 },
-      { direction: 'left', duration: 330 },
-      { direction: 'right', duration: 330 },
-      { direction: 'left', duration: 330 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'right', duration: 330 },
+        { type: 'direction', direction: 'left', duration: 330 },
+        { type: 'direction', direction: 'left', duration: 330 },
+        { type: 'direction', direction: 'right', duration: 330 },
+        { type: 'direction', direction: 'left', duration: 330 },
+        { type: 'direction', direction: 'left', duration: 330 },
+        { type: 'direction', direction: 'right', duration: 330 },
+        { type: 'direction', direction: 'left', duration: 330 },
+      ],
+    },
   },
   {
     id: 're45',
@@ -149,17 +179,19 @@ export const guns: Gun[] = [
     ammo: 'energy',
     reloadTimeSeconds: 1.95,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 250 },
-      { direction: 'left', duration: 250 },
-      { direction: 'right', duration: 250 },
-      { direction: 'right', duration: 250 },
-      { direction: 'left', duration: 250 },
-      { direction: 'left', duration: 250 },
-      { direction: 'right', duration: 250 },
-      { direction: 'right', duration: 250 },
-      { direction: 'left', duration: 250 },
-    ],
+    pattern: {
+      default: [
+        { type: 'shoot', duration: 400 },
+        { type: 'direction', direction: 'left', duration: 250 },
+        { type: 'direction', direction: 'left', duration: 250 },
+        { type: 'direction', direction: 'right', duration: 250 },
+        { type: 'direction', direction: 'right', duration: 250 },
+        { type: 'direction', direction: 'left', duration: 250 },
+        { type: 'direction', direction: 'left', duration: 250 },
+        { type: 'direction', direction: 'right', duration: 250 },
+        { type: 'direction', direction: 'right', duration: 250 },
+      ],
+    },
   },
   {
     id: 'flatline',
@@ -169,12 +201,14 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 2.79,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 600 },
-      { direction: 'right', duration: 500  },
-      { direction: 'left', duration: 1100 },
-      { direction: 'right', duration: 610 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 600 },
+        { type: 'direction', direction: 'right', duration: 500  },
+        { type: 'direction', direction: 'left', duration: 1100 },
+        { type: 'direction', direction: 'right', duration: 610 },
+      ],
+    },
   },
   {
     id: 'car',
@@ -184,13 +218,15 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 1.92,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 470 },
-      { direction: 'right', duration: 380 },
-      { direction: 'left', duration: 250 },
-      { direction: 'right', duration: 330 },
-      { direction: 'left', duration: 320 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 470 },
+        { type: 'direction', direction: 'right', duration: 380 },
+        { type: 'direction', direction: 'left', duration: 250 },
+        { type: 'direction', direction: 'right', duration: 330 },
+        { type: 'direction', direction: 'left', duration: 320 },
+      ],
+    },
   },
   {
     id: 'prowler-auto',
@@ -200,12 +236,14 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 2.34,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 990 },
-      { direction: 'right', duration: 660 },
-      { direction: 'left', duration: 380 },
-      { direction: 'right', duration: 530 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 990 },
+        { type: 'direction', direction: 'right', duration: 660 },
+        { type: 'direction', direction: 'left', duration: 380 },
+        { type: 'direction', direction: 'right', duration: 530 },
+      ],
+    },
   },
   {
     id: 'rampage',
@@ -215,11 +253,18 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 3.6,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 450 },
-      { direction: 'right', duration: 940 },
-      { direction: 'left', duration: 4600 },
-    ],
+    pattern: {
+      'normal': [
+        { type: 'direction', direction: 'left', duration: 620 },
+        { type: 'direction', direction: 'right', duration: 1230 },
+        { type: 'direction', direction: 'left', duration: 6100 },
+      ],
+      'charged': [
+        { type: 'direction', direction: 'left', duration: 450 },
+        { type: 'direction', direction: 'right', duration: 940 },
+        { type: 'direction', direction: 'left', duration: 4600 },
+      ],
+    },
   },
   {
     id: 'prowler-burst',
@@ -229,16 +274,17 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 2.34,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 450 },
-      { direction: 'left', duration: 450 },
-      { direction: 'left', duration: 450 },
-      { direction: 'right', duration: 450 },
-      { direction: 'right', duration: 450 },
-      { direction: 'right', duration: 450 },
-      { direction: 'left', duration: 450 },
-
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 450 },
+        { type: 'direction', direction: 'left', duration: 450 },
+        { type: 'direction', direction: 'left', duration: 450 },
+        { type: 'direction', direction: 'right', duration: 450 },
+        { type: 'direction', direction: 'right', duration: 450 },
+        { type: 'direction', direction: 'right', duration: 450 },
+        { type: 'direction', direction: 'left', duration: 450 },
+      ],
+    },
   },
   {
     id: 'hemlok',
@@ -248,17 +294,19 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 2.57,
     remarks: ['Use a purple stock & magazine'],
-    strafePattern: [
-      { direction: 'left', duration: 370 },
-      { direction: 'left', duration: 370 },
-      { direction: 'left', duration: 370 },
-      { direction: 'right', duration: 370 },
-      { direction: 'right', duration: 370 },
-      { direction: 'left', duration: 370 },
-      { direction: 'left', duration: 370 },
-      { direction: 'right', duration: 370 },
-      { direction: 'right', duration: 370 },
-      { direction: 'right', duration: 370 },
-    ],
+    pattern: {
+      default: [
+        { type: 'direction', direction: 'left', duration: 370 },
+        { type: 'direction', direction: 'left', duration: 370 },
+        { type: 'direction', direction: 'left', duration: 370 },
+        { type: 'direction', direction: 'right', duration: 370 },
+        { type: 'direction', direction: 'right', duration: 370 },
+        { type: 'direction', direction: 'left', duration: 370 },
+        { type: 'direction', direction: 'left', duration: 370 },
+        { type: 'direction', direction: 'right', duration: 370 },
+        { type: 'direction', direction: 'right', duration: 370 },
+        { type: 'direction', direction: 'right', duration: 370 },
+      ],
+    },
   }
 ];

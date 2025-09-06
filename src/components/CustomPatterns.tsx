@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Gun, StrafePattern } from "@/types/gun";
+import { Gun, Pattern } from "@/types/gun";
 import { useI18n } from "@/i18n/I18nProvider";
 
 type CustomProfile = {
   id: string;
   name: string;
-  strafePattern: StrafePattern[];
+  strafePattern: Pattern[];
 };
 
 interface CustomPatternsProps {
@@ -35,8 +35,8 @@ function saveProfiles(profiles: CustomProfile[]) {
   } catch {}
 }
 
-function createEmptyStep(): StrafePattern {
-  return { direction: "left", duration: 200 };
+function createEmptyStep(): Pattern {
+  return { type: "direction", direction: "left", duration: 200 };
 }
 
 function makeGunFromProfile(profile: CustomProfile): Gun {
@@ -45,7 +45,7 @@ function makeGunFromProfile(profile: CustomProfile): Gun {
     name: profile.name || "Custom",
     category: "custom",
     image: "/favicon.ico",
-    strafePattern: profile.strafePattern,
+    pattern: { default: profile.strafePattern },
   };
 }
 
@@ -54,7 +54,7 @@ export default function CustomPatterns({ onSelect }: CustomPatternsProps) {
   const [profiles, setProfiles] = useState<CustomProfile[]>([]);
   const [editing, setEditing] = useState<CustomProfile | null>(null);
   const [draftName, setDraftName] = useState("");
-  const [draftSteps, setDraftSteps] = useState<StrafePattern[]>([]);
+  const [draftSteps, setDraftSteps] = useState<Pattern[]>([]);
 
   useEffect(() => {
     setProfiles(loadProfiles());
@@ -117,8 +117,15 @@ export default function CustomPatterns({ onSelect }: CustomPatternsProps) {
     setDraftSteps((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const updateStep = (idx: number, step: Partial<StrafePattern>) => {
-    setDraftSteps((prev) => prev.map((s, i) => (i === idx ? { direction: step.direction ?? s.direction, duration: step.duration ?? s.duration } : s)));
+  const updateStep = (idx: number, step: Partial<Pattern>) => {
+    setDraftSteps((prev) => prev.map((s, i) => {
+      if (i !== idx) return s;
+      const base: any = { ...s };
+      if (step.type) base.type = step.type;
+      if ("direction" in step && (step as any).direction !== undefined) base.direction = (step as any).direction;
+      if ("duration" in step && step.duration !== undefined) base.duration = step.duration as number;
+      return base as Pattern;
+    }));
   };
 
   return (
@@ -200,13 +207,23 @@ export default function CustomPatterns({ onSelect }: CustomPatternsProps) {
               {draftSteps.map((s, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <select
-                    value={s.direction}
-                    onChange={(e) => updateStep(idx, { direction: e.target.value as StrafePattern["direction"] })}
+                    value={s.type}
+                    onChange={(e) => updateStep(idx, { type: e.target.value as Pattern["type"] })}
                     className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5"
                   >
-                    <option value="left">{t("custom.left")}</option>
-                    <option value="right">{t("custom.right")}</option>
+                    <option value="direction">Direction</option>
+                    <option value="shoot">Shoot</option>
                   </select>
+                  {s.type === "direction" && (
+                    <select
+                      value={s.direction}
+                      onChange={(e) => updateStep(idx, { direction: e.target.value as any })}
+                      className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5"
+                    >
+                      <option value="left">{t("custom.left")}</option>
+                      <option value="right">{t("custom.right")}</option>
+                    </select>
+                  )}
                   <div className="text-[11px] text-white/60">{t("custom.durationMs")}</div>
                   <input
                     type="number"

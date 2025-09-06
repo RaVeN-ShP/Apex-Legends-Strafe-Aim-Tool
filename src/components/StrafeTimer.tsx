@@ -1,26 +1,29 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Gun, Phase, Timeline } from '@/types/gun';
+import { Gun, Phase, Timeline, Pattern, AudioCue } from '@/types/gun';
 import { buildTimeline, formatTime } from '@/utils/audio';
 import { useI18n } from '@/i18n/I18nProvider';
 import Image from 'next/image';
+import { getStepStyle, getPhaseStyle } from '@/config/styles';
 
 interface StrafeTimerProps {
   gun: Gun;
+  pattern: Pattern[];
   waitTimeSeconds: number;
   volume?: number;
   resetToken?: string | number; // when this changes, stop the timer
 }
 
-export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetToken }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, waitTimeSeconds, volume = 0.8, resetToken }: StrafeTimerProps) {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [currentDirection, setCurrentDirection] = useState<'left' | 'right' | null>(null);
   const [currentPhase, setCurrentPhase] = useState<Phase | null>(null);
   const [beatCount, setBeatCount] = useState(0);
-  
+  const [justShot, setJustShot] = useState<boolean>(false);
+
   const timeline = useRef<Timeline>({ phases: [], totalDurationMs: 0 });
   const startTime = useRef<number>(0);
   const animationFrame = useRef<number | undefined>(undefined);
@@ -55,13 +58,13 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
   }, []);
 
   useEffect(() => {
-    timeline.current = buildTimeline(gun, waitTimeSeconds);
+    timeline.current = buildTimeline(pattern, gun, waitTimeSeconds);
     return () => {
       if (animationFrame.current) {
         cancelAnimationFrame(animationFrame.current);
       }
     };
-  }, [gun, waitTimeSeconds]);
+  }, [gun, pattern, waitTimeSeconds]);
 
   // Stop autoplay when switching weapons
   useEffect(() => {
@@ -133,8 +136,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
 
   const scheduleCueAt = (
     when: number,
-    direction: 'left' | 'right',
-    phase: 'start' | 'pattern' | 'end'
+    cue: AudioCue
   ) => {
     if (!audioContext.current) return;
     ensureAudioNodes();
@@ -146,19 +148,12 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
       gainRef.current.gain.cancelScheduledValues(cutTime);
       gainRef.current.gain.setValueAtTime(0.0001, cutTime);
     } catch {}
-    let frequency = 500;
-    let duration = 0.2;
-    let amplitude = 1.0;
+
+    const frequency = cue.frequencyHz;
+    const duration = cue.lengthSec;
+    const amplitude = Math.max(0, Math.min(1, cue.amplitude ?? 1.0));
     const attack = 0.005;
-    if (phase === 'pattern') {
-      frequency = direction === 'left' ? 400 : 800;
-      duration = 0.15;
-      amplitude = 1.0;
-    } else if (phase === 'end') {
-      frequency = 1500;
-      duration = 0.9;
-      amplitude = 1.0;
-    }
+
     try {
       // Safari/iOS sometimes throws if setValueAtTime is scheduled in the past
       oscillatorRef.current.frequency.cancelScheduledValues(when);
@@ -195,7 +190,8 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
         for (const cue of phase.cues) {
           const cueTime = cycleStart + cue.timestamp / 1000;
           if (cueTime >= fromSec && cueTime < toSec) {
-            scheduleCueAt(cueTime, cue.direction, cue.phase);
+            console.log('scheduling cue', cue);
+            scheduleCueAt(cueTime, cue);
           }
         }
       }
@@ -236,6 +232,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
     setCurrentPhase(timeline.current.phases[0] || null);
     currentPhaseIdRef.current = timeline.current.phases[0]?.id ?? null;
     setBeatCount(0);
+    setJustShot(false);
     startTime.current = Date.now();
     lastCueIndex.current = -1;
     scheduledNodesRef.current.forEach(({ osc }) => {
@@ -300,6 +297,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
         setCurrentPhase(activePhase);
         currentPhaseIdRef.current = activePhase.id;
         lastCueIndex.current = -1;
+        setJustShot(false);
       }
  
       // Update UI indicators deterministically from cycle time
@@ -312,12 +310,22 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
         const withinPattern = elapsedMs - activePhase.startTime;
         let acc = 0;
         let dir: 'left' | 'right' | null = null;
-        for (const step of gun.strafePattern) {
-          if (withinPattern >= acc && withinPattern < acc + step.duration) {
-            dir = step.direction;
+        setJustShot(false);
+        for (const step of pattern) {
+          const stepDuration = step.duration;
+          if (withinPattern >= acc && withinPattern < acc + stepDuration) {
+            const isShoot = step.type === 'shoot';
+            const stepDir = step.type === 'direction' ? step.direction : undefined;
+            if (isShoot) {
+              if (Math.abs(withinPattern - acc) < 16) {
+                setJustShot(true);
+                setTimeout(() => setJustShot(false), 120);
+              }
+            }
+            dir = stepDir ?? dir;
             break;
           }
-          acc += step.duration;
+          acc += stepDuration;
         }
         setCurrentDirection(dir);
         setBeatCount(0);
@@ -414,9 +422,9 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
       case 'pattern':
         return {
           title: t('timer.phase.pattern'),
-          subtitle: t('timer.phase.follow'),
-          color: 'text-blue-600',
-          direction: currentDirection === 'left' ? 'A ←' : currentDirection === 'right' ? '→ D' : '...'
+          subtitle: justShot ? 'Shoot' : t('timer.phase.follow'),
+          color: justShot ? 'text-purple-500' : 'text-blue-600',
+          direction: justShot ? '●' : currentDirection === 'left' ? 'A ←' : currentDirection === 'right' ? '→ D' : '...'
         };
       case 'end':
         return {
@@ -532,12 +540,14 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
               segments.push({ color: 'bg-amber-500', duration: 500, title: 'Start' });
             }
             // Pattern steps with arrows
-            for (const step of gun.strafePattern) {
+            for (const step of pattern) {
+              const { barColor, symbol, label } = getStepStyle(step);
+              const dur = step.duration;
               segments.push({
-                color: step.direction === 'left' ? 'bg-blue-500' : 'bg-rose-500',
-                duration: step.duration,
-                title: step.direction === 'left' ? 'Left' : 'Right',
-                symbol: step.direction === 'left' ? '◄' : '►',
+                color: barColor,
+                duration: dur,
+                title: label,
+                symbol: symbol || undefined,
               });
             }
             // End: reload + extra wait
@@ -625,11 +635,10 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
                   alert('Popout not supported in this browser. Use latest Chrome/Edge.');
                   return;
                 }
-                // Measure current size and request a smaller popout
-                const rect = centralRef.current.getBoundingClientRect();
-                const scale = 0.6; // shrink to 60% of on-page size
-                const targetWidth = Math.max(240, Math.round(rect.width * scale));
-                const targetHeight = Math.max(140, Math.round(rect.height * scale));
+                // Request the smallest practical popout size (compact but not clipped)
+                // Central display enforces a minHeight when popped; match that and a compact width
+                const targetWidth = 300; // slightly larger for readability
+                const targetHeight = 150; // slightly taller to avoid crowding
                 const pipWin: Window = await winWithDPIP.documentPictureInPicture.requestWindow({ width: targetWidth, height: targetHeight });
                 pipWindowRef.current = pipWin;
                 // Copy same-origin styles
@@ -660,7 +669,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
                 pipWin.document.body.style.overflow = 'hidden';
                 pipWin.document.documentElement.style.height = '100%';
                 pipWin.document.body.style.height = '100%';
-                pipWin.document.body.style.padding = '6px';
+                pipWin.document.body.style.padding = '4px';
                 // Insert placeholder and move node
                 const originalNode = centralRef.current;
                 const placeholder = document.createElement('div');
@@ -728,7 +737,7 @@ export default function StrafeTimer({ gun, waitTimeSeconds, volume = 0.8, resetT
               onChange={(e) => {
                 const v = parseFloat(e.target.value);
                 // update timeline immediately
-                timeline.current = buildTimeline(gun, v);
+                timeline.current = buildTimeline(pattern, gun, v);
                 setCurrentPhase(null);
                 setBeatCount(0);
                 setCurrentDirection(null);
