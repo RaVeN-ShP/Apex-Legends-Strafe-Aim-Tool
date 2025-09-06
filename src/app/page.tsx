@@ -12,7 +12,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Listbox, Transition, Disclosure } from "@headlessui/react";
 import { Fragment } from "react";
 import Image from "next/image";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ArrowsRightLeftIcon, ArrowLeftIcon, ArrowRightIcon, BoltIcon, TrashIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 type CustomProfile = {
   id: string;
@@ -229,7 +230,7 @@ export default function Home() {
         {/* Content */}
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
           {/* Left Sidebar */}
-          <aside>
+          <aside className="order-2 md:order-1">
             <div className="mb-2">
               <button
                 type="button"
@@ -288,16 +289,17 @@ export default function Home() {
           </aside>
 
         {/* Main Section */}
-          <section className="relative rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+          <section className="relative rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white order-1 md:order-2">
             {isCreating ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div className="text-xl font-bold tracking-wide">{t('custom.createTitle', { defaultValue: 'Create Custom Pattern' })}</div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={cancelCreate}
-                      className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/10"
+                      className="text-sm px-3 py-1.5 rounded-md border border-white/15 bg-white/5 hover:bg-white/10"
+                      title={t('custom.cancel')}
                     >
                       {t('custom.cancel')}
                     </button>
@@ -305,165 +307,186 @@ export default function Home() {
                       type="button"
                       disabled={!isDraftValid}
                       onClick={saveDraft}
-                      className={`text-sm px-3 py-1.5 rounded ${isDraftValid ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 text-white/40 cursor-not-allowed'}`}
+                      className={`text-sm px-3 py-1.5 rounded-md ${isDraftValid ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 text-white/40 cursor-not-allowed'}`}
+                      title={t('custom.save')}
                     >
                       {t('custom.save')}
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-3">
                     {/* Import from existing gun + variant */}
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <div className="text-[11px] text-white/60 mr-2">Import from</div>
-                      <Listbox value={importGunId} onChange={(v: string | null) => { setImportGunId(v); setImportVariantKey(null); }}>
-                        <div className="relative">
-                          <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[160px] text-left">
-                            {(() => {
-                              const gun = allGuns.find(x => x.id === importGunId);
-                              return gun ? gun.name : 'Select gun';
-                            })()}
-                          </Listbox.Button>
-                          <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                            <Listbox.Options className="absolute z-20 mt-1 max-h-56 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                              {allGuns.map((g) => (
-                                <Listbox.Option key={g.id} value={g.id} className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                  {g.name}
-                                </Listbox.Option>
-                              ))}
-                            </Listbox.Options>
-                          </Transition>
-                        </div>
-                      </Listbox>
-                      <Listbox
-                        value={importVariantKey}
-                        onChange={(v: string | null) => setImportVariantKey(v)}
-                        disabled={!importGunId}
-                      >
-                        <div className="relative">
-                          <Listbox.Button className={`text-xs px-2 py-1 rounded border border-white/15 ${importGunId ? 'bg-white/5' : 'bg-white/5 opacity-50'} min-w-[120px] text-left`}>
-                            {(() => {
-                              if (!importGunId) return 'Variant';
-                              const g = allGuns.find(x => x.id === importGunId);
-                              const keys = g ? Object.keys(g.pattern ?? {}) : [];
-                              const key = importVariantKey && keys.includes(importVariantKey) ? importVariantKey : (keys.includes('default') ? 'default' : keys[0]);
-                              return key || 'Variant';
-                            })()}
-                          </Listbox.Button>
-                          <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                            <Listbox.Options className="absolute z-20 mt-1 max-h-48 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div className="text-[11px] text-white/60 mb-2">Import from</div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Listbox value={importGunId} onChange={(v: string | null) => { setImportGunId(v); setImportVariantKey(null); }}>
+                          <div className="relative">
+                            <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/20 min-w-[180px] text-left">
                               {(() => {
+                                const gun = allGuns.find(x => x.id === importGunId);
+                                return gun ? gun.name : 'Select gun';
+                              })()}
+                            </Listbox.Button>
+                            <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                              <Listbox.Options className="absolute z-20 mt-1 max-h-56 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                                {allGuns.map((g) => (
+                                  <Listbox.Option key={g.id} value={g.id} className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                    {g.name}
+                                  </Listbox.Option>
+                                ))}
+                              </Listbox.Options>
+                            </Transition>
+                          </div>
+                        </Listbox>
+                        <Listbox
+                          value={importVariantKey}
+                          onChange={(v: string | null) => setImportVariantKey(v)}
+                          disabled={!importGunId}
+                        >
+                          <div className="relative">
+                            <Listbox.Button className={`text-xs h-8 px-2 rounded border border-white/15 ${importGunId ? 'bg-black/20' : 'bg-black/20 opacity-50'} min-w-[140px] text-left`}>
+                              {(() => {
+                                if (!importGunId) return 'Variant';
                                 const g = allGuns.find(x => x.id === importGunId);
                                 const keys = g ? Object.keys(g.pattern ?? {}) : [];
-                                return keys.map((k) => (
-                                  <Listbox.Option key={k} value={k} className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                    {k}
-                                  </Listbox.Option>
-                                ));
+                                const key = importVariantKey && keys.includes(importVariantKey) ? importVariantKey : (keys.includes('default') ? 'default' : keys[0]);
+                                return key || 'Variant';
                               })()}
-                            </Listbox.Options>
-                          </Transition>
-                        </div>
-                      </Listbox>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const g = allGuns.find(x => x.id === importGunId);
-                          if (!g) return;
-                          const keys = Object.keys(g.pattern ?? {});
-                          const key = (importVariantKey && keys.includes(importVariantKey)) ? importVariantKey : (keys.includes('default') ? 'default' : keys[0]);
-                          const steps = (g.pattern?.[key] ?? []).map((s) => ({ ...s }));
-                          setDraftSteps(steps);
-                          setEditResetToken((v) => v + 1);
-                        }}
-                        className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 hover:bg-white/10"
-                      >
-                        Copy
-                      </button>
+                            </Listbox.Button>
+                            <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                              <Listbox.Options className="absolute z-20 mt-1 max-h-48 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                                {(() => {
+                                  const g = allGuns.find(x => x.id === importGunId);
+                                  const keys = g ? Object.keys(g.pattern ?? {}) : [];
+                                  return keys.map((k) => (
+                                    <Listbox.Option key={k} value={k} className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                      {k}
+                                    </Listbox.Option>
+                                  ));
+                                })()}
+                              </Listbox.Options>
+                            </Transition>
+                          </div>
+                        </Listbox>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const g = allGuns.find(x => x.id === importGunId);
+                            if (!g) return;
+                            const keys = Object.keys(g.pattern ?? {});
+                            const key = (importVariantKey && keys.includes(importVariantKey)) ? importVariantKey : (keys.includes('default') ? 'default' : keys[0]);
+                            const steps = (g.pattern?.[key] ?? []).map((s) => ({ ...s }));
+                            setDraftSteps(steps);
+                            setEditResetToken((v) => v + 1);
+                          }}
+                          className="inline-flex items-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/20 hover:bg-white/10"
+                          title="Copy pattern"
+                        >
+                          <ArrowsRightLeftIcon className="w-4 h-4" />
+                          Copy
+                        </button>
+                      </div>
                     </div>
-                    <div className="mb-2">
+
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                       <label className="block text-[11px] text-white/60 mb-1">{t('custom.name')}</label>
                       <input
                         value={draftName}
                         onChange={(e) => setDraftName(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded bg-white/5 border border-white/10 outline-none focus:border-white/30"
+                        className="w-full h-9 px-2 text-sm rounded bg-black/20 border border-white/10 outline-none focus:border-white/30"
                         placeholder={t('custom.name')}
                       />
                     </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-[11px] text-white/60">{t('custom.steps')}</div>
-                      <button
-                        type="button"
-                        onClick={addStep}
-                        className="text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/10"
-                      >
-                        {t('custom.addStep')}
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {draftSteps.map((s, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <Listbox value={s.type} onChange={(v: Pattern['type']) => updateStep(idx, { type: v })}>
-                            <div className="relative">
-                              <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[100px] text-left">
-                                {s.type === 'direction' ? 'Direction' : 'Shoot'}
-                              </Listbox.Button>
-                              <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                                <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                                  <Listbox.Option value="direction" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                    Direction
-                                  </Listbox.Option>
-                                  <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                    Shoot
-                                  </Listbox.Option>
-                                </Listbox.Options>
-                              </Transition>
+
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-semibold text-white/90">{t('custom.steps')}</div>
+                        <button
+                          type="button"
+                          onClick={addStep}
+                          className="inline-flex items-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/20 hover:bg-white/10"
+                        >
+                          <PlusIcon className="w-4 h-4" />
+                          {t('custom.addStep')}
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {draftSteps.map((s, idx) => (
+                          <div key={idx} className="rounded-md border border-white/10 bg-black/20 px-2 py-2 flex flex-wrap items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white/10 text-white/80 text-[11px] inline-flex items-center justify-center select-none">
+                              {idx + 1}
                             </div>
-                          </Listbox>
-                          {s.type === 'direction' && (
-                            <Listbox value={s.direction} onChange={(v: any) => updateStep(idx, { direction: v } as any)}>
+                            <Listbox value={s.type} onChange={(v: Pattern['type']) => updateStep(idx, { type: v })}>
                               <div className="relative">
-                                <Listbox.Button className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5 min-w-[80px] text-left">
-                                  {s.type === 'direction' ? (s.direction === 'left' ? t('custom.left') : t('custom.right')) : '-'}
+                                <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[100px] text-left">
+                                  {s.type === 'direction' ? 'Direction' : 'Shoot'}
                                 </Listbox.Button>
                                 <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                                   <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                                    <Listbox.Option value="left" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                      {t('custom.left')}
+                                    <Listbox.Option value="direction" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                      Direction
                                     </Listbox.Option>
-                                    <Listbox.Option value="right" className={({ active }) => `px-2 py-1 text-xs ${active ? 'bg-white/10' : ''}`}>
-                                      {t('custom.right')}
+                                    <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                      Shoot
                                     </Listbox.Option>
                                   </Listbox.Options>
                                 </Transition>
                               </div>
                             </Listbox>
-                          )}
-                          <div className="text-[11px] text-white/60">{t('custom.durationMs')}</div>
-                          <input
-                            type="number"
-                            min={1}
-                            value={s.duration}
-                            onChange={(e) => updateStep(idx, { duration: Number(e.target.value) } as any)}
-                            className="w-24 px-2 py-1 text-xs rounded bg-white/5 border border-white/10 outline-none focus:border-white/30"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeStep(idx)}
-                            className="ml-auto text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/10"
-                          >
-                            {t('custom.delete')}
-                          </button>
-                        </div>
-                      ))}
+                            {s.type === 'direction' && (
+                              <Listbox value={s.direction} onChange={(v: any) => updateStep(idx, { direction: v } as any)}>
+                                <div className="relative">
+                                  <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[90px] text-left">
+                                    {s.type === 'direction' ? (s.direction === 'left' ? t('custom.left') : t('custom.right')) : '-'}
+                                  </Listbox.Button>
+                                  <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                                    <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                                      <Listbox.Option value="left" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                        {t('custom.left')}
+                                      </Listbox.Option>
+                                      <Listbox.Option value="right" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>
+                                        {t('custom.right')}
+                                      </Listbox.Option>
+                                    </Listbox.Options>
+                                  </Transition>
+                                </div>
+                              </Listbox>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={1}
+                                value={s.duration}
+                                onChange={(e) => updateStep(idx, { duration: Number(e.target.value) } as any)}
+                                className="w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30"
+                              />
+                              <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">
+                                <ClockIcon className="w-3.5 h-3.5 -mt-px" /> {t('custom.durationMs')}
+                              </div>
+                            </div>
+                            <div className="w-full sm:w-auto sm:ml-auto">
+                              <button
+                                type="button"
+                                onClick={() => removeStep(idx)}
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/30 hover:bg-white/10"
+                                title={t('custom.delete')}
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                                <span className="hidden sm:inline">{t('custom.delete')}</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
                   <div className="rounded-lg border border-white/10 bg-black/30 p-3">
                     <div className="text-sm font-semibold mb-2">{t('custom.preview', { defaultValue: 'Preview' })}</div>
                     <PatternVisualizer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} />
-                    <div className="mt-3">
+                    <div className="mt-3 overflow-x-auto">
                       <StrafeTimer gun={{ id: 'draft', name: draftName || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: draftSteps } }} pattern={draftSteps} volume={volume} resetToken={editResetToken} />
                     </div>
                   </div>
