@@ -119,7 +119,7 @@ export const guns: Gun[] = [
     image: '/weapons/lmg/Devotion_LMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 3.27,
-    remarks: ['Use a purple stock & magazine', 'Pattern takes into account slow ramp up'],
+    remarks: ['Use a purple stock & magazine'],
     pattern: {
       normal: [
         { type: 'direction', direction: 'right', duration: 500 },
