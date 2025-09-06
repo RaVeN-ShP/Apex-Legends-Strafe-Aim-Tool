@@ -26,15 +26,66 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<Locale>('en');
 
   useEffect(() => {
-    // Initialize from URL ?lang= if present
+    // Initialize locale priority:
+    // 1) URL ?lang=
+    // 2) persisted preference (localStorage)
+    // 3) browser language (navigator.language / navigator.languages)
     if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const lang = params.get('lang') as Locale | null;
-      if (lang && ['en', 'ja', 'ko', 'zh'].includes(lang)) {
-        setLocale(lang as Locale);
-      }
+      const supported: Locale[] = ['en', 'ja', 'ko', 'zh'];
+
+      const fromUrl = () => {
+        const params = new URLSearchParams(window.location.search);
+        const lang = params.get('lang') as Locale | null;
+        if (lang && supported.includes(lang)) return lang;
+        return null;
+      };
+
+      const fromStorage = () => {
+        try {
+          const stored = window.localStorage.getItem('preferred_locale') as Locale | null;
+          if (stored && supported.includes(stored)) return stored;
+        } catch {}
+        return null;
+      };
+
+      const normalize = (value: string | undefined | null): Locale | null => {
+        if (!value) return null;
+        const lower = value.toLowerCase();
+        if (lower.startsWith('ja')) return 'ja';
+        if (lower.startsWith('ko')) return 'ko';
+        if (lower.startsWith('zh')) return 'zh';
+        if (lower.startsWith('en')) return 'en';
+        return null;
+      };
+
+      const fromNavigator = () => {
+        const nav = window.navigator as Navigator & { userLanguage?: string };
+        const candidates: Array<string | undefined> = [];
+        if (Array.isArray(nav.languages)) candidates.push(...nav.languages);
+        candidates.push(nav.language, nav.userLanguage);
+        for (const cand of candidates) {
+          const norm = normalize(cand);
+          if (norm) return norm;
+        }
+        return null;
+      };
+
+      const chosen = fromUrl() ?? fromStorage() ?? fromNavigator() ?? 'en';
+      setLocale(chosen);
     }
   }, []);
+
+  // Persist and reflect current locale
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('preferred_locale', locale);
+      } catch {}
+      try {
+        document.documentElement.lang = locale;
+      } catch {}
+    }
+  }, [locale]);
 
   const t = useCallback((key: string, vars?: Record<string, string | number>) => {
     const msg = (allMessages[locale] && allMessages[locale][key]) ?? key;
