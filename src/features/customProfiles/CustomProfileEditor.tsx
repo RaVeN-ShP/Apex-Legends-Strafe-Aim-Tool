@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Pattern, Gun } from "@/features/guns/types/gun";
 import PatternVisualizer from "@/features/patterns/components/PatternVisualizer";
 import StrafeTimer from "@/features/timer/components/StrafeTimer";
@@ -14,6 +14,7 @@ export default function CustomProfileEditor({
   allGuns,
   initialName,
   initialSteps,
+  initialReloadTimeSeconds,
   volume,
   onVolumeChange,
   resetToken,
@@ -23,22 +24,27 @@ export default function CustomProfileEditor({
   allGuns: Gun[];
   initialName: string;
   initialSteps: Pattern[];
+  initialReloadTimeSeconds?: number;
   volume: number;
   onVolumeChange: (v: number) => void;
   resetToken?: string | number;
   onCancel: () => void;
-  onSave: (name: string, steps: Pattern[]) => void;
+  onSave: (name: string, steps: Pattern[], reloadTimeSeconds: number) => void;
 }) {
   const { t } = useI18n();
   const [name, setName] = useState<string>(initialName);
   const [steps, setSteps] = useState<Pattern[]>(initialSteps);
+  const [reloadTimeSeconds, setReloadTimeSeconds] = useState<number>(Number.isFinite(initialReloadTimeSeconds) ? (initialReloadTimeSeconds as number) : 1.5);
   const [importGunId, setImportGunId] = useState<string | null>(null);
   const [importVariantKey, setImportVariantKey] = useState<string | null>(null);
+  const [localResetToken, setLocalResetToken] = useState<number>(0);
 
-  const isValid = name.trim().length > 0 && steps.length > 0 && steps.every((s) => Number.isFinite(s.duration) && s.duration > 0);
+  const bumpReset = () => setLocalResetToken((v) => v + 1);
 
-  const addStep = () => setSteps((prev) => [...prev, { type: 'direction', direction: 'left', duration: 200 }]);
-  const removeStep = (idx: number) => setSteps((prev) => prev.filter((_, i) => i !== idx));
+  const isValid = name.trim().length > 0 && steps.length > 0 && steps.every((s) => Number.isFinite(s.duration) && s.duration > 0) && Number.isFinite(reloadTimeSeconds) && reloadTimeSeconds >= 0;
+
+  const addStep = () => { setSteps((prev) => [...prev, { type: 'direction', direction: 'left', duration: 200 }]); bumpReset(); };
+  const removeStep = (idx: number) => { setSteps((prev) => prev.filter((_, i) => i !== idx)); bumpReset(); };
   const updateStep = (idx: number, step: Partial<Pattern> & { direction?: 'left' | 'right' }) => {
     setSteps((prev) => prev.map((s, i) => {
       if (i !== idx) return s;
@@ -50,7 +56,17 @@ export default function CustomProfileEditor({
       if (typeof step.duration !== 'undefined') base = { ...base, duration: step.duration } as Pattern;
       return base;
     }));
+    bumpReset();
   };
+
+  const draftGun = useMemo<Gun>(() => ({
+    id: 'draft',
+    name: name || 'Draft',
+    category: 'custom' as const,
+    image: '/favicon.ico',
+    pattern: { default: steps },
+    reloadTimeSeconds,
+  }), [name, steps, reloadTimeSeconds]);
 
   return (
     <div className="space-y-4">
@@ -63,7 +79,7 @@ export default function CustomProfileEditor({
           <button
             type="button"
             disabled={!isValid}
-            onClick={() => onSave(name.trim(), steps.map((s) => ({ ...s, duration: Math.round(s.duration) })))}
+            onClick={() => onSave(name.trim(), steps.map((s) => ({ ...s, duration: Math.round(s.duration) })), reloadTimeSeconds)}
             className={`text-sm px-3 py-1.5 rounded-md ${isValid ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 text-white/40 cursor-not-allowed'}`}
             title={t('custom.save')}
           >
@@ -80,17 +96,45 @@ export default function CustomProfileEditor({
             importVariantKey={importVariantKey}
             onChangeGunId={(v) => { setImportGunId(v); setImportVariantKey(null); }}
             onChangeVariantKey={setImportVariantKey}
-            onCopy={(copied) => setSteps(copied)}
+            onCopy={(copied) => {
+              setSteps(copied);
+              const g = allGuns.find(x => x.id === importGunId) || null;
+              if (g && Number.isFinite(g.reloadTimeSeconds)) {
+                setReloadTimeSeconds(g.reloadTimeSeconds as number);
+              }
+              // Update name to "{weapon name} - Copy" format
+              if (g) {
+                setName(`${g.name} - Copy`);
+              }
+              // Reset import selections
+              setImportGunId(null);
+              setImportVariantKey(null);
+              bumpReset();
+            }}
           />
 
-          <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-            <label className="block text-[11px] text-white/60 mb-1">{t('custom.name')}</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full h-9 px-2 text-sm rounded bg-black/20 border border-white/10 outline-none focus:border-white/30"
-              placeholder={t('custom.name')}
-            />
+          <div className="grid grid-cols-12 gap-3">
+            <div className="col-span-8 rounded-lg border border-white/10 bg-white/5 p-3">
+              <label className="block text-[11px] text-white/60 mb-1">{t('custom.name')}</label>
+              <input
+                value={name}
+                onChange={(e) => { setName(e.target.value); bumpReset(); }}
+                className="w-full h-9 px-2 text-sm rounded bg-black/20 border border-white/10 outline-none focus:border-white/30"
+                placeholder={t('custom.name')}
+              />
+            </div>
+            <div className="col-span-4 rounded-lg border border-white/10 bg-white/5 p-3">
+              <label className="block text-[11px] text-white/60 mb-1">{t('custom.reloadTime')}</label>
+              <input 
+                type="number"
+                min={0}
+                step={0.01}
+                value={reloadTimeSeconds}
+                onChange={(e) => { setReloadTimeSeconds(Math.max(0, Number(e.target.value))); bumpReset(); }}
+                className="w-full h-9 px-2 text-sm rounded bg-black/20 border border-white/10 outline-none focus:border-white/30"
+                placeholder="1.5"
+              />
+            </div>
           </div>
 
           <div className="rounded-lg border border-white/10 bg-white/5 p-3">
@@ -149,9 +193,9 @@ export default function CustomProfileEditor({
 
         <div className="rounded-lg border border-white/10 bg-black/30 p-3">
           <div className="text-sm font-semibold mb-2">{t('custom.preview', { defaultValue: 'Preview' })}</div>
-          <PatternVisualizer gun={{ id: 'draft', name: name || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: steps } }} pattern={steps} />
+          <PatternVisualizer gun={draftGun} pattern={steps} />
           <div className="mt-3 overflow-x-auto">
-            <StrafeTimer gun={{ id: 'draft', name: name || 'Draft', category: 'custom', image: '/favicon.ico', pattern: { default: steps } }} pattern={steps} volume={volume} onVolumeChange={onVolumeChange} resetToken={resetToken} />
+            <StrafeTimer gun={draftGun} pattern={steps} volume={volume} onVolumeChange={onVolumeChange} resetToken={`${resetToken ?? ''}:${localResetToken}`} />
           </div>
         </div>
       </div>

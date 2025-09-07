@@ -52,11 +52,20 @@ export default function CentralDisplay(props: CentralDisplayProps) {
     segments.push({ color: barColor, duration: step.duration, title: label, symbol: sym || undefined });
   }
   const reloadMs = Math.round(((reloadTimeSeconds ?? 1)) * 1000);
-  const endPhaseMs = Math.max(0, reloadMs - 1500 + waitTimeSeconds * 1000);
+  const startDurationMs = 1500;
+  const patternTotalMs = pattern.reduce((acc, s) => acc + s.duration, 0);
+  const endPhaseMs = Math.max(0, reloadMs - startDurationMs + waitTimeSeconds * 1000);
   segments.push({ color: 'bg-green-600', duration: endPhaseMs, title: 'Reload+Wait' });
 
+  // Pre-calculated percentages for hatch overlay
+  const endPhaseStartMs = startDurationMs + patternTotalMs;
+  const endPhaseStartPct = (endPhaseStartMs / totalMs) * 100;
+  const reloadPct = (reloadMs / totalMs) * 100;
+  const startPct = (startDurationMs / totalMs) * 100;
+  const endPct = (endPhaseMs / totalMs) * 100;
+
   const renderCycle = (keyPrefix: string) => (
-    <>
+    <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
       {segments.map((s, idx) => (
         <div key={`${keyPrefix}-${idx}`} className={`${s.color} relative h-full`} style={{ width: `${(s.duration / totalMs) * 100}%` }} title={`${s.title} • ${s.duration}ms`}>
           {s.symbol && (
@@ -64,7 +73,51 @@ export default function CentralDisplay(props: CentralDisplayProps) {
           )}
         </div>
       ))}
-    </>
+      {(() => {
+        const tailPct = Math.max(0, Math.min(reloadPct, endPct));
+        const headPctRaw = Math.max(0, reloadPct - endPct);
+        const headPct = Math.min(headPctRaw, startPct);
+        return (
+          <>
+            {tailPct > 0 && (
+              <div
+                className="absolute top-0 bottom-0 z-10 cursor-help"
+                title="reloading"
+                style={{
+                  left: `${endPhaseStartPct}%`,
+                  width: `${tailPct}%`,
+                  backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                  backgroundBlendMode: 'overlay',
+                }}
+              />
+            )}
+            {headPct > 0 && (
+              <div
+                className="absolute top-0 bottom-0 z-10 cursor-help"
+                title="reloading"
+                style={{
+                  left: `0%`,
+                  width: `${headPct}%`,
+                  backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                  backgroundBlendMode: 'overlay',
+                }}
+              />
+            )}
+            {(() => {
+              const markerLeftPct = headPct > 0 ? headPct : (endPhaseStartPct + tailPct);
+              if ((headPct > 0) || (tailPct > 0)) {
+                return (
+                  <div className="pointer-events-none absolute z-20 top-0 bottom-0" style={{ left: `${markerLeftPct}%` }}>
+                    <div className="absolute -translate-x-1/2 top-0 bottom-0 w-[3px] bg-white rounded-full" />
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </>
+        );
+      })()}
+    </div>
   );
 
   return (
@@ -93,7 +146,7 @@ export default function CentralDisplay(props: CentralDisplayProps) {
       <div className="absolute left-0 right-0 bottom-2 px-3">
         <div className="relative">
           <div className="h-3 w-full rounded-md overflow-hidden bg-white/10 border border-white/10">
-            <div className="h-full flex" style={{ width: '300%', transform: translateStyle, willChange: 'transform' }}>
+            <div className="h-full flex relative" style={{ width: '300%', transform: translateStyle, willChange: 'transform' }}>
               {renderCycle('prev')}
               {renderCycle('curr')}
               {renderCycle('next')}

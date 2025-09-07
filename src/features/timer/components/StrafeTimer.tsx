@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
 import { buildTimeline } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
@@ -26,7 +26,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [waitTimeSeconds, setWaitTimeSeconds] = useState<number>(DEFAULT_DELAY_SECONDS);
+  const [waitTimeSeconds, setWaitTimeSeconds] = useState<number>(RECOMMENDED_DELAY_SECONDS);
   const [waitInfoOpen, setWaitInfoOpen] = useState<boolean>(false);
 
   const timeline = useRef<Timeline>({ phases: [], totalDurationMs: 0 });
@@ -57,12 +57,14 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
+  const timelineValue = useMemo(() => buildTimeline(pattern, gun, waitTimeSeconds), [gun, pattern, waitTimeSeconds]);
+
   useEffect(() => {
-    timeline.current = buildTimeline(pattern, gun, waitTimeSeconds);
+    timeline.current = timelineValue;
     // Build a flattened, timestamp-sorted cue list for fast lookups
     try {
       const cues: AudioCue[] = [];
-      for (const p of timeline.current.phases) {
+      for (const p of timelineValue.phases) {
         for (const c of p.cues) cues.push(c);
       }
       cues.sort((a, b) => a.timestamp - b.timestamp);
@@ -75,7 +77,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
         cancelAnimationFrame(animationFrame.current);
       }
     };
-  }, [gun, pattern, waitTimeSeconds]);
+  }, [timelineValue]);
 
   // Stop autoplay when switching weapons
   useEffect(() => {
@@ -121,7 +123,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     const engine = new AudioEngine();
     engineRef.current = engine;
     await engine.resume();
-    const startBase = engine.start(timeline.current, volume, 10);
+    const startBase = engine.start(timelineValue, volume, 10);
     baseAudioStartRef.current = startBase;
 
  
@@ -165,9 +167,9 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     }
   };
 
-  const totalDuration = timeline.current.totalDurationMs;
+  const totalDuration = timelineValue.totalDurationMs;
 
-  const centralTheme = useCentralTheme({ timeline: timeline.current, pattern, currentTimeMs: currentTime });
+  const centralTheme = useCentralTheme({ timeline: timelineValue, pattern, currentTimeMs: currentTime });
 
   // Live volume updates via AudioEngine
   useEffect(() => {
@@ -252,6 +254,10 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           </label>
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
+              {/* Custom solid track (bottom layer) */}
+              <div className="absolute top-1 bottom-0 left-[7px] right-[7px] z-0 flex items-center">
+                <div className="w-full h-2 bg-gray-600 rounded" />
+              </div>
               <input
                 type="range"
                 min="0"
@@ -261,20 +267,17 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 onChange={(e) => {
                   const v = parseFloat(e.target.value);
                   setWaitTimeSeconds(v);
-                  // update timeline immediately
-                  timeline.current = buildTimeline(pattern, gun, v);
-
                   if (isPlayingRef.current) {
                     stopTimer();
                   }
                 }}
-                className="uniform-slider relative z-10 w-full h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
+                className="uniform-slider relative z-20 w-full h-2 cursor-pointer appearance-none rounded outline-none"
               />
               {/* Markers overlay (account for 14px thumb: 7px inset on both sides) */}
-              <div className="pointer-events-none absolute top-0 bottom-0 z-0 left-[7px] right-[7px]">
+              <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">
                 {/* Recommended 0.5s marker (gray) */}
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[3px] h-5 bg-gray-300/90 rounded-full"
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[6px] h-3 bg-gray-600 rounded-full"
                   style={{ left: `${(RECOMMENDED_DELAY_SECONDS / DELAY_SLIDER_MAX_SECONDS) * 100}%` }}
                 />
                 {/* Default 1.5s marker (amber) */}
@@ -293,6 +296,10 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           </label>
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
+              {/* Custom solid track (bottom layer) */}
+              <div className="absolute inset-0 z-0 flex items-center">
+                <div className="w-full h-2 bg-gray-600 rounded" />
+              </div>
               <input
                 type="range"
                 min="0"
@@ -303,21 +310,14 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                   const v = parseFloat(e.target.value);
                   onVolumeChange(v);
                 }}
-                className="uniform-slider relative z-10 w-full h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
+                className="uniform-slider relative z-20 w-full h-2 cursor-pointer appearance-none rounded bg-transparent outline-none"
               />
             </div>
             <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{(volume * 100).toFixed(0)}%</span>
           </div>
         </div>
       </div>
-      {/* Ensure both sliders look consistent across browsers */}
-      <style jsx global>{`
-        input.uniform-slider { -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.1); }
-        input.uniform-slider::-webkit-slider-runnable-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
-        input.uniform-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: #111827; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; margin-top: -3px; }
-        input.uniform-slider::-moz-range-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
-        input.uniform-slider::-moz-range-thumb { width: 14px; height: 14px; background: #111827; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; }
-      `}</style>
+      {/* Slider styles are defined globally in globals.css to avoid initial flash */}
     </div>
   );
 }
