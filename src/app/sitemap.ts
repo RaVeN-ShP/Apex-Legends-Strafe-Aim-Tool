@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ['zh', `${siteUrl}/?lang=zh`],
   ];
 
-  return locales.map(([lang, url]) => ({ url, ...base }));
+  return locales.map(([, url]) => ({ url, ...base }));
 }
 
 
