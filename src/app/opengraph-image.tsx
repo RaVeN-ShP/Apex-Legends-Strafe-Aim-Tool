@@ -8,8 +8,8 @@ export const size = {
 export const contentType = 'image/png';
 
 export default function OpengraphImage() {
-  const title = 'Apex Legends Strafe Aiming Tool';
-  const subtitle = 'Master strafe aiming techniques with audio cues and timing';
+  const title = 'Apex Legends Recoil Strafe Trainer';
+  const subtitle = 'Master recoil strafing in Apex Legends with audio cues, visual indicators, and a popout timing guide.';
 
   return new ImageResponse(
     (

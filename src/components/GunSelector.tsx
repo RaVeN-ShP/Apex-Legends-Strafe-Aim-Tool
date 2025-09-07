@@ -236,13 +236,13 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                       <div className="relative z-10 w-10 h-10 shrink-0">
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
                       </div>
-                      <div className="min-w-0 relative z-10">
-                        <div className="text-sm font-medium truncate">{gun.name}</div>
+                      <div className="min-w-0 pr-8">
+                        <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
 
                       {/* Unified menu */}
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                         <GunActionsMenu
                           gun={gun}
                           onEditCustom={onEditCustom}
@@ -303,8 +303,8 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                     sizes="64px"
                   />
                 </div>
-                <div className="min-w-0">
-                  <div className="text-white font-semibold truncate tracking-wide">
+                <div className="min-w-0 pr-6">
+                  <div className="text-white font-semibold truncate tracking-wide" title={gun.name}>
                     {gun.name}
                   </div>
                   <div className="mt-1 inline-flex items-center gap-2">

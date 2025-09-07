@@ -499,8 +499,8 @@ export default function Home() {
                     <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
                       <Image src={selectedGun.image} alt={selectedGun.name} fill className="object-contain invert" sizes="48px" />
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-xl font-bold tracking-wide truncate">{selectedGun.name}</div>
+                    <div className="min-w-0 pr-6">
+                      <div className="text-xl font-bold tracking-wide truncate max-w-[35ch]" title={selectedGun.name}>{selectedGun.name}</div>
                       {selectedGun.remarks && selectedGun.remarks.length > 0 && (
                         <div className="mt-1 flex flex-wrap items-center gap-2 pr-28 md:pr-0">
                           {selectedGun.remarks.map((r, i) => (

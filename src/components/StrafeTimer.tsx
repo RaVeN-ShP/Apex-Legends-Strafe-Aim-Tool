@@ -505,7 +505,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
           {phaseDisplay.title}
         </div>
         <div className={`absolute right-3 flex items-center gap-2 ${isPopped ? 'top-2' : 'top-3'}`}>
-          <span className={`${isPopped ? 'text-[9px]' : 'text-[11px]'} text-white/80 max-w-[50vw] truncate`}>{gun.name}</span>
+          <span className={`${isPopped ? 'text-[9px]' : 'text-[11px]'} text-white/80 max-w-[25ch] truncate`} title={gun.name}>{gun.name}</span>
           <div className={`${isPopped ? 'w-4 h-4' : 'w-5 h-5'} relative opacity-80`}>
             <Image src={gun.image} alt={gun.name} fill className="object-contain invert drop-shadow" sizes="20px" />
           </div>
