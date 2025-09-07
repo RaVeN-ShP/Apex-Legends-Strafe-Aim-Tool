@@ -135,10 +135,9 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       const ctx = engineRef.current?.ctx ?? null;
       let elapsedMs = Date.now() - startTime.current;
       if (ctx && baseAudioStartRef.current > 0) {
-        const audioElapsedSec = ctx.currentTime - baseAudioStartRef.current;
-        const totalMs = Math.max(1, totalDuration);
-        // cycle time in ms, normalized to [0, totalMs)
-        elapsedMs = ((audioElapsedSec * 1000) % totalMs + totalMs) % totalMs;
+       const totalMs = Math.max(1, totalDuration);
+        const audioElapsedMs = Math.max(0, (ctx.currentTime - baseAudioStartRef.current) * 1000);
+        elapsedMs = audioElapsedMs % totalMs;
       } else {
         // Fallback to wall clock if AudioContext not ready yet
         elapsedMs = ((elapsedMs % Math.max(1, totalDuration)) + Math.max(1, totalDuration)) % Math.max(1, totalDuration);
