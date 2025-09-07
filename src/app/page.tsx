@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Gun, Pattern } from "@/types/gun";
-import { DELAY_SLIDER_MAX_SECONDS, DEFAULT_DELAY_SECONDS } from "@/config/constants";
+import { DirectionStep, Gun, Pattern } from "@/types/gun";
+// import { DEFAULT_DELAY_SECONDS } from "@/config/constants";
 import { guns } from "@/data/guns";
 import GunSelector from "@/components/GunSelector";
 import StrafeTimer from "@/components/StrafeTimer";
@@ -12,8 +12,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Listbox, Transition, Disclosure } from "@headlessui/react";
 import { Fragment } from "react";
 import Image from "next/image";
-import { ChevronDownIcon, ArrowsRightLeftIcon, ArrowLeftIcon, ArrowRightIcon, BoltIcon, TrashIcon, ClockIcon } from "@heroicons/react/24/outline";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ArrowsRightLeftIcon, TrashIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/24/outline";
 
 type CustomProfile = {
   id: string;
@@ -60,7 +60,8 @@ function generateId(): string {
 export default function Home() {
   const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
   const [selectedModeId, setSelectedModeId] = useState<string | null>(null);
-  const [waitTimeSeconds, setWaitTimeSeconds] = useState(DEFAULT_DELAY_SECONDS);
+  // Preserved for future features; currently unused
+  // const [waitTimeSeconds] = useState(DEFAULT_DELAY_SECONDS);
   const [volume, setVolume] = useState(0.8);
   const { t } = useI18n();
   const [profiles, setProfiles] = useState<CustomProfile[]>([]);
@@ -78,9 +79,9 @@ export default function Home() {
 
   // expose volume only
   useEffect(() => {
-    (window as any).__setVolume = (v: number) => setVolume(v);
+    (window as unknown as { __setVolume?: (v: number) => void }).__setVolume = (v: number) => setVolume(v);
     return () => {
-      try { delete (window as any).__setVolume; } catch {}
+      try { delete (window as unknown as { __setVolume?: (v: number) => void }).__setVolume; } catch {}
     };
   }, []);
 
@@ -112,8 +113,7 @@ export default function Home() {
       setSelectedModeId(null);
     }
     // Initialize slider default to current gun reload time (clamped to slider bounds)
-    const reload = Math.max(0, Math.min(DELAY_SLIDER_MAX_SECONDS, selectedGun.reloadTimeSeconds ?? 0));
-    setWaitTimeSeconds(DEFAULT_DELAY_SECONDS);
+    // const reload = Math.max(0, Math.min(DELAY_SLIDER_MAX_SECONDS, selectedGun.reloadTimeSeconds ?? 0));
   }, [selectedGun]);
 
   // Effective selections
@@ -159,9 +159,9 @@ export default function Home() {
   const updateStep = (idx: number, step: Partial<Pattern>) => {
     setDraftSteps((prev) => prev.map((s, i) => {
       if (i !== idx) return s;
-      const base: any = { ...s };
+      const base: Pattern = { ...s } as Pattern;
       if (step.type) base.type = step.type;
-      if ('direction' in step && (step as any).direction !== undefined) base.direction = (step as any).direction;
+      if ('direction' in step && (step as DirectionStep).direction !== undefined) (base as unknown as { direction?: 'left' | 'right' }).direction = (step as DirectionStep).direction as 'left' | 'right';
       if ('duration' in step && step.duration !== undefined) base.duration = step.duration as number;
       return base as Pattern;
     }));
@@ -436,7 +436,7 @@ export default function Home() {
                               </div>
                             </Listbox>
                             {s.type === 'direction' && (
-                              <Listbox value={s.direction} onChange={(v: any) => updateStep(idx, { direction: v } as any)}>
+                              <Listbox value={s.direction} onChange={(v: 'left' | 'right') => updateStep(idx, { direction: v })}>
                                 <div className="relative">
                                   <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[90px] text-left">
                                     {s.type === 'direction' ? (s.direction === 'left' ? t('custom.left') : t('custom.right')) : '-'}
@@ -459,7 +459,7 @@ export default function Home() {
                                 type="number"
                                 min={1}
                                 value={s.duration}
-                                onChange={(e) => updateStep(idx, { duration: Number(e.target.value) } as any)}
+                                onChange={(e) => updateStep(idx, { duration: Number(e.target.value) })}
                                 className="w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30"
                               />
                               <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">

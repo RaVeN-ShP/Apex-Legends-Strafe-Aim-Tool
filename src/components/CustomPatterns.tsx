@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Gun, Pattern } from "@/types/gun";
+import { DirectionStep, Gun, Pattern } from "@/types/gun";
 import { useI18n } from "@/i18n/I18nProvider";
 
 type CustomProfile = {
@@ -120,9 +120,9 @@ export default function CustomPatterns({ onSelect }: CustomPatternsProps) {
   const updateStep = (idx: number, step: Partial<Pattern>) => {
     setDraftSteps((prev) => prev.map((s, i) => {
       if (i !== idx) return s;
-      const base: any = { ...s };
+      const base: Pattern = { ...s } as Pattern;
       if (step.type) base.type = step.type;
-      if ("direction" in step && (step as any).direction !== undefined) base.direction = (step as any).direction;
+      if ("direction" in step && (step as DirectionStep).direction !== undefined) (base as unknown as { direction?: 'left' | 'right' }).direction = (step as DirectionStep).direction as 'left' | 'right';
       if ("duration" in step && step.duration !== undefined) base.duration = step.duration as number;
       return base as Pattern;
     }));
@@ -217,7 +217,7 @@ export default function CustomPatterns({ onSelect }: CustomPatternsProps) {
                   {s.type === "direction" && (
                     <select
                       value={s.direction}
-                      onChange={(e) => updateStep(idx, { direction: e.target.value as any })}
+                      onChange={(e) => updateStep(idx, { direction: (e.target.value as 'left' | 'right') })}
                       className="text-xs px-2 py-1 rounded border border-white/15 bg-white/5"
                     >
                       <option value="left">{t("custom.left")}</option>

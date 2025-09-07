@@ -115,7 +115,7 @@ function GunActionsMenu({
     <Menu>
       <span>
         <MenuButton
-          ref={triggerRef as any}
+          ref={triggerRef as unknown as React.Ref<HTMLButtonElement>}
           onClick={(e) => { e.stopPropagation(); setTimeout(reposition, 0); }}
           className="inline-flex items-center justify-center w-6 h-6 rounded border border-white/10 bg-white/5 hover:bg-white/10 focus:outline-none focus-visible:outline-none ring-0 focus:ring-0"
           title={labelMore}
@@ -125,7 +125,7 @@ function GunActionsMenu({
       </span>
       <Portal>
         <MenuItems
-          ref={(el) => { (containerRef as any).current = el; reposition(); }}
+          ref={(el) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el; reposition(); }}
           className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 w-40 rounded-md border border-white/10 bg-black/80 text-white shadow-md backdrop-blur-sm"
         >
           <div className="py-1">
@@ -273,7 +273,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
         {guns.map((gun) => {
           const isComingSoon = false;
           const isActive = selectedGun?.id === gun.id;
-          const [triggerRefCopy, containerRefCopy, repositionCopy] = useFixedPopper({ offsetY: 6 });
+          // const [triggerRefCopy, containerRefCopy, repositionCopy] = useFixedPopper({ offsetY: 6 });
           return (
             <button
               key={gun.id}

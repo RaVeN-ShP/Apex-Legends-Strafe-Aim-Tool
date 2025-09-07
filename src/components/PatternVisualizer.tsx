@@ -8,7 +8,7 @@ interface PatternVisualizerProps {
 }
 
 // Simple visualizer: horizontal timeline with segments colored per direction
-export default function PatternVisualizer({ gun, pattern }: PatternVisualizerProps) {
+export default function PatternVisualizer({ pattern }: PatternVisualizerProps) {
   const { t } = useI18n();
   const total = pattern.reduce((acc, s) => acc + s.duration, 0);
 
