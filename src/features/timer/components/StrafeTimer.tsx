@@ -297,7 +297,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               {/* Custom solid track (bottom layer) */}
-              <div className="absolute inset-0 z-0 flex items-center">
+              <div className="absolute top-1 bottom-0 left-[7px] right-[7px] z-0 flex items-center">
                 <div className="w-full h-2 bg-gray-600 rounded" />
               </div>
               <input
