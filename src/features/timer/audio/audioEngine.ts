@@ -1,4 +1,4 @@
-import { AudioCue, Timeline } from '@/types/gun';
+import { AudioCue, Timeline } from '@/features/guns/types/gun';
 
 export class AudioEngine {
   ctx: AudioContext | null = null;

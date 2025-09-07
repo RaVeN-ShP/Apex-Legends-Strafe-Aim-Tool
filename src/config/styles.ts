@@ -1,4 +1,4 @@
-import { Pattern, PhaseId } from '@/types/gun';
+import { Pattern, PhaseId } from '@/features/guns/types/gun';
 
 export const PatternTypeStyles = {
   shoot: {

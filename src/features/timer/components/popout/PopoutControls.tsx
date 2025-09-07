@@ -1,4 +1,4 @@
-import { useDocumentPictureInPicture } from '@/hooks/useDocumentPictureInPicture';
+import { useDocumentPictureInPicture } from '@/features/timer/hooks/useDocumentPictureInPicture';
 import Image from 'next/image';
 // import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useI18n } from '@/i18n/I18nProvider';

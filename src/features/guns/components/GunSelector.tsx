@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, ReactNode, useEffect, useRef } from 'react';
-import { Gun } from '@/types/gun';
+import { Gun } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
@@ -125,7 +125,7 @@ function GunActionsMenu({
       </span>
       <Portal>
         <MenuItems
-          ref={(el) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el; reposition(); }}
+          ref={(el: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el; reposition(); }}
           className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 w-40 rounded-md border border-white/10 bg-black/80 text-white shadow-md backdrop-blur-sm"
         >
           <div className="py-1">

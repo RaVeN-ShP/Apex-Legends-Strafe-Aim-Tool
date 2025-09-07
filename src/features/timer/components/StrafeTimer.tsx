@@ -1,27 +1,28 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Gun, Timeline, Pattern, AudioCue } from '@/types/gun';
-import { buildTimeline } from '@/utils/audio';
-import { AudioEngine } from '@/utils/audioEngine';
+import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
+import { buildTimeline } from '@/features/timer/audio/audio';
+import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
 // import Image from 'next/image';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
  
 import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS } from '@/config/constants';
-import CentralDisplay from '@/components/central/CentralDisplay';
-import PopoutControls from '@/components/popout/PopoutControls';
-import { useCentralTheme } from '@/hooks/useCentralTheme';
+import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
+import PopoutControls from '@/features/timer/components/popout/PopoutControls';
+import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
 
 interface StrafeTimerProps {
   gun: Gun;
   pattern: Pattern[];
-  volume?: number;
+  volume: number;
+  onVolumeChange: (v: number) => void;
   resetToken?: string | number; // when this changes, stop the timer
 }
 
-export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken }: StrafeTimerProps) {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -300,11 +301,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, resetToken }: 
                 value={volume}
                 onChange={(e) => {
                   const v = parseFloat(e.target.value);
-                  try {
-                    // Adjust in-place volume by updating gain envelope amplitude factor
-                    // We do not store locally here; parent controls prop. Notify parent if available.
-                    (window as unknown as { __setVolume?: (v: number) => void }).__setVolume?.(v);
-                  } catch {}
+                  onVolumeChange(v);
                 }}
                 className="uniform-slider relative z-10 w-full h-2 cursor-pointer appearance-none rounded bg-white/10 outline-none"
               />

@@ -1,4 +1,4 @@
-import { Gun, AudioCue, Phase, Timeline, Pattern } from '@/types/gun';
+import { Gun, AudioCue, Phase, Timeline, Pattern } from '@/features/guns/types/gun';
 
 export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: number): Timeline {
   const phases: Phase[] = [];

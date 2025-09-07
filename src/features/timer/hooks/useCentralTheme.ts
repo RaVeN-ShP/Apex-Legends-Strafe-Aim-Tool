@@ -1,4 +1,4 @@
-import { Pattern, Timeline, PhaseId } from '@/types/gun';
+import { Pattern, Timeline, PhaseId } from '@/features/guns/types/gun';
 import { getPhaseStyle, PatternTypeStyles } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
 

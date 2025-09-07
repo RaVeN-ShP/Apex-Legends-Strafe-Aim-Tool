@@ -1,4 +1,4 @@
-import { Gun, Pattern } from '@/types/gun';
+import { Gun, Pattern } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
 import { getStepStyle, PatternTypeStyles } from '@/config/styles';
 

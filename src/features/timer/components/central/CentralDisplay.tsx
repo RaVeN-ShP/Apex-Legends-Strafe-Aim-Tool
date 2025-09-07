@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Pattern } from '@/types/gun';
+import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 
 export type CentralDisplayProps = {
