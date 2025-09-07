@@ -25,11 +25,12 @@ function loadProfilesFromStorage(): CustomProfile[] {
   if (typeof window === "undefined") return [];
   const parsed = safeParse<unknown>(window.localStorage.getItem(STORAGE_KEY));
   if (!Array.isArray(parsed)) return [];
-  return (parsed as unknown[]).filter((p): p is CustomProfile => {
+  const validated = (parsed as unknown[]).filter((p): p is CustomProfile => {
     if (!p || typeof p !== 'object') return false;
     const obj = p as Record<string, unknown>;
     return typeof obj.id === 'string' && typeof obj.name === 'string' && Array.isArray(obj.strafePattern);
   });
+  return validated.map((p) => (p.reloadTimeSeconds == null ? { ...p, reloadTimeSeconds: 1.5 } : p));
 }
 
 function saveProfilesToStorage(profiles: CustomProfile[]) {
