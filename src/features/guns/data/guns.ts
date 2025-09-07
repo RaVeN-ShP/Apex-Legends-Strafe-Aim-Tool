@@ -131,7 +131,7 @@ export const guns: Gun[] = [
         { type: 'direction', direction: 'right', duration: 270 },
         { type: 'direction', direction: 'left', duration: 1080 },
         { type: 'direction', direction: 'right', duration: 1400 },
-        { type: 'direction', direction: 'left', duration: 7600 },
+        { type: 'direction', direction: 'left', duration: 760 },
       ],
     },
   },
