@@ -11,8 +11,6 @@ const isProd = process.env.NODE_ENV === 'production';
 const defaultTitle = "Recoil Strafing Trainer";
 const defaultDescription = "Improve your recoil strafing in Apex Legends with audio cues and visual indicators. The popout timing guide helps you master left and right strafes while practicing in the training range.";
 
-export const dynamic = 'force-static';
-export const revalidate = false;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
