@@ -7,6 +7,7 @@ export type CustomProfile = {
   id: string;
   name: string;
   strafePattern: Pattern[];
+  reloadTimeSeconds?: number;
 };
 
 const STORAGE_KEY = "customPatterns"; // backward compatible key
@@ -44,6 +45,7 @@ export function profileToGun(profile: CustomProfile): Gun {
     category: "custom",
     image: "/favicon.ico",
     pattern: { default: profile.strafePattern },
+    reloadTimeSeconds: profile.reloadTimeSeconds,
   };
 }
 

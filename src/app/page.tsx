@@ -23,7 +23,7 @@ export default function Home() {
   const { t } = useI18n();
   const { profiles, addProfile, updateProfile, removeProfile, gunsFromProfiles } = useCustomProfiles();
   const [isEditing, setIsEditing] = useState(false);
-  const [editorContext, setEditorContext] = useState<{ id: string | null; name: string; steps: Pattern[] }>({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }] });
+  const [editorContext, setEditorContext] = useState<{ id: string | null; name: string; steps: Pattern[]; reloadTimeSeconds?: number }>({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: undefined });
 
 
   const allGuns: Gun[] = useMemo(() => {
@@ -71,33 +71,33 @@ export default function Home() {
 
   const handleStartCreate = () => {
     setIsEditing(true);
-    setEditorContext({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }] });
+    setEditorContext({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: 1.5 });
   };
 
   const handleStartEdit = (profileId: string) => {
     const p = profiles.find((x) => x.id === profileId);
     if (!p) return;
     setIsEditing(true);
-    setEditorContext({ id: p.id, name: p.name, steps: p.strafePattern.map((s) => ({ ...s })) });
+    setEditorContext({ id: p.id, name: p.name, steps: p.strafePattern.map((s) => ({ ...s })), reloadTimeSeconds: p.reloadTimeSeconds });
   };
 
-  const handleStartCopy = (name: string, steps: Pattern[]) => {
+  const handleStartCopy = (name: string, steps: Pattern[], reloadTimeSeconds?: number) => {
     setIsEditing(true);
-    setEditorContext({ id: null, name, steps: steps.map((s) => ({ ...s })) });
+    setEditorContext({ id: null, name, steps: steps.map((s) => ({ ...s })), reloadTimeSeconds });
   };
 
   const handleEditorCancel = () => {
     setIsEditing(false);
-    setEditorContext({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }] });
+    setEditorContext({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: 1.5 });
   };
 
-  const handleEditorSave = (name: string, steps: Pattern[]) => {
+  const handleEditorSave = (name: string, steps: Pattern[], reloadTimeSeconds: number) => {
     if (editorContext.id) {
-      const updated = { id: editorContext.id, name, strafePattern: steps };
+      const updated = { id: editorContext.id, name, strafePattern: steps, reloadTimeSeconds };
       updateProfile(updated);
       setSelectedGun(profileToGun(updated));
     } else {
-      const created = addProfile({ name, strafePattern: steps });
+      const created = addProfile({ name, strafePattern: steps, reloadTimeSeconds });
       setSelectedGun(profileToGun(created));
     }
     setIsEditing(false);
@@ -147,7 +147,7 @@ export default function Home() {
               onSelectGun={(g) => { setSelectedGun(g); setIsEditing(false); }}
               onStartCreate={handleStartCreate}
               onStartEdit={handleStartEdit}
-              onStartCopy={(name, steps) => handleStartCopy(name, steps)}
+              onStartCopy={(name, steps, reloadTimeSeconds) => handleStartCopy(name, steps, reloadTimeSeconds)}
               onDeleteProfile={(id) => { removeProfile(id); }}
             />
           </aside>
@@ -159,6 +159,7 @@ export default function Home() {
                 allGuns={allGuns}
                 initialName={editorContext.name}
                 initialSteps={editorContext.steps}
+                initialReloadTimeSeconds={editorContext.reloadTimeSeconds}
                 volume={volume}
                 onVolumeChange={setVolume}
                 onCancel={handleEditorCancel}

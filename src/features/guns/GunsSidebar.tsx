@@ -20,7 +20,7 @@ export default function GunsSidebar({
   onSelectGun: (gun: Gun | null) => void;
   onStartCreate: () => void;
   onStartEdit: (profileId: string) => void;
-  onStartCopy: (name: string, steps: Pattern[]) => void;
+  onStartCopy: (name: string, steps: Pattern[], reloadTimeSeconds?: number) => void;
   onDeleteProfile: (profileId: string) => void;
 }) {
   const { t } = useI18n();
@@ -62,7 +62,7 @@ export default function GunsSidebar({
             ? selectedPatternKey
             : (keys.includes('default') ? 'default' : keys[0]);
           const steps = (g.pattern?.[variantKey!] ?? []).map((s: Pattern) => ({ ...s }));
-          onStartCopy(`${g.name} - Copy`, steps);
+          onStartCopy(`${g.name} - Copy`, steps, g.reloadTimeSeconds);
         }}
         listMode
       />
