@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { Listbox, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { PlusIcon, TrashIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { PatternTypeStyles } from "@/config/styles";
 
 export default function CustomProfileEditor({
   allGuns,
@@ -106,9 +107,6 @@ export default function CustomProfileEditor({
               if (g) {
                 setName(`${g.name} - Copy`);
               }
-              // Reset import selections
-              setImportGunId(null);
-              setImportVariantKey(null);
               bumpReset();
             }}
           />
@@ -139,54 +137,52 @@ export default function CustomProfileEditor({
 
           <div className="rounded-lg border border-white/10 bg-white/5 p-3">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-semibold text-white/90">{t('custom.steps')}</div>
+              <div className="text-sm font-semibold text-white/90 capitalize">{t('custom.steps')}</div>
               <button type="button" onClick={addStep} className="inline-flex items-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/20 hover:bg-white/10">
                 <PlusIcon className="w-4 h-4" />
                 {t('custom.addStep')}
               </button>
             </div>
             <div className="space-y-2">
-              {steps.map((s, idx) => (
-                <div key={idx} className="rounded-md border border-white/10 bg-black/20 px-2 py-2 flex flex-wrap items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-white/10 text-white/80 text-[11px] inline-flex items-center justify-center select-none">{idx + 1}</div>
-                  <Listbox value={s.type} onChange={(v: Pattern['type']) => updateStep(idx, { type: v })}>
-                    <div className="relative">
-                      <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[100px] text-left">{s.type === 'direction' ? 'Direction' : 'Shoot'}</Listbox.Button>
-                      <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                        <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                          <Listbox.Option value="direction" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>Direction</Listbox.Option>
-                          <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>Shoot</Listbox.Option>
-                        </Listbox.Options>
-                      </Transition>
-                    </div>
-                  </Listbox>
-                  {s.type === 'direction' && (
-                    <Listbox value={s.direction} onChange={(v: 'left' | 'right') => updateStep(idx, { direction: v })}>
+              {steps.map((s, idx) => {
+                const actionValue: 'shoot' | 'left' | 'right' = s.type === 'shoot' ? 'shoot' : s.direction;
+                const gradient = s.type === 'shoot'
+                  ? 'from-purple-500/20 to-purple-500/5'
+                  : (s.direction === 'left' ? PatternTypeStyles.direction.left.gradient : PatternTypeStyles.direction.right.gradient);
+                const containerClass = `rounded-md border border-white/10 bg-gradient-to-r ${gradient} px-2 py-2 flex flex-wrap items-center gap-2`;
+                return (
+                  <div key={idx} className={containerClass}>
+                    <div className="w-6 h-6 rounded-full bg-white/10 text-white/80 text-[11px] inline-flex items-center justify-center select-none">{idx + 1}</div>
+                    <Listbox value={actionValue} onChange={(v: 'shoot' | 'left' | 'right') => {
+                      if (v === 'shoot') updateStep(idx, { type: 'shoot' });
+                      else updateStep(idx, { type: 'direction', direction: v });
+                    }}>
                       <div className="relative">
-                        <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[90px] text-left">{s.direction === 'left' ? t('custom.left') : t('custom.right')}</Listbox.Button>
+                        <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[110px] text-left">{actionValue === 'shoot' ? 'Shoot' : actionValue === 'left' ? 'Left' : 'Right'}</Listbox.Button>
                         <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                           <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                            <Listbox.Option value="left" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.left')}</Listbox.Option>
-                            <Listbox.Option value="right" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.right')}</Listbox.Option>
+                            <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>Shoot</Listbox.Option>
+                            <Listbox.Option value="left" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>Left</Listbox.Option>
+                            <Listbox.Option value="right" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>Right</Listbox.Option>
                           </Listbox.Options>
                         </Transition>
                       </div>
                     </Listbox>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <input type="number" min={1} value={s.duration} onChange={(e) => updateStep(idx, { duration: Number(e.target.value) })} className="w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30" />
-                    <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">
-                      <ClockIcon className="w-3.5 h-3.5 -mt-px" /> {t('custom.durationMs')}
+                    <div className="flex items-center gap-2">
+                      <input type="number" min={1} value={s.duration} onChange={(e) => updateStep(idx, { duration: Number(e.target.value) })} className="w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30" />
+                      <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">
+                        <ClockIcon className="w-3.5 h-3.5 -mt-px" /> {t('custom.durationMs')}
+                      </div>
+                    </div>
+                    <div className="w-full sm:w-auto sm:ml-auto">
+                      <button type="button" onClick={() => removeStep(idx)} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/30 hover:bg-white/10" title={t('custom.delete')}>
+                        <TrashIcon className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t('custom.delete')}</span>
+                      </button>
                     </div>
                   </div>
-                  <div className="w-full sm:w-auto sm:ml-auto">
-                    <button type="button" onClick={() => removeStep(idx)} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/30 hover:bg-white/10" title={t('custom.delete')}>
-                      <TrashIcon className="w-4 h-4" />
-                      <span className="hidden sm:inline">{t('custom.delete')}</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

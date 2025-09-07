@@ -179,7 +179,7 @@ export default function Home() {
                 <div className="pt-4 border-t border-white/10">
                   <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
                   <div className="space-y-2">
-                    {['q0','q1','q2','q3','q4','q5','q6','q7'].map((k) => (
+                    {['q0','q1','q2','q3'].map((k) => (
                       <Disclosure key={k}>
                         {({ open }) => (
                           <div className="rounded-md border border-white/10 bg-white/5">
@@ -188,7 +188,7 @@ export default function Home() {
                               <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
                             </Disclosure.Button>
                             <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
-                              {k === 'q7' ? (
+                              {k === 'q3' ? (
                                 <div>
                                   <div>{t(`faq.${k}.answer`, { weapon: selectedGun?.name ?? '-' })}</div>
                                   <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: selectedGun?.name ?? '-' })}</div>
