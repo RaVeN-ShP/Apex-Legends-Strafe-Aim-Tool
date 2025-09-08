@@ -1,6 +1,4 @@
 'use client';
-
-import Image from 'next/image';
 import { useState, ReactNode, useEffect, useRef } from 'react';
 import { Gun } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -214,8 +212,8 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
               <div>
                 <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center gap-2 px-2 py-2">
                   {ammoIcon[group.key] && (
-                    <span className="relative inline-block w-4 h-4">
-                      <Image src={ammoIcon[group.key]!} alt={group.key} fill className="object-contain" sizes="16px" />
+                    <span className="inline-block w-4 h-4">
+                      <img src={ammoIcon[group.key]!} alt={group.key} className="object-contain w-full h-full" />
                     </span>
                   )}
                   <span>{ammoLabel[group.key] || 'Other'}</span>
@@ -233,8 +231,8 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                       }`}
                     >
                       {/* Background ammo accents removed */}
-                      <div className="relative z-10 w-10 h-10 shrink-0">
-                        <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
+                      <div className="z-10 w-10 h-10 shrink-0">
+                        <img src={gun.image} alt={gun.name} className="object-contain invert w-full h-full" />
                       </div>
                       <div className="min-w-0 pr-8">
                         <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
@@ -294,13 +292,11 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                 </div>
               )}
               <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16 shrink-0">
-                  <Image
+                <div className="w-16 h-16 shrink-0">
+                  <img
                     src={gun.image}
                     alt={gun.name}
-                    fill
-                    className="object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                    sizes="64px"
+                    className="object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] w-full h-full"
                   />
                 </div>
                 <div className="min-w-0 pr-6">

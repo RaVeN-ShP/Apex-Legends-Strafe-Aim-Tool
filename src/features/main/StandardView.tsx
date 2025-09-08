@@ -4,7 +4,7 @@ import { Gun, Pattern } from "@/features/guns/types/gun";
 import PatternVisualizer from "@/features/patterns/components/PatternVisualizer";
 import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
-import Image from "next/image";
+// Replaced Next.js Image with native img
 
 export default function StandardView({
   gun,
@@ -25,8 +25,8 @@ export default function StandardView({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
-            <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="48px" />
+          <div className="w-12 h-12 md:w-16 md:h-16 shrink-0">
+            <img src={gun.image} alt={gun.name} className="object-contain invert w-full h-full" />
           </div>
           <div className="min-w-0 pr-6">
             <div className="text-xl font-bold tracking-wide truncate max-w-[35ch]" title={gun.name}>{gun.name}</div>

@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     description: defaultDescription,
     images: [
       {
-        url: '/opengraph-image',
+        url: '/overlay_example.jpg',
         width: 1200,
         height: 630,
         alt: defaultTitle,
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: defaultTitle,
     description: defaultDescription,
-    images: ['/opengraph-image'],
+    images: ['/overlay_example.jpg'],
   },
   icons: {
     icon: '/favicon.ico',
@@ -71,15 +71,15 @@ export const metadata: Metadata = {
       follow: isProd,
     },
   },
-  themeColor: '#111827',
   verification: {
     google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
   },
 };
 
 export const viewport = {
-  width: "device-width",
-  initialScale: 1,
+	width: "device-width",
+	initialScale: 1,
+	themeColor: '#111827',
 };
 
 export default function RootLayout({

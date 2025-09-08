@@ -4,7 +4,6 @@ import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { Gun, Pattern } from "@/features/guns/types/gun";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
-import Image from "next/image";
 import { useI18n } from "@/i18n/I18nProvider";
 
 export default function PatternImportPicker({
@@ -84,8 +83,8 @@ export default function PatternImportPicker({
                     <div key={group.key}>
                       <div className={`px-2 py-1 text-[10px] uppercase tracking-wider text-white/60 flex items-center gap-2 ${gi > 0 ? 'border-t border-white/10 mt-1 pt-2' : ''} sticky top-0 bg-black/90`}> 
                         {ammoIcon[group.key] && (
-                          <span className="relative inline-block w-3.5 h-3.5">
-                            <Image src={ammoIcon[group.key]!} alt={group.key} fill className="object-contain" sizes="14px" />
+                          <span className="inline-block w-3.5 h-3.5">
+                            <img src={ammoIcon[group.key]!} alt={group.key} className="object-contain w-full h-full" />
                           </span>
                         )}
                         <span>{ammoLabel[group.key] || 'Other'}</span>
