@@ -74,5 +74,12 @@
   "importPicker.selectGun": "武器を選択",
   "importPicker.variant": "バリアント",
   "importPicker.copyTitle": "パターンをコピー",
-  "importPicker.copy": "コピー"
+  "importPicker.copy": "コピー",
+  "pattern.units.ms": "ms",
+  "pattern.legend.left": "左（A）",
+  "pattern.legend.right": "右（D）",
+  "pattern.legend.shoot": "射撃"
+  ,
+  "remarks.usePurpleStockMag": "紫ストックと紫マガジンを使用",
+  "remarks.nemesisFullyCharged": "フルチャージ時のネメシス用パターン"
 }

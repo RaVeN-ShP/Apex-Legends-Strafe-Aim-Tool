@@ -74,5 +74,12 @@
   "importPicker.selectGun": "选择武器",
   "importPicker.variant": "变体",
   "importPicker.copyTitle": "复制模式",
-  "importPicker.copy": "复制"
+  "importPicker.copy": "复制",
+  "pattern.units.ms": "ms",
+  "pattern.legend.left": "左 (A)",
+  "pattern.legend.right": "右 (D)",
+  "pattern.legend.shoot": "射击"
+  ,
+  "remarks.usePurpleStockMag": "使用紫色枪托与弹匣",
+  "remarks.nemesisFullyCharged": "适用于满充能的 Nemesis 模式"
 }

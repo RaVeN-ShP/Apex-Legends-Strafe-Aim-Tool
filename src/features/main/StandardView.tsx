@@ -1,6 +1,7 @@
 "use client";
 
 import { Gun, Pattern } from "@/features/guns/types/gun";
+import { useI18n } from "@/i18n/I18nProvider";
 import PatternVisualizer from "@/features/patterns/components/PatternVisualizer";
 import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
@@ -21,6 +22,7 @@ export default function StandardView({
   volume: number;
   onVolumeChange: (v: number) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -34,7 +36,7 @@ export default function StandardView({
               <div className="mt-1 flex flex-wrap items-center gap-2 pr-28 md:pr-0">
                 {gun.remarks.map((r, i) => (
                   <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
-                    {r}
+                    {t(r)}
                   </span>
                 ))}
               </div>
