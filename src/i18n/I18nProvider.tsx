@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-export type Locale = 'en' | 'ja' | 'ko' | 'zh';
+export type Locale = 'en' | 'ja' | 'ko' | 'zh' | 'ru';
 
 type Messages = Record<string, string>;
 
@@ -19,8 +19,9 @@ import en from './messages/en.json';
 import ja from './messages/ja.json';
 import ko from './messages/ko.json';
 import zh from './messages/zh.json';
+import ru from './messages/ru.json';
 
-const allMessages: Record<Locale, Messages> = { en, ja, ko, zh };
+const allMessages: Record<Locale, Messages> = { en, ja, ko, zh, ru };
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<Locale>('en');
@@ -31,7 +32,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     // 2) persisted preference (localStorage)
     // 3) browser language (navigator.language / navigator.languages)
     if (typeof window !== 'undefined') {
-      const supported: Locale[] = ['en', 'ja', 'ko', 'zh'];
+      const supported: Locale[] = ['en', 'ja', 'ko', 'zh', 'ru'];
 
       const fromUrl = () => {
         const params = new URLSearchParams(window.location.search);
@@ -54,6 +55,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         if (lower.startsWith('ja')) return 'ja';
         if (lower.startsWith('ko')) return 'ko';
         if (lower.startsWith('zh')) return 'zh';
+        if (lower.startsWith('ru')) return 'ru';
         if (lower.startsWith('en')) return 'en';
         return null;
       };

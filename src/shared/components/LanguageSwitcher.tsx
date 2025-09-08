@@ -7,7 +7,8 @@ const flag: Record<Locale, string> = {
   en: '🇺🇸',
   ja: '🇯🇵',
   ko: '🇰🇷',
-  zh: '🇨🇳'
+  zh: '🇨🇳',
+  ru: '🇷🇺'
 };
 
 export default function LanguageSwitcher() {
@@ -16,7 +17,8 @@ export default function LanguageSwitcher() {
     { value: 'en', label: 'English' },
     { value: 'ja', label: '日本語' },
     { value: 'ko', label: '한국어' },
-    { value: 'zh', label: '中文' }
+    { value: 'zh', label: '中文' },
+    { value: 'ru', label: 'Русский' }
   ];
 
   const onChange = (newLocale: Locale) => {
