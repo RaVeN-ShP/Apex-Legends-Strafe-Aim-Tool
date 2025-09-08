@@ -4,7 +4,12 @@ import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { Gun, Pattern } from "@/features/guns/types/gun";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
-// Replaced Next.js Image with native img
+import LightAmmo from '@/public/ammo/Light_Rounds.svg';
+import HeavyAmmo from '@/public/ammo/Heavy_Rounds.svg';
+import EnergyAmmo from '@/public/ammo/Energy_Ammo.svg';
+import ShotgunAmmo from '@/public/ammo/Shotgun_Shells.svg';
+import SniperAmmo from '@/public/ammo/Sniper_Ammo.svg';
+import ArrowsAmmo from '@/public/ammo/Arrows.svg';
 
 export default function PatternImportPicker({
   guns,
@@ -39,13 +44,13 @@ export default function PatternImportPicker({
     care: 'Care Package',
     other: 'Other',
   };
-  const ammoIcon: Record<string, string | undefined> = {
-    light: '/ammo/Light_Rounds.svg',
-    heavy: '/ammo/Heavy_Rounds.svg',
-    energy: '/ammo/Energy_Ammo.svg',
-    shotgun: '/ammo/Shotgun_Shells.svg',
-    sniper: '/ammo/Sniper_Ammo.svg',
-    arrow: '/ammo/Arrows.svg',
+  const AmmoIcon: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined> = {
+    light: LightAmmo,
+    heavy: HeavyAmmo,
+    energy: EnergyAmmo,
+    shotgun: ShotgunAmmo,
+    sniper: SniperAmmo,
+    arrow: ArrowsAmmo,
     care: undefined,
     other: undefined,
   };
@@ -81,9 +86,12 @@ export default function PatternImportPicker({
                   group.items.length > 0 && (
                     <div key={group.key}>
                       <div className={`px-2 py-1 text-[10px] uppercase tracking-wider text-white/60 flex items-center gap-2 ${gi > 0 ? 'border-t border-white/10 mt-1 pt-2' : ''} sticky top-0 bg-black/90`}> 
-                        {ammoIcon[group.key] && (
+                        {AmmoIcon[group.key] && (
                           <span className="relative inline-block w-3.5 h-3.5">
-                            <img src={ammoIcon[group.key]!} alt={group.key} className="absolute inset-0 w-full h-full object-contain" />
+                            {(() => {
+                              const Icon = AmmoIcon[group.key]!;
+                              return <Icon className="absolute inset-0 w-full h-full object-contain fill-current" />;
+                            })()}
                           </span>
                         )}
                         <span>{ammoLabel[group.key] || 'Other'}</span>

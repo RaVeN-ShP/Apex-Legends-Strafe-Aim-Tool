@@ -4,7 +4,6 @@ import { Gun, Pattern } from "@/features/guns/types/gun";
 import PatternVisualizer from "@/features/patterns/components/PatternVisualizer";
 import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
-// Removed Next.js Image import in favor of native img
 
 export default function StandardView({
   gun,
