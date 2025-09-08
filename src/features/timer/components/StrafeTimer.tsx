@@ -232,7 +232,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       {/* Inline settings below buttons */}
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-          <label className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
+          <label htmlFor="waitTimeSeconds" className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
             {t('settings.wait')}
             <Popover className="relative inline-block align-middle">
               <div
@@ -258,6 +258,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 <div className="w-full h-2 bg-gray-600 rounded" />
               </div>
               <input
+                id="waitTimeSeconds"
                 type="range"
                 min="0"
                 max={DELAY_SLIDER_MAX_SECONDS}
@@ -290,7 +291,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           </div>
         </div>
         <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-          <label className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
+          <label htmlFor="volume" className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
             {t('settings.volume')}
           </label>
           <div className="flex items-center gap-2">
@@ -300,6 +301,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 <div className="w-full h-2 bg-gray-600 rounded" />
               </div>
               <input
+                id="volume"
                 type="range"
                 min="0"
                 max="1"
