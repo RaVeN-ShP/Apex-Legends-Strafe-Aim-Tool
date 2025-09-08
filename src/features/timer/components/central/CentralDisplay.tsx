@@ -1,4 +1,4 @@
-import Image from 'next/image';
+// Removed Next.js Image import in favor of native img
 import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 
@@ -130,7 +130,7 @@ export default function CentralDisplay(props: CentralDisplayProps) {
       <div className={`absolute right-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
         <span className={`${isCompact ? 'text-[9px]' : 'text-[11px]'} text-white/80 max-w-[25ch] truncate`} title={gunName}>{gunName}</span>
         <div className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} relative opacity-80`}>
-          <Image src={gunImage} alt={gunName} fill className="object-contain invert drop-shadow" sizes="20px" />
+          <img src={gunImage} alt={gunName} className="absolute inset-0 w-full h-full object-contain invert drop-shadow" />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+// Removed Next.js Image import in favor of native img
 import { useState, ReactNode, useEffect, useRef } from 'react';
 import { Gun } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -215,7 +215,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                 <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center gap-2 px-2 py-2">
                   {ammoIcon[group.key] && (
                     <span className="relative inline-block w-4 h-4">
-                      <Image src={ammoIcon[group.key]!} alt={group.key} fill className="object-contain" sizes="16px" />
+                      <img src={ammoIcon[group.key]!} alt={group.key} className="absolute inset-0 w-full h-full object-contain" />
                     </span>
                   )}
                   <span>{ammoLabel[group.key] || 'Other'}</span>
@@ -234,7 +234,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                     >
                       {/* Background ammo accents removed */}
                       <div className="relative z-10 w-10 h-10 shrink-0">
-                        <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
+                        <img src={gun.image} alt={gun.name} className="absolute inset-0 w-full h-full object-contain invert" />
                       </div>
                       <div className="min-w-0 pr-8">
                         <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
@@ -295,12 +295,10 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
               )}
               <div className="flex items-center gap-4">
                 <div className="relative w-16 h-16 shrink-0">
-                  <Image
+                  <img
                     src={gun.image}
                     alt={gun.name}
-                    fill
-                    className="object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                    sizes="64px"
+                    className="absolute inset-0 w-full h-full object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                   />
                 </div>
                 <div className="min-w-0 pr-6">
