@@ -56,6 +56,7 @@
   "custom.addStep": "ステップを追加",
   "custom.left": "左",
   "custom.right": "右",
+  "custom.shoot": "射撃",
   "custom.durationMs": "時間（ms）",
   "custom.reloadTime": "リロード時間（s）",
   "custom.save": "保存",
@@ -64,7 +65,14 @@
   "custom.createTitle": "カスタムパターンの作成",
   "custom.preview": "プレビュー",
   "custom.confirmDelete": "このカスタムパターンを削除しますか？",
+  "custom.confirmDiscard": "現在の変更を破棄しますか？",
+  "custom.dragToReorder": "ドラッグして並び替え",
   "gun.copyCustomize": "コピーしてカスタマイズ",
   "menu.more": "その他",
-  "gun.selectedLabel": "選択済み:"
+  "gun.selectedLabel": "選択済み:",
+  "importPicker.importFrom": "インポート元",
+  "importPicker.selectGun": "武器を選択",
+  "importPicker.variant": "バリアント",
+  "importPicker.copyTitle": "パターンをコピー",
+  "importPicker.copy": "コピー"
 }

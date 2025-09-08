@@ -5,6 +5,7 @@ import { Listbox, Transition } from "@headlessui/react";
 import { Gun, Pattern } from "@/features/guns/types/gun";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function PatternImportPicker({
   guns,
@@ -21,6 +22,7 @@ export default function PatternImportPicker({
   onChangeVariantKey: (key: string | null) => void;
   onCopy: (steps: Pattern[]) => void;
 }) {
+  const { t } = useI18n();
   const selectedGun = guns.find(g => g.id === importGunId) || null;
   const variantKeys = selectedGun ? Object.keys(selectedGun.pattern ?? {}) : [];
   const resolvedVariantKey = importVariantKey && variantKeys.includes(importVariantKey)
@@ -68,12 +70,12 @@ export default function PatternImportPicker({
 
   return (
     <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-      <div className="text-[11px] text-white/60 mb-2">Import from</div>
+      <div className="text-[11px] text-white/60 mb-2">{t('importPicker.importFrom')}</div>
       <div className="flex flex-wrap items-center gap-2">
         <Listbox value={importGunId} onChange={(v: string | null) => { onChangeGunId(v); onChangeVariantKey(null); }}>
           <div className="relative">
             <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/20 min-w-[180px] text-left">
-              {selectedGun ? selectedGun.name : 'Select gun'}
+              {selectedGun ? selectedGun.name : t('importPicker.selectGun')}
             </Listbox.Button>
             <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
               <Listbox.Options className="absolute z-20 mt-1 max-h-[70vh] overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none custom-scroll">
@@ -115,7 +117,7 @@ export default function PatternImportPicker({
             <Listbox value={importVariantKey} onChange={(v: string | null) => onChangeVariantKey(v)} disabled={!importGunId}>
               <div className="relative">
                 <Listbox.Button className={`text-xs h-8 px-2 rounded border border-red-500 bg-red-600/20 text-red-200 capitalize min-w-[140px] text-left`}>
-                   {importGunId ? (resolvedVariantKey || 'Variant') : 'Variant'}
+                   {importGunId ? (resolvedVariantKey || t('importPicker.variant')) : t('importPicker.variant')}
                 </Listbox.Button>
                 <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                   <Listbox.Options className="absolute z-20 mt-1 max-h-48 overflow-auto w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
@@ -139,10 +141,10 @@ export default function PatternImportPicker({
             onCopy(steps);
           }}
           className="inline-flex items-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/20 hover:bg-white/10"
-          title="Copy pattern"
+          title={t('importPicker.copyTitle')}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
-          Copy
+          {t('importPicker.copy')}
         </button>
       </div>
     </div>

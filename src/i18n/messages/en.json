@@ -56,6 +56,7 @@
   "custom.addStep": "Add step",
   "custom.left": "Left",
   "custom.right": "Right",
+  "custom.shoot": "Shoot",
   "custom.durationMs": "Duration (ms)",
   "custom.reloadTime": "Reload time (s)",
   "custom.save": "Save",
@@ -64,7 +65,14 @@
   "custom.createTitle": "Create Custom Pattern",
   "custom.preview": "Preview",
   "custom.confirmDelete": "Delete this custom pattern?",
+  "custom.confirmDiscard": "Discard current changes?",
+  "custom.dragToReorder": "Drag to reorder",
   "gun.copyCustomize": "Copy & Customize",
   "menu.more": "More",
-  "gun.selectedLabel": "Selected:"
+  "gun.selectedLabel": "Selected:",
+  "importPicker.importFrom": "Import from",
+  "importPicker.selectGun": "Select gun",
+  "importPicker.variant": "Variant",
+  "importPicker.copyTitle": "Copy pattern",
+  "importPicker.copy": "Copy"
 }

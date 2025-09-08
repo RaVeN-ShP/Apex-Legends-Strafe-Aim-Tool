@@ -24,6 +24,7 @@ export default function Home() {
   const { profiles, addProfile, updateProfile, removeProfile, gunsFromProfiles } = useCustomProfiles();
   const [isEditing, setIsEditing] = useState(false);
   const [editorContext, setEditorContext] = useState<{ id: string | null; name: string; steps: Pattern[]; reloadTimeSeconds?: number }>({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: undefined });
+  const [editorResetToken, setEditorResetToken] = useState<number>(0);
 
 
   const allGuns: Gun[] = useMemo(() => {
@@ -69,21 +70,36 @@ export default function Home() {
     return all[key] ?? [];
   }, [selectedGun, selectedPatternKey]);
 
+  const confirmDiscardIfEditing = (): boolean => {
+    if (!isEditing) return true;
+    const ok = window.confirm(t('custom.confirmDiscard', { defaultValue: 'Discard current changes?' }));
+    if (!ok) return false;
+    // Signal child editor to reset its internal state on next open
+    setEditorResetToken((v) => v + 1);
+    return true;
+  };
+
   const handleStartCreate = () => {
+    if (!confirmDiscardIfEditing()) return;
     setIsEditing(true);
     setEditorContext({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: 1.5 });
+    setEditorResetToken((v) => v + 1);
   };
 
   const handleStartEdit = (profileId: string) => {
     const p = profiles.find((x) => x.id === profileId);
     if (!p) return;
+    if (!confirmDiscardIfEditing()) return;
     setIsEditing(true);
     setEditorContext({ id: p.id, name: p.name, steps: p.strafePattern.map((s) => ({ ...s })), reloadTimeSeconds: p.reloadTimeSeconds });
+    setEditorResetToken((v) => v + 1);
   };
 
   const handleStartCopy = (name: string, steps: Pattern[], reloadTimeSeconds?: number) => {
+    if (!confirmDiscardIfEditing()) return;
     setIsEditing(true);
     setEditorContext({ id: null, name, steps: steps.map((s) => ({ ...s })), reloadTimeSeconds });
+    setEditorResetToken((v) => v + 1);
   };
 
   const handleEditorCancel = () => {
@@ -139,7 +155,7 @@ export default function Home() {
         {/* Content */}
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
           {/* Left Sidebar */}
-          <aside className="order-2 md:order-1">
+          <aside className="order-2 md:order-1 self-start">
             <GunsSidebar
               guns={allGuns}
               selectedGun={selectedGun}
@@ -152,60 +168,67 @@ export default function Home() {
             />
           </aside>
 
-        {/* Main Section */}
-          <section className="relative rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white order-1 md:order-2">
-            {isEditing ? (
-              <CustomProfileEditor
-                allGuns={allGuns}
-                initialName={editorContext.name}
-                initialSteps={editorContext.steps}
-                initialReloadTimeSeconds={editorContext.reloadTimeSeconds}
-                volume={volume}
-                onVolumeChange={setVolume}
-                onCancel={handleEditorCancel}
-                onSave={handleEditorSave}
-              />
-            ) : selectedGun ? (
-              <div className="space-y-6">
-                <StandardView
-                  gun={selectedGun}
-                  pattern={selectedPattern}
-                  selectedPatternKey={selectedPatternKey}
-                  onSelectMode={(k) => setSelectedModeId(k)}
+          {/* Right Column: Main + FAQ stacked */}
+          <div className="order-1 md:order-2 md:col-start-2 self-start flex flex-col gap-6">
+            {/* Main Section */}
+            <section className="relative rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+              {isEditing ? (
+                <CustomProfileEditor
+                  allGuns={allGuns}
+                  initialName={editorContext.name}
+                  initialSteps={editorContext.steps}
+                  initialReloadTimeSeconds={editorContext.reloadTimeSeconds}
                   volume={volume}
                   onVolumeChange={setVolume}
+                  resetToken={editorResetToken}
+                  onCancel={handleEditorCancel}
+                  onSave={handleEditorSave}
                 />
-                {/* FAQ Section inside main panel */}
-                <div className="pt-4 border-t border-white/10">
-                  <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
-                  <div className="space-y-2">
-                    {['q0','q1','q2','q3'].map((k) => (
-                      <Disclosure key={k}>
-                        {({ open }) => (
-                          <div className="rounded-md border border-white/10 bg-white/5">
-                            <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
-                              <span className="text-sm font-semibold text-white/90">{t(`faq.${k}.question`)}</span>
-                              <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
-                            </Disclosure.Button>
-                            <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
-                              {k === 'q3' ? (
-                                <div>
-                                  <div>{t(`faq.${k}.answer`, { weapon: selectedGun?.name ?? '-' })}</div>
-                                  <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: selectedGun?.name ?? '-' })}</div>
-                                </div>
-                              ) : t(`faq.${k}.answer`)}
-                            </Disclosure.Panel>
-                          </div>
-                        )}
-                      </Disclosure>
-                    ))}
-                  </div>
+              ) : selectedGun ? (
+                <div className="space-y-6">
+                  <StandardView
+                    gun={selectedGun}
+                    pattern={selectedPattern}
+                    selectedPatternKey={selectedPatternKey}
+                    onSelectMode={(k) => setSelectedModeId(k)}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                  />
+                
                 </div>
-              </div>
-            ) : (
-              <div className="text-white/70">{t('main.selectPrompt')}</div>
-            )}
-          </section>
+              ) : (
+                <div className="text-white/70">{t('main.selectPrompt')}</div>
+              )}
+            </section>
+            {/* FAQ Container - show only with StandardView (not editing) */}
+            {!isEditing && selectedGun ? (
+              <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+                <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
+                <div className="space-y-2">
+                  {['q0','q1','q2','q3'].map((k) => (
+                    <Disclosure key={k}>
+                      {({ open }) => (
+                        <div className="rounded-md border border-white/10 bg-white/5">
+                          <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
+                            <span className="text-sm font-semibold text-white/90">{t(`faq.${k}.question`)}</span>
+                            <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
+                          </Disclosure.Button>
+                          <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
+                            {k === 'q3' ? (
+                              <div>
+                                <div>{t(`faq.${k}.answer`, { weapon: selectedGun?.name ?? '-' })}</div>
+                                <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: selectedGun?.name ?? '-' })}</div>
+                              </div>
+                            ) : t(`faq.${k}.answer`)}
+                          </Disclosure.Panel>
+                        </div>
+                      )}
+                    </Disclosure>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
         </div>
 
 

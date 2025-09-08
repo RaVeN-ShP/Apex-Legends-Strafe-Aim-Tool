@@ -56,6 +56,7 @@
   "custom.addStep": "스텝 추가",
   "custom.left": "왼쪽",
   "custom.right": "오른쪽",
+  "custom.shoot": "사격",
   "custom.durationMs": "지속시간 (ms)",
   "custom.reloadTime": "재장전 시간 (s)",
   "custom.save": "저장",
@@ -64,7 +65,14 @@
   "custom.createTitle": "커스텀 패턴 만들기",
   "custom.preview": "미리보기",
   "custom.confirmDelete": "이 커스텀 패턴을 삭제할까요?",
+  "custom.confirmDiscard": "현재 변경 사항을 버릴까요?",
+  "custom.dragToReorder": "드래그하여 순서 변경",
   "gun.copyCustomize": "복사 후 사용자 지정",
   "menu.more": "더보기",
-  "gun.selectedLabel": "선택됨:"
+  "gun.selectedLabel": "선택됨:",
+  "importPicker.importFrom": "가져오기 대상",
+  "importPicker.selectGun": "무기 선택",
+  "importPicker.variant": "변형",
+  "importPicker.copyTitle": "패턴 복사",
+  "importPicker.copy": "복사"
 }

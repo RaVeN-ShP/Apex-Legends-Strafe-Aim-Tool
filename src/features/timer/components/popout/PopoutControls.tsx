@@ -19,16 +19,16 @@ export default function PopoutControls({ targetRef, onStateChange }: { targetRef
             <div className="rounded-md border border-white/15 bg-black/90 p-2 shadow-lg">
               <div className="text-[11px] text-white/80 mb-2">{t('timer.popoutHint')}</div>
               <div className="relative w-full h-52 overflow-hidden rounded">
-                <Image src="/overlay_example.png" alt="Overlay example" fill className="object-cover" />
+                <img src="/overlay_example.jpg" alt="Overlay example" className="object-cover" />
               </div>
             </div>
           </div>
-          <button onClick={open} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors" title="Pop out the display (Document Picture-in-Picture)">
+          <button onClick={open} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors">
             {t('timer.popout')}
           </button>
         </div>
       ) : (
-        <button onClick={close} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors" title="Return the display to the page">
+        <button onClick={close} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors">
           {t('timer.return')}
         </button>
       )}

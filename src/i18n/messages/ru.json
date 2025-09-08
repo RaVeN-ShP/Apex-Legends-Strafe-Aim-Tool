@@ -56,6 +56,7 @@
   "custom.addStep": "Добавить шаг",
   "custom.left": "Влево",
   "custom.right": "Вправо",
+  "custom.shoot": "Стрелять",
   "custom.durationMs": "Длительность (мс)",
   "custom.reloadTime": "Время перезарядки (с)",
   "custom.save": "Сохранить",
@@ -64,8 +65,15 @@
   "custom.createTitle": "Создать пользовательский паттерн",
   "custom.preview": "Предпросмотр",
   "custom.confirmDelete": "Удалить этот пользовательский паттерн?",
+  "custom.confirmDiscard": "Отменить текущие изменения?",
+  "custom.dragToReorder": "Перетащите для изменения порядка",
   "gun.copyCustomize": "Скопировать и настроить",
   "menu.more": "Ещё",
-  "gun.selectedLabel": "Выбрано:"
+  "gun.selectedLabel": "Выбрано:",
+  "importPicker.importFrom": "Импорт из",
+  "importPicker.selectGun": "Выберите оружие",
+  "importPicker.variant": "Вариант",
+  "importPicker.copyTitle": "Скопировать паттерн",
+  "importPicker.copy": "Копировать"
 }
 

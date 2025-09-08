@@ -90,9 +90,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-gray-900 text-white" style={{ colorScheme: 'dark' }}>
       <head>
-        <script defer src="/um.js" data-website-id="b87caea7-b860-43f7-aef8-14970c007d40"></script>
+        {isProd && (
+          <script defer src="/um.js" data-website-id="b87caea7-b860-43f7-aef8-14970c007d40"></script>
+        )}
       </head>
-      <Analytics/>
+      {isProd && <Analytics/>}
       <body className={inter.className}>
         <I18nProvider>
           {children}
