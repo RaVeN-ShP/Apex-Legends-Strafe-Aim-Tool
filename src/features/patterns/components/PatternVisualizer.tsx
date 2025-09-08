@@ -23,13 +23,19 @@ export default function PatternVisualizer({ pattern }: PatternVisualizerProps) {
           {pattern.map((step, idx) => {
             const dur = step.duration;
             const widthPct = (dur / total) * 100;
-            const { barColor, symbol, label } = getStepStyle(step);
+            const { barColor, symbol } = getStepStyle(step);
+            const tLabel =
+              step.type === 'shoot'
+                ? t('custom.shoot')
+                : step.direction === 'left'
+                ? t('custom.left')
+                : t('custom.right');
             return (
               <div
                 key={idx}
                 className={`${barColor} relative h-full`}
                 style={{ width: `${widthPct}%` }}
-                title={`${label.toUpperCase()} • ${dur}ms`}
+                title={`${tLabel} • ${dur}${t('pattern.units.ms')}`}
               >
                 {/* Direction chevrons */}
                 <span className="absolute inset-0 grid place-items-center text-[10px] text-white/90">
@@ -48,7 +54,7 @@ export default function PatternVisualizer({ pattern }: PatternVisualizerProps) {
             const widthPct = (dur / total) * 100;
             return (
               <div key={`dur-${idx}`} className="px-0.5 text-center" style={{ width: `${widthPct}%` }}>
-                <span className="block text-[10px] leading-tight text-white/70">{dur}ms</span>
+                <span className="block text-[10px] leading-tight text-white/70">{dur}{t('pattern.units.ms')}</span>
               </div>
             );
           })}
@@ -62,13 +68,13 @@ export default function PatternVisualizer({ pattern }: PatternVisualizerProps) {
         return (
           <div className="mt-2 text-[11px] text-white/60">
             {hasLeft && (
-              <span className="inline-flex items-center mr-3"><span className={`inline-block w-3 h-3 ${PatternTypeStyles.direction.left.barColor} rounded-sm mr-1`} /> Left (A)</span>
+              <span className="inline-flex items-center mr-3"><span className={`inline-block w-3 h-3 ${PatternTypeStyles.direction.left.barColor} rounded-sm mr-1`} /> {t('pattern.legend.left')}</span>
             )}
             {hasRight && (
-              <span className="inline-flex items-center mr-3"><span className={`inline-block w-3 h-3 ${PatternTypeStyles.direction.right.barColor} rounded-sm mr-1`} /> Right (D)</span>
+              <span className="inline-flex items-center mr-3"><span className={`inline-block w-3 h-3 ${PatternTypeStyles.direction.right.barColor} rounded-sm mr-1`} /> {t('pattern.legend.right')}</span>
             )}
             {hasShoot && (
-              <span className="inline-flex items-center mr-3"><span className={`inline-block w-3 h-3 ${PatternTypeStyles.shoot.barColor} rounded-sm mr-1`} /> Shoot</span>
+              <span className="inline-flex items-center mr-3"><span className={`inline-block w-3 h-3 ${PatternTypeStyles.shoot.barColor} rounded-sm mr-1`} /> {t('pattern.legend.shoot')}</span>
             )}
           </div>
         );

@@ -74,5 +74,12 @@
   "importPicker.selectGun": "무기 선택",
   "importPicker.variant": "변형",
   "importPicker.copyTitle": "패턴 복사",
-  "importPicker.copy": "복사"
+  "importPicker.copy": "복사",
+  "pattern.units.ms": "ms",
+  "pattern.legend.left": "왼쪽 (A)",
+  "pattern.legend.right": "오른쪽 (D)",
+  "pattern.legend.shoot": "사격"
+  ,
+  "remarks.usePurpleStockMag": "보라색 스톡과 탄창 사용",
+  "remarks.nemesisFullyCharged": "완충 네메시스용 패턴"
 }

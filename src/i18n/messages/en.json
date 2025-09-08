@@ -74,5 +74,12 @@
   "importPicker.selectGun": "Select gun",
   "importPicker.variant": "Variant",
   "importPicker.copyTitle": "Copy pattern",
-  "importPicker.copy": "Copy"
+  "importPicker.copy": "Copy",
+  "pattern.units.ms": "ms",
+  "pattern.legend.left": "Left (A)",
+  "pattern.legend.right": "Right (D)",
+  "pattern.legend.shoot": "Shoot"
+  ,
+  "remarks.usePurpleStockMag": "Use a purple stock & magazine",
+  "remarks.nemesisFullyCharged": "Pattern works for fully charged Nemesis"
 }

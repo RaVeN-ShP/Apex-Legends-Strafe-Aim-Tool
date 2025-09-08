@@ -8,7 +8,7 @@ export const guns: Gun[] = [
     image: '/weapons/ar/R-301_Carbine_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 2.4,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 800 },
@@ -24,7 +24,7 @@ export const guns: Gun[] = [
     image: '/weapons/smg/R-99_SMG_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 2.21,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 390 },
@@ -42,7 +42,7 @@ export const guns: Gun[] = [
     image: '/weapons/lmg/M600_Spitfire_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 3.78,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 430 },
@@ -61,7 +61,7 @@ export const guns: Gun[] = [
     image: '/weapons/smg/Alternator_SMG_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 2.01,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 600 },
@@ -78,7 +78,7 @@ export const guns: Gun[] = [
     image: '/weapons/ar/HAVOC_Rifle_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 2.88,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       normal: [
         { type: 'shoot', duration: 350 },
@@ -102,7 +102,7 @@ export const guns: Gun[] = [
     image: '/weapons/smg/Volt_SMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 1.83,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 750 },
@@ -119,7 +119,7 @@ export const guns: Gun[] = [
     image: '/weapons/lmg/Devotion_LMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 3.27,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       normal: [
         { type: 'direction', direction: 'right', duration: 500 },
@@ -142,7 +142,7 @@ export const guns: Gun[] = [
     image: '/weapons/lmg/L-STAR_EMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 2.21,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 300 },
@@ -157,7 +157,7 @@ export const guns: Gun[] = [
     image: '/weapons/ar/Nemesis_Burst_AR_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 2.43,
-    remarks: ['Use a purple stock & magazine', 'Pattern works for fully charged Nemesis'],
+    remarks: ['remarks.usePurpleStockMag', 'remarks.nemesisFullyCharged'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 330 },
@@ -178,7 +178,7 @@ export const guns: Gun[] = [
     image: '/weapons/pistol/RE-45_Auto_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 1.95,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'shoot', duration: 400 },
@@ -200,7 +200,7 @@ export const guns: Gun[] = [
     image: '/weapons/ar/VK-47_Flatline_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.79,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 600 },
@@ -217,7 +217,7 @@ export const guns: Gun[] = [
     image: '/weapons/smg/C.A.R._SMG_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 1.92,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 470 },
@@ -235,7 +235,7 @@ export const guns: Gun[] = [
     image: '/weapons/smg/Prowler_Burst_PDW_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.34,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       burst: [
         { type: 'direction', direction: 'left', duration: 450 },
@@ -261,7 +261,7 @@ export const guns: Gun[] = [
     image: '/weapons/lmg/Rampage_LMG_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 3.6,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       'normal': [
         { type: 'direction', direction: 'left', duration: 620 },
@@ -282,7 +282,7 @@ export const guns: Gun[] = [
     image: '/weapons/ar/Hemlok_Burst_AR_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.57,
-    remarks: ['Use a purple stock & magazine'],
+    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 370 },

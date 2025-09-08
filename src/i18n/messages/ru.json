@@ -74,6 +74,13 @@
   "importPicker.selectGun": "Выберите оружие",
   "importPicker.variant": "Вариант",
   "importPicker.copyTitle": "Скопировать паттерн",
-  "importPicker.copy": "Копировать"
+  "importPicker.copy": "Копировать",
+  "pattern.units.ms": "мс",
+  "pattern.legend.left": "Влево (A)",
+  "pattern.legend.right": "Вправо (D)",
+  "pattern.legend.shoot": "Стрелять"
+  ,
+  "remarks.usePurpleStockMag": "Используйте фиолетовые приклад и магазин",
+  "remarks.nemesisFullyCharged": "Паттерн для полностью заряженной Nemesis"
 }
 
