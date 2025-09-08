@@ -25,7 +25,13 @@ export default function StandardView({
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
-            <img src={gun.image} alt={gun.name} className="absolute inset-0 w-full h-full object-contain invert" />
+            {(() => {
+              const Icon = gun.image;
+              if (typeof Icon === 'string') {
+                return <img src={Icon} alt={gun.name} className="absolute inset-0 w-full h-full object-contain invert" />;
+              }
+              return <Icon className="absolute inset-0 w-full h-full object-contain invert" />;
+            })()}
           </div>
           <div className="min-w-0 pr-6">
             <div className="text-xl font-bold tracking-wide truncate max-w-[35ch]" title={gun.name}>{gun.name}</div>

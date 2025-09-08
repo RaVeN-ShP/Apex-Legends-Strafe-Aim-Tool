@@ -1,11 +1,28 @@
 import { Gun } from '@/features/guns/types/gun';
 
+import R301Icon from '@/features/guns/assets/weapons/ar/R-301_Carbine_Icon.svg';
+import R99Icon from '@/features/guns/assets/weapons/smg/R-99_SMG_Icon.svg';
+import SpitfireIcon from '@/features/guns/assets/weapons/lmg/M600_Spitfire_Icon.svg';
+import AlternatorIcon from '@/features/guns/assets/weapons/smg/Alternator_SMG_Icon.svg';
+import HavocIcon from '@/features/guns/assets/weapons/ar/HAVOC_Rifle_Icon.svg';
+import VoltIcon from '@/features/guns/assets/weapons/smg/Volt_SMG_Icon.svg';
+import DevotionIcon from '@/features/guns/assets/weapons/lmg/Devotion_LMG_Icon.svg';
+import LstarIcon from '@/features/guns/assets/weapons/lmg/L-STAR_EMG_Icon.svg';
+import NemesisIcon from '@/features/guns/assets/weapons/ar/Nemesis_Burst_AR_Icon.svg';
+import RE45Icon from '@/features/guns/assets/weapons/pistol/RE-45_Auto_Icon.svg';
+import FlatlineIcon from '@/features/guns/assets/weapons/ar/VK-47_Flatline_Icon.svg';
+import CARIcon from '@/features/guns/assets/weapons/smg/C.A.R._SMG_Icon.svg';
+import ProwlerIcon from '@/features/guns/assets/weapons/smg/Prowler_Burst_PDW_Icon.svg';
+import RampageIcon from '@/features/guns/assets/weapons/lmg/Rampage_LMG_Icon.svg';
+import HemlokIcon from '@/features/guns/assets/weapons/ar/Hemlok_Burst_AR_Icon.svg';
+
+
 export const guns: Gun[] = [
   {
     id: 'r301',
     name: 'R-301 Carbine',
     category: 'ar',
-    image: '/weapons/ar/R-301_Carbine_Icon.svg',
+    image: R301Icon,
     ammo: 'light',
     reloadTimeSeconds: 2.4,
     remarks: ['Use a purple stock & magazine'],
@@ -21,7 +38,7 @@ export const guns: Gun[] = [
     id: 'r99',
     name: 'R-99 SMG',
     category: 'smg',
-    image: '/weapons/smg/R-99_SMG_Icon.svg',
+    image: R99Icon,
     ammo: 'light',
     reloadTimeSeconds: 2.21,
     remarks: ['Use a purple stock & magazine'],
@@ -39,7 +56,7 @@ export const guns: Gun[] = [
     id: 'spitfire',
     name: 'M600 Spitfire',
     category: 'lmg',
-    image: '/weapons/lmg/M600_Spitfire_Icon.svg',
+    image: SpitfireIcon,
     ammo: 'light',
     reloadTimeSeconds: 3.78,
     remarks: ['Use a purple stock & magazine'],
@@ -58,7 +75,7 @@ export const guns: Gun[] = [
     id: 'alternator',
     name: 'Alternator SMG',
     category: 'smg',
-    image: '/weapons/smg/Alternator_SMG_Icon.svg',
+    image: AlternatorIcon,
     ammo: 'light',
     reloadTimeSeconds: 2.01,
     remarks: ['Use a purple stock & magazine'],
@@ -75,7 +92,7 @@ export const guns: Gun[] = [
     id: 'havoc',
     name: 'HAVOC Rifle',
     category: 'ar',
-    image: '/weapons/ar/HAVOC_Rifle_Icon.svg',
+    image: HavocIcon,
     ammo: 'energy',
     reloadTimeSeconds: 2.88,
     remarks: ['Use a purple stock & magazine'],
@@ -99,7 +116,7 @@ export const guns: Gun[] = [
     id: 'volt',
     name: 'Volt SMG',
     category: 'smg',
-    image: '/weapons/smg/Volt_SMG_Icon.svg',
+    image: VoltIcon,
     ammo: 'energy',
     reloadTimeSeconds: 1.83,
     remarks: ['Use a purple stock & magazine'],
@@ -116,7 +133,7 @@ export const guns: Gun[] = [
     id: 'devotion',
     name: 'Devotion LMG',
     category: 'lmg',
-    image: '/weapons/lmg/Devotion_LMG_Icon.svg',
+    image: DevotionIcon,
     ammo: 'energy',
     reloadTimeSeconds: 3.27,
     remarks: ['Use a purple stock & magazine'],
@@ -139,7 +156,7 @@ export const guns: Gun[] = [
     id: 'lstar',
     name: 'L-STAR EMG',
     category: 'lmg',
-    image: '/weapons/lmg/L-STAR_EMG_Icon.svg',
+    image: LstarIcon,
     ammo: 'energy',
     reloadTimeSeconds: 2.21,
     remarks: ['Use a purple stock & magazine'],
@@ -154,7 +171,7 @@ export const guns: Gun[] = [
     id: 'nemesis',
     name: 'Nemesis Burst AR',
     category: 'ar',
-    image: '/weapons/ar/Nemesis_Burst_AR_Icon.svg',
+    image: NemesisIcon,
     ammo: 'energy',
     reloadTimeSeconds: 2.43,
     remarks: ['Use a purple stock & magazine', 'Pattern works for fully charged Nemesis'],
@@ -175,7 +192,7 @@ export const guns: Gun[] = [
     id: 're45',
     name: 'RE-45 Burst',
     category: 'pistol',
-    image: '/weapons/pistol/RE-45_Auto_Icon.svg',
+    image: RE45Icon,
     ammo: 'energy',
     reloadTimeSeconds: 1.95,
     remarks: ['Use a purple stock & magazine'],
@@ -197,7 +214,7 @@ export const guns: Gun[] = [
     id: 'flatline',
     name: 'VK-47 Flatline',
     category: 'ar',
-    image: '/weapons/ar/VK-47_Flatline_Icon.svg',
+    image: FlatlineIcon,
     ammo: 'heavy',
     reloadTimeSeconds: 2.79,
     remarks: ['Use a purple stock & magazine'],
@@ -214,7 +231,7 @@ export const guns: Gun[] = [
     id: 'car',
     name: 'C.A.R. SMG',
     category: 'smg',
-    image: '/weapons/smg/C.A.R._SMG_Icon.svg',
+    image: CARIcon,
     ammo: 'heavy',
     reloadTimeSeconds: 1.92,
     remarks: ['Use a purple stock & magazine'],
@@ -232,7 +249,7 @@ export const guns: Gun[] = [
     id: 'prowler-auto',
     name: 'Prowler (Auto)',
     category: 'smg',
-    image: '/weapons/smg/Prowler_Burst_PDW_Icon.svg',
+    image: ProwlerIcon,
     ammo: 'heavy',
     reloadTimeSeconds: 2.34,
     remarks: ['Use a purple stock & magazine'],
@@ -249,7 +266,7 @@ export const guns: Gun[] = [
     id: 'rampage',
     name: 'Rampage LMG',
     category: 'lmg',
-    image: '/weapons/lmg/Rampage_LMG_Icon.svg',
+    image: RampageIcon,
     ammo: 'heavy',
     reloadTimeSeconds: 3.6,
     remarks: ['Use a purple stock & magazine'],
@@ -270,7 +287,7 @@ export const guns: Gun[] = [
     id: 'prowler-burst',
     name: 'Prowler (Burst)',
     category: 'smg',
-    image: '/weapons/smg/Prowler_Burst_PDW_Icon.svg',
+    image: ProwlerIcon,
     ammo: 'heavy',
     reloadTimeSeconds: 2.34,
     remarks: ['Use a purple stock & magazine'],
@@ -290,7 +307,7 @@ export const guns: Gun[] = [
     id: 'hemlok',
     name: 'Hemlok Burst AR',
     category: 'ar',
-    image: '/weapons/ar/Hemlok_Burst_AR_Icon.svg',
+    image: HemlokIcon,
     ammo: 'heavy',
     reloadTimeSeconds: 2.57,
     remarks: ['Use a purple stock & magazine'],

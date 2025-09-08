@@ -19,7 +19,7 @@ export interface Gun {
   // Map of pattern variants: e.g., { default: [...], charged: [...], 'non-charged': [...] }
   pattern: Record<string, Pattern[]>;
   category: WeaponCategory;
-  image: string; // public path to svg icon
+  image: React.ComponentType<React.SVGProps<SVGSVGElement>> | string; // public path to svg icon
   ammo?: 'light' | 'heavy' | 'energy' | 'shotgun' | 'sniper' | 'arrow' | 'care';
   remarks?: string[];
   reloadTimeSeconds?: number; // base reload duration for this weapon

@@ -4,12 +4,12 @@ import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { Gun, Pattern } from "@/features/guns/types/gun";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
-import LightAmmo from '@/public/ammo/Light_Rounds.svg';
-import HeavyAmmo from '@/public/ammo/Heavy_Rounds.svg';
-import EnergyAmmo from '@/public/ammo/Energy_Ammo.svg';
-import ShotgunAmmo from '@/public/ammo/Shotgun_Shells.svg';
-import SniperAmmo from '@/public/ammo/Sniper_Ammo.svg';
-import ArrowsAmmo from '@/public/ammo/Arrows.svg';
+import LightAmmo from '@/features/guns/assets/ammo/Light_Rounds.svg';
+import HeavyAmmo from '@/features/guns/assets/ammo/Heavy_Rounds.svg';
+import EnergyAmmo from '@/features/guns/assets/ammo/Energy_Ammo.svg';
+import ShotgunAmmo from '@/features/guns/assets/ammo/Shotgun_Shells.svg';
+import SniperAmmo from '@/features/guns/assets/ammo/Sniper_Ammo.svg';
+import ArrowsAmmo from '@/features/guns/assets/ammo/Arrows.svg';
 
 export default function PatternImportPicker({
   guns,

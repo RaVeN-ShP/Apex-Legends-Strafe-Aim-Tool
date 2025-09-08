@@ -1,11 +1,11 @@
 'use client';
 
-import LightAmmo from '@/public/ammo/Light_Rounds.svg';
-import HeavyAmmo from '@/public/ammo/Heavy_Rounds.svg';
-import EnergyAmmo from '@/public/ammo/Energy_Ammo.svg';
-import ShotgunAmmo from '@/public/ammo/Shotgun_Shells.svg';
-import SniperAmmo from '@/public/ammo/Sniper_Ammo.svg';
-import ArrowsAmmo from '@/public/ammo/Arrows.svg';
+import LightAmmo from '@/features/guns/assets/ammo/Light_Rounds.svg';
+import HeavyAmmo from '@/features/guns/assets/ammo/Heavy_Rounds.svg';
+import EnergyAmmo from '@/features/guns/assets/ammo/Energy_Ammo.svg';
+import ShotgunAmmo from '@/features/guns/assets/ammo/Shotgun_Shells.svg';
+import SniperAmmo from '@/features/guns/assets/ammo/Sniper_Ammo.svg';
+import ArrowsAmmo from '@/features/guns/assets/ammo/Arrows.svg';
 import { useState, ReactNode, useEffect, useRef } from 'react';
 import { Gun } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -242,7 +242,13 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                     >
                       {/* Background ammo accents removed */}
                       <div className="relative z-10 w-10 h-10 shrink-0">
-                        <img src={gun.image} alt={gun.name} className="absolute inset-0 w-full h-full object-contain invert" />
+                        {(() => {
+                          const Icon = gun.image;
+                          if (typeof Icon === 'string') {
+                            return <img src={Icon} alt={gun.name} className="absolute inset-0 w-full h-full object-contain invert" />;
+                          }
+                          return <Icon className="absolute inset-0 w-full h-full object-contain invert" />;
+                        })()}
                       </div>
                       <div className="min-w-0 pr-8">
                         <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
@@ -303,11 +309,13 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
               )}
               <div className="flex items-center gap-4">
                 <div className="relative w-16 h-16 shrink-0">
-                  <img
-                    src={gun.image}
-                    alt={gun.name}
-                    className="absolute inset-0 w-full h-full object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                  />
+                {(() => {
+              const Icon = gun.image;
+              if (typeof Icon === 'string') {
+                return <img src={Icon} alt={gun.name} className="absolute inset-0 w-full h-full object-contain invert" />;
+              }
+              return <Icon className="absolute inset-0 w-full h-full object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />;
+            })()}
                 </div>
                 <div className="min-w-0 pr-6">
                   <div className="text-white font-semibold truncate tracking-wide" title={gun.name}>

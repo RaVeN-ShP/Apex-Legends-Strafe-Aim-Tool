@@ -10,7 +10,7 @@ export type CentralDisplayProps = {
   // movementDirection is not used; remove to avoid lint errors and keep API minimal
   subtitleColor: string;
   gunName: string;
-  gunImage: string;
+  gunImage: React.ComponentType<React.SVGProps<SVGSVGElement>> | string;
   isCompact: boolean;
   totalDurationMs: number;
   currentTimeMs: number;
@@ -130,7 +130,13 @@ export default function CentralDisplay(props: CentralDisplayProps) {
       <div className={`absolute right-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
         <span className={`${isCompact ? 'text-[9px]' : 'text-[11px]'} text-white/80 max-w-[25ch] truncate`} title={gunName}>{gunName}</span>
         <div className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} relative opacity-80`}>
-          <img src={gunImage} alt={gunName} className="absolute inset-0 w-full h-full object-contain invert drop-shadow" />
+          {(() => {
+              const Icon = gunImage;
+              if (typeof Icon === 'string') {
+                return <img src={Icon} alt={gunName} className="absolute inset-0 w-full h-full object-contain invert drop-shadow" />;
+              }
+              return <Icon className="absolute inset-0 w-full h-full object-contain invert drop-shadow" />;
+            })()}
         </div>
       </div>
 
