@@ -12,11 +12,23 @@ import { useCustomProfiles, profileToGun } from "@/features/customProfiles/useCu
 import GunsSidebar from "@/features/guns/GunsSidebar";
 import CustomProfileEditor from "@/features/customProfiles/CustomProfileEditor";
 import StandardView from "@/features/main/StandardView";
+import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
+import Image from "next/image";
+import StrafeTimer from "@/features/timer/components/StrafeTimer";
+import DualPatternVisualizer from "@/features/patterns/components/DualPatternVisualizer";
 // Custom profiles are managed via hook for storage compatibility
 
+type SelectionMode = 'A' | 'B' | 'AB';
+
 export default function Home() {
-  const [selectedGun, setSelectedGun] = useState<Gun | null>(guns[0] ?? null);
-  const [selectedModeId, setSelectedModeId] = useState<string | null>(null);
+  // Two gun slots
+  const [selectedGunA, setSelectedGunA] = useState<Gun | null>(guns[0] ?? null);
+  const [selectedGunB, setSelectedGunB] = useState<Gun | null>(guns[1] ?? guns[0] ?? null);
+  // Variant (pattern key) per gun slot
+  const [selectedModeAId, setSelectedModeAId] = useState<string | null>(null);
+  const [selectedModeBId, setSelectedModeBId] = useState<string | null>(null);
+  // A/B/AB selection mode
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('A');
   // Preserved for future features; currently unused
   // const [waitTimeSeconds] = useState(DEFAULT_DELAY_SECONDS);
   const [volume, setVolume] = useState(0.8);
@@ -34,41 +46,80 @@ export default function Home() {
     ];
   }, [gunsFromProfiles]);
 
-  // Reset/initialize mode when switching guns
+  // Reset/initialize variant when switching guns per slot
   useEffect(() => {
-    if (!selectedGun) {
-      setSelectedModeId(null);
-      return;
-    }
-    const keys = Object.keys(selectedGun.pattern ?? {});
-    if (keys.length > 1) {
-      setSelectedModeId((prev) => {
-        if (prev && keys.includes(prev)) return prev;
-        // prefer 'default' if present, else first key
-        return keys.includes('default') ? 'default' : keys[0];
-      });
+    if (!selectedGunA) {
+      setSelectedModeAId(null);
     } else {
-      setSelectedModeId(null);
+      const keys = Object.keys(selectedGunA.pattern ?? {});
+      if (keys.length > 1) {
+        setSelectedModeAId((prev) => (prev && keys.includes(prev)) ? prev : (keys.includes('default') ? 'default' : keys[0]));
+      } else {
+        setSelectedModeAId(keys[0] ?? null);
+      }
     }
-    // Initialize slider default to current gun reload time (clamped to slider bounds)
-    // const reload = Math.max(0, Math.min(DELAY_SLIDER_MAX_SECONDS, selectedGun.reloadTimeSeconds ?? 0));
-  }, [selectedGun]);
+  }, [selectedGunA]);
 
-  // Effective selections
-  const selectedPatternKey: string | null = useMemo(() => {
-    if (!selectedGun) return null;
-    const keys = Object.keys(selectedGun.pattern ?? {});
+  useEffect(() => {
+    if (!selectedGunB) {
+      setSelectedModeBId(null);
+    } else {
+      const keys = Object.keys(selectedGunB.pattern ?? {});
+      if (keys.length > 1) {
+        setSelectedModeBId((prev) => (prev && keys.includes(prev)) ? prev : (keys.includes('default') ? 'default' : keys[0]));
+      } else {
+        setSelectedModeBId(keys[0] ?? null);
+      }
+    }
+  }, [selectedGunB]);
+
+  // Effective selections per slot
+  const selectedPatternKeyA: string | null = useMemo(() => {
+    if (!selectedGunA) return null;
+    const keys = Object.keys(selectedGunA.pattern ?? {});
     if (keys.length <= 1) return keys[0] ?? 'default';
-    if (selectedModeId && keys.includes(selectedModeId)) return selectedModeId;
+    if (selectedModeAId && keys.includes(selectedModeAId)) return selectedModeAId;
     return keys.includes('default') ? 'default' : keys[0];
-  }, [selectedGun, selectedModeId]);
+  }, [selectedGunA, selectedModeAId]);
 
-  const selectedPattern: Pattern[] = useMemo(() => {
-    if (!selectedGun) return [];
-    const all = selectedGun.pattern ?? {};
-    const key = selectedPatternKey ?? (Object.keys(all)[0] ?? 'default');
+  const selectedPatternKeyB: string | null = useMemo(() => {
+    if (!selectedGunB) return null;
+    const keys = Object.keys(selectedGunB.pattern ?? {});
+    if (keys.length <= 1) return keys[0] ?? 'default';
+    if (selectedModeBId && keys.includes(selectedModeBId)) return selectedModeBId;
+    return keys.includes('default') ? 'default' : keys[0];
+  }, [selectedGunB, selectedModeBId]);
+
+  const selectedPatternA: Pattern[] = useMemo(() => {
+    if (!selectedGunA) return [];
+    const all = selectedGunA.pattern ?? {};
+    const key = selectedPatternKeyA ?? (Object.keys(all)[0] ?? 'default');
     return all[key] ?? [];
-  }, [selectedGun, selectedPatternKey]);
+  }, [selectedGunA, selectedPatternKeyA]);
+
+  const selectedPatternB: Pattern[] = useMemo(() => {
+    if (!selectedGunB) return [];
+    const all = selectedGunB.pattern ?? {};
+    const key = selectedPatternKeyB ?? (Object.keys(all)[0] ?? 'default');
+    return all[key] ?? [];
+  }, [selectedGunB, selectedPatternKeyB]);
+
+  // Which slot is currently controlled by selections from the sidebar
+  const activeSlot: SelectionMode = selectionMode;
+  const displayGun: Gun | null = useMemo(() => {
+    if (activeSlot === 'B') return selectedGunB;
+    return selectedGunA;
+  }, [activeSlot, selectedGunA, selectedGunB]);
+  const displayPatternKey: string | null = useMemo(() => {
+    if (activeSlot === 'B') return selectedPatternKeyB;
+    return selectedPatternKeyA;
+  }, [activeSlot, selectedPatternKeyA, selectedPatternKeyB]);
+  const displayPattern: Pattern[] = useMemo(() => {
+    if (activeSlot === 'B') return selectedPatternB;
+    return selectedPatternA;
+  }, [activeSlot, selectedPatternA, selectedPatternB]);
+
+  // Dual mode moved to /advanced
 
   const confirmDiscardIfEditing = (): boolean => {
     if (!isEditing) return true;
@@ -111,10 +162,18 @@ export default function Home() {
     if (editorContext.id) {
       const updated = { id: editorContext.id, name, strafePattern: steps, reloadTimeSeconds };
       updateProfile(updated);
-      setSelectedGun(profileToGun(updated));
+      if (selectionMode === 'B') {
+        setSelectedGunB(profileToGun(updated));
+      } else {
+        setSelectedGunA(profileToGun(updated));
+      }
     } else {
       const created = addProfile({ name, strafePattern: steps, reloadTimeSeconds });
-      setSelectedGun(profileToGun(created));
+      if (selectionMode === 'B') {
+        setSelectedGunB(profileToGun(created));
+      } else {
+        setSelectedGunA(profileToGun(created));
+      }
     }
     setIsEditing(false);
   };
@@ -158,9 +217,17 @@ export default function Home() {
           <aside className="order-2 md:order-1 self-start">
             <GunsSidebar
               guns={allGuns}
-              selectedGun={selectedGun}
-              selectedPatternKey={selectedPatternKey}
-              onSelectGun={(g) => { setSelectedGun(g); setIsEditing(false); }}
+              selectedGun={displayGun}
+              selectedPatternKey={displayPatternKey}
+              onSelectGun={(g) => {
+                if (selectionMode === 'B') {
+                  setSelectedGunB(g);
+                } else {
+                  // In 'A' or 'AB' modes, selecting updates A
+                  setSelectedGunA(g);
+                }
+                setIsEditing(false);
+              }}
               onStartCreate={handleStartCreate}
               onStartEdit={handleStartEdit}
               onStartCopy={(name, steps, reloadTimeSeconds) => handleStartCopy(name, steps, reloadTimeSeconds)}
@@ -184,16 +251,154 @@ export default function Home() {
                   onCancel={handleEditorCancel}
                   onSave={handleEditorSave}
                 />
-              ) : selectedGun ? (
+              ) : displayGun ? (
                 <div className="space-y-6">
-                  <StandardView
-                    gun={selectedGun}
-                    pattern={selectedPattern}
-                    selectedPatternKey={selectedPatternKey}
-                    onSelectMode={(k) => setSelectedModeId(k)}
-                    volume={volume}
-                    onVolumeChange={setVolume}
-                  />
+                  {/* Top three boxes: Gun A, Center Toggle, Gun B */}
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
+                    {/* Gun A box */}
+                    <div className={`rounded-lg border border-white/10 bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-50' : ''}`}>
+                      {selectedGunA ? (
+                        <div className="flex items-start gap-3">
+                          <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
+                            <Image src={selectedGunA.image} alt={selectedGunA.name} fill className="object-contain invert" sizes="64px" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-base font-bold tracking-wide truncate max-w-[35ch]" title={selectedGunA.name}>{selectedGunA.name}</div>
+                            {selectedGunA.remarks && selectedGunA.remarks.length > 0 && (
+                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                {selectedGunA.remarks.map((r, i) => (
+                                  <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
+                                    {t(r)}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-2">
+                              <PatternModeSwitcher
+                                patternMap={selectedGunA.pattern}
+                                selectedKey={selectedPatternKeyA}
+                                onSelect={(k) => setSelectedModeAId(k)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-white/60 text-sm">{t('main.selectPrompt')}</div>
+                      )}
+                    </div>
+
+                    {/* Center square toggle */}
+                    <div className="p-3 flex items-center justify-center">
+  <button
+    type="button"
+    onClick={() =>
+      setSelectionMode(
+        selectionMode === 'A'
+          ? 'B'
+          : selectionMode === 'B'
+          ? 'AB'
+          : 'A'
+      )
+    }
+    className="relative w-8 h-8 md:w-10 md:h-10 rounded-md border border-white/15 bg-black/30 hover:bg-black/40 transition-colors"
+    aria-label="Toggle A/B/Dual"
+    title="Toggle A/B/Dual"
+  >
+    {/* First R-301 */}
+    <Image
+      src="/weapons/ar/R-301_Carbine_Icon.svg"
+      alt="R301 A"
+      fill
+      className={`object-contain invert drop-shadow transition-opacity ${
+        selectionMode === 'B' ? 'opacity-30' : 'opacity-100'
+      }`}
+      sizes="64px"
+      style={{
+        transform: 'rotate(-45deg) scale(-1) translate(0, 15%)',
+        transformOrigin: '50% 50%',
+      }}
+    />
+
+    {/* Second R-301 */}
+    <Image
+      src="/weapons/ar/R-301_Carbine_Icon.svg"
+      alt="R301 B"
+      fill
+      className={`object-contain invert drop-shadow transition-opacity ${
+        selectionMode === 'A' ? 'opacity-30' : 'opacity-100'
+      }`}
+      sizes="64px"
+      style={{
+        transform: 'rotate(-225deg) scale(-1) translate(0, 15%)',
+        transformOrigin: '50% 50%',
+      }}
+    />
+  </button> 
+</div>
+
+                    {/* Gun B box */}
+                    <div className={`rounded-lg border border-white/10 bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-50' : ''}`}>
+                      {selectedGunB ? (
+                        <div className="flex items-start gap-3">
+                          <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
+                            <Image src={selectedGunB.image} alt={selectedGunB.name} fill className="object-contain invert" sizes="64px" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-base font-bold tracking-wide truncate max-w-[35ch]" title={selectedGunB.name}>{selectedGunB.name}</div>
+                            {selectedGunB.remarks && selectedGunB.remarks.length > 0 && (
+                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                {selectedGunB.remarks.map((r, i) => (
+                                  <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
+                                    {t(r)}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-2">
+                              <PatternModeSwitcher
+                                patternMap={selectedGunB.pattern}
+                                selectedKey={selectedPatternKeyB}
+                                onSelect={(k) => setSelectedModeBId(k)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-white/60 text-sm">{t('main.selectPrompt')}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectionMode === 'AB' ? (
+                    <>
+                      <DualPatternVisualizer patternA={selectedPatternA} patternB={selectedPatternB} />
+                      <div className="pt-2">
+                        <StrafeTimer
+                          gun={selectedGunA ?? displayGun}
+                          pattern={selectedPatternA ?? displayPattern}
+                          volume={volume}
+                          onVolumeChange={setVolume}
+                          resetToken={`${selectedGunA?.id ?? 'null'}:${selectedPatternKeyA ?? 'default'}|${selectedGunB?.id ?? 'null'}:${selectedPatternKeyB ?? 'default'}`}
+                          dual
+                          gunB={selectedGunB ?? undefined}
+                          patternB={selectedPatternB ?? undefined}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <StandardView
+                      gun={displayGun}
+                      pattern={displayPattern}
+                      selectedPatternKey={displayPatternKey}
+                      onSelectMode={(k) => {
+                        if (selectionMode === 'B') setSelectedModeBId(k); else setSelectedModeAId(k);
+                      }}
+                      volume={volume}
+                      onVolumeChange={setVolume}
+                      hideHeader
+                      hideModeSwitcher
+                    />
+                  )}
                 
                 </div>
               ) : (
@@ -201,7 +406,7 @@ export default function Home() {
               )}
             </section>
             {/* FAQ Container - show only with StandardView (not editing) */}
-            {!isEditing && selectedGun ? (
+            {!isEditing && displayGun ? (
               <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
                 <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
                 <div className="space-y-2">
@@ -216,8 +421,8 @@ export default function Home() {
                           <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
                             {k === 'q3' ? (
                               <div>
-                                <div>{t(`faq.${k}.answer`, { weapon: selectedGun?.name ?? '-' })}</div>
-                                <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: selectedGun?.name ?? '-' })}</div>
+                                <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
+                                <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
                               </div>
                             ) : t(`faq.${k}.answer`)}
                           </Disclosure.Panel>
@@ -242,6 +447,11 @@ export default function Home() {
               <span>•</span>
               <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className="underline hover:text-white/80">Mokeysniper</a>
             </span>
+            <div className="mt-3">
+              <a href="/advanced" className="inline-flex items-center text-white/70 hover:text-white underline underline-offset-2">
+                {t('advanced.link', { defaultValue: 'Switch to Advanced Mode (two-gun combine)' })}
+              </a>
+            </div>
           </div>
         </footer>
       </div>

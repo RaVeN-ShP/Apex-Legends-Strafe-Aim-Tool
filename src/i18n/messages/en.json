@@ -82,4 +82,18 @@
   ,
   "remarks.usePurpleStockMag": "Use a purple stock & magazine",
   "remarks.nemesisFullyCharged": "Pattern works for fully charged Nemesis"
+  ,
+  "tabs.single": "Single",
+  "tabs.dual": "Dual",
+  "advanced.title": "Advanced Mode",
+  "advanced.subtitle": "Combine timelines from two weapons for expert practice.",
+  "advanced.gunA": "Weapon A",
+  "advanced.gunB": "Weapon B",
+  "advanced.selectBoth": "Select both Weapon A and Weapon B to begin.",
+  "dual.assignTo": "Assign selection to",
+  "dual.slotA": "Slot A",
+  "dual.slotB": "Slot B",
+  "dual.hint": "Pick a weapon from the sidebar; it assigns to the active slot.",
+  "dual.assignAuto": "Dual selection alternates automatically: A → B → A",
+  "dual.hintAuto": "Click weapons in the sidebar to alternate between Slot A and Slot B."
 }

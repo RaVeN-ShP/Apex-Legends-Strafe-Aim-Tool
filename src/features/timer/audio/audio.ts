@@ -48,6 +48,121 @@ export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: num
   return { phases, totalDurationMs: currentTime };
 }
 
+/**
+ * Build a dual-weapon timeline that alternates A then B, inserting minimal inter-waits so that
+ * each weapon auto-reloads while the other is firing plus during its own 1.5s pre-start countdown.
+ *
+ * Cycle layout:
+ *   Start(A) → Pattern(A) → Inter-wait A→B → Start(B) → Pattern(B) → Inter-wait B→A
+ */
+export function buildDualTimeline(
+  patternA: Pattern[],
+  gunA: Gun,
+  patternB: Pattern[],
+  gunB: Gun,
+  waitTimeSeconds: number,
+): Timeline {
+  const phases: Phase[] = [];
+  let currentTime = 0;
+
+  const countdownMs = 1500;
+  const userDelayMs = Math.round(waitTimeSeconds * 1000);
+
+  const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
+  const patAms = patternDur(patternA);
+  const patBms = patternDur(patternB);
+
+  // A: Start
+  {
+    const cues: AudioCue[] = [];
+    for (let i = 0; i < 3; i++) {
+      cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
+      currentTime += 500;
+    }
+    phases.push({ id: 'start', name: 'Start A', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+  }
+
+  // A: Pattern
+  {
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    for (const step of patternA) {
+      if (step.type === 'shoot') {
+        cues.push({ type: 'shoot', timestamp: currentTime, phase: 'pattern', frequencyHz: 1500, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += Math.max(0, step.duration);
+      } else {
+        cues.push({ type: 'direction', direction: step.direction, timestamp: currentTime, phase: 'pattern', frequencyHz: step.direction === 'left' ? 400 : 800, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += step.duration;
+      }
+    }
+    phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues });
+  }
+
+  // Inter-wait A -> B (ensure B finished reloading + user delay)
+  {
+    // Dual mode: ignore pattern duration. Ensure post-reload delay D after 1s reload.
+    // We want: waitAB + countdownMs = 1000 + userDelayMs
+    const reloadBms = 1000;
+    const waitAB = Math.max(0, reloadBms + userDelayMs - countdownMs);
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    if (waitAB > 0) {
+      const safetyTailMs = 10;
+      const maxLen = Math.max(0, (waitAB - safetyTailMs) / 1000);
+      const len = Math.min(0.9, maxLen);
+      if (len > 0) cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+    }
+    currentTime += Math.max(0, waitAB);
+    phases.push({ id: 'end', name: 'Wait A→B', startTime: start, endTime: currentTime, cues });
+  }
+
+  // B: Start
+  {
+    const cues: AudioCue[] = [];
+    for (let i = 0; i < 3; i++) {
+      cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
+      currentTime += 500;
+    }
+    phases.push({ id: 'start', name: 'Start B', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+  }
+
+  // B: Pattern
+  {
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    for (const step of patternB) {
+      if (step.type === 'shoot') {
+        cues.push({ type: 'shoot', timestamp: currentTime, phase: 'pattern', frequencyHz: 1500, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += Math.max(0, step.duration);
+      } else {
+        cues.push({ type: 'direction', direction: step.direction, timestamp: currentTime, phase: 'pattern', frequencyHz: step.direction === 'left' ? 400 : 800, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += step.duration;
+      }
+    }
+    phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues });
+  }
+
+  // Inter-wait B -> A (ensure A finished reloading + user delay)
+  {
+    // Dual mode: ignore pattern duration. Ensure post-reload delay D after 1s reload.
+    // We want: waitBA + countdownMs = 1000 + userDelayMs
+    const reloadAms = 1000;
+    const waitBA = Math.max(0, reloadAms + userDelayMs - countdownMs);
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    if (waitBA > 0) {
+      const safetyTailMs = 10;
+      const maxLen = Math.max(0, (waitBA - safetyTailMs) / 1000);
+      const len = Math.min(0.9, maxLen);
+      if (len > 0) cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+    }
+    currentTime += Math.max(0, waitBA);
+    phases.push({ id: 'end', name: 'Wait B→A', startTime: start, endTime: currentTime, cues });
+  }
+
+  return { phases, totalDurationMs: currentTime };
+}
+
 export function formatTime(ms: number): string {
   const seconds = Math.floor(ms / 1000);
   const milliseconds = ms % 1000;

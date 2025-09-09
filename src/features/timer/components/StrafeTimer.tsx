@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
-import { buildTimeline } from '@/features/timer/audio/audio';
+import { buildTimeline, buildDualTimeline } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
 // import Image from 'next/image';
@@ -11,6 +11,7 @@ import { InformationCircleIcon } from '@heroicons/react/24/outline';
  
 import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS } from '@/config/constants';
 import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
+import DualCentralDisplay from '@/features/timer/components/central/DualCentralDisplay';
 import PopoutControls from '@/features/timer/components/popout/PopoutControls';
 import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
 
@@ -20,9 +21,12 @@ interface StrafeTimerProps {
   volume: number;
   onVolumeChange: (v: number) => void;
   resetToken?: string | number; // when this changes, stop the timer
+  dual?: boolean;
+  gunB?: Gun;
+  patternB?: Pattern[];
 }
 
-export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB }: StrafeTimerProps) {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -57,7 +61,12 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  const timelineValue = useMemo(() => buildTimeline(pattern, gun, waitTimeSeconds), [gun, pattern, waitTimeSeconds]);
+  const timelineValue = useMemo(() => {
+    if (dual && gunB && patternB && patternB.length > 0) {
+      return buildDualTimeline(pattern, gun, patternB, gunB, waitTimeSeconds);
+    }
+    return buildTimeline(pattern, gun, waitTimeSeconds);
+  }, [dual, gun, pattern, gunB, patternB, waitTimeSeconds]);
 
   useEffect(() => {
     timeline.current = timelineValue;
@@ -84,7 +93,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     if (isPlayingRef.current) {
       stopTimer();
     }
-  }, [gun.id]);
+  }, [gun.id, gunB?.id, dual]);
 
   // Stop when reset token changes (e.g., pattern edited)
   useEffect(() => {
@@ -168,7 +177,17 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const totalDuration = timelineValue.totalDurationMs;
 
-  const centralTheme = useCentralTheme({ timeline: timelineValue, pattern, currentTimeMs: currentTime });
+  // Choose the appropriate pattern for the central theme in dual mode
+  const patternForTheme: Pattern[] = useMemo(() => {
+    if (!dual || !gunB || !patternB) return pattern;
+    const totalMs = Math.max(1, totalDuration);
+    const nowMs = ((currentTime % totalMs) + totalMs) % totalMs;
+    const active = timelineValue.phases.find(p => nowMs >= p.startTime && nowMs < p.endTime) || null;
+    if (active && /Pattern B/.test(active.name || '')) return patternB;
+    return pattern;
+  }, [dual, gunB, patternB, pattern, timelineValue, currentTime, totalDuration]);
+
+  const centralTheme = useCentralTheme({ timeline: timelineValue, pattern: patternForTheme, currentTimeMs: currentTime });
 
   // Live volume updates via AudioEngine
   useEffect(() => {
@@ -189,22 +208,46 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       </div>
 
       {/* Central Display */}
-      <CentralDisplay
-        title={centralTheme.title}
-        subtitle={centralTheme.subtitle}
-        symbol={centralTheme.symbol}
-        containerBg={centralTheme.containerBg}
-        subtitleColor={centralTheme.subtitleColor}
-        gunName={gun.name}
-        gunImage={gun.image}
-        isCompact={isPopped}
-        totalDurationMs={totalDuration}
-        currentTimeMs={currentTime}
-        pattern={pattern}
-        waitTimeSeconds={waitTimeSeconds}
-        reloadTimeSeconds={gun.reloadTimeSeconds}
-        rootRef={centralRef}
-      />
+      {!dual || !gunB || !patternB ? (
+        <CentralDisplay
+          title={centralTheme.title}
+          subtitle={centralTheme.subtitle}
+          symbol={centralTheme.symbol}
+          containerBg={centralTheme.containerBg}
+          subtitleColor={centralTheme.subtitleColor}
+          gunName={gun.name}
+          gunImage={gun.image}
+          isCompact={isPopped}
+          totalDurationMs={totalDuration}
+          currentTimeMs={currentTime}
+          pattern={pattern}
+          waitTimeSeconds={waitTimeSeconds}
+          reloadTimeSeconds={gun.reloadTimeSeconds}
+          rootRef={centralRef}
+        />
+      ) : (
+        // Dual central display
+        <DualCentralDisplay
+          title={centralTheme.title}
+          subtitle={centralTheme.subtitle}
+          symbol={centralTheme.symbol}
+          containerBg={centralTheme.containerBg}
+          subtitleColor={centralTheme.subtitleColor}
+          gunAName={gun.name}
+          gunAImage={gun.image}
+          gunBName={gunB.name}
+          gunBImage={gunB.image}
+          isCompact={isPopped}
+          totalDurationMs={totalDuration}
+          currentTimeMs={currentTime}
+          patternA={pattern}
+          patternB={patternB}
+          waitTimeSeconds={waitTimeSeconds}
+          reloadTimeSecondsA={gun.reloadTimeSeconds}
+          reloadTimeSecondsB={gunB.reloadTimeSeconds}
+          rootRef={centralRef}
+        />
+      )}
 
 
 
