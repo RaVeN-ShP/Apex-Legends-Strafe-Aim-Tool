@@ -16,6 +16,8 @@ interface GunSelectorProps {
   onDeleteCustom?: (gun: Gun) => void;
   onEditCustom?: (gun: Gun) => void;
   onCopyCustomize?: (gun: Gun) => void;
+  onReplaceWeaponA?: (gun: Gun) => void;
+  onReplaceWeaponB?: (gun: Gun) => void;
 }
 
 const categoryLabel: Record<Gun['category'], string> = {
@@ -96,19 +98,27 @@ function GunActionsMenu({
   onEditCustom,
   onDeleteCustom,
   onCopyCustomize,
+  onReplaceWeaponA,
+  onReplaceWeaponB,
   labelEdit,
   labelDelete,
   labelCopy,
   labelMore,
+  labelReplace1,
+  labelReplace2,
 }: {
   gun: Gun;
   onEditCustom?: (gun: Gun) => void;
   onDeleteCustom?: (gun: Gun) => void;
   onCopyCustomize?: (gun: Gun) => void;
+  onReplaceWeaponA?: (gun: Gun) => void;
+  onReplaceWeaponB?: (gun: Gun) => void;
   labelEdit: string;
   labelDelete: string;
   labelCopy: string;
   labelMore: string;
+  labelReplace1: string;
+  labelReplace2: string;
 }) {
   const [triggerRef, containerRef, reposition] = useFixedPopper({ offsetY: 6 });
   return (
@@ -129,6 +139,33 @@ function GunActionsMenu({
           className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 w-40 rounded-md border border-white/10 bg-black/80 text-white shadow-md backdrop-blur-sm"
         >
           <div className="py-1">
+            {/* Replace actions */}
+            {onReplaceWeaponA && (
+              <MenuItem>
+                {({ active }) => (
+                  <button
+                    type="button"
+                    className={`block w-full text-left px-2 py-1.5 text-[11px] ${active ? 'bg-white/5' : ''} focus:outline-none focus-visible:outline-none ring-0 focus:ring-0`}
+                    onClick={(e) => { e.stopPropagation(); onReplaceWeaponA(gun); }}
+                  >
+                    {labelReplace1}
+                  </button>
+                )}
+              </MenuItem>
+            )}
+            {onReplaceWeaponB && (
+              <MenuItem>
+                {({ active }) => (
+                  <button
+                    type="button"
+                    className={`block w-full text-left px-2 py-1.5 text-[11px] ${active ? 'bg-white/5' : ''} focus:outline-none focus-visible:outline-none ring-0 focus:ring-0`}
+                    onClick={(e) => { e.stopPropagation(); onReplaceWeaponB(gun); }}
+                  >
+                    {labelReplace2}
+                  </button>
+                )}
+              </MenuItem>
+            )}
             {gun.category === 'custom' && onEditCustom && (
               <MenuItem>
                 {({ active }) => (
@@ -175,7 +212,7 @@ function GunActionsMenu({
   );
 }
 
-export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, onCopyCustomize }: GunSelectorProps) {
+export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, onCopyCustomize, onReplaceWeaponA, onReplaceWeaponB }: GunSelectorProps) {
   const { t } = useI18n();
   // Background accents removed per request
   if (listMode) {
@@ -227,6 +264,14 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                   return (
                     <div
                       key={gun.id}
+                      draggable
+                      onDragStart={(e) => {
+                        try {
+                          e.dataTransfer.setData('application/x-gun-id', gun.id);
+                        } catch {}
+                        e.dataTransfer.setData('text/plain', gun.id);
+                        e.dataTransfer.effectAllowed = 'copyMove';
+                      }}
                       onClick={() => onGunSelect(gun)}
                       className={`group relative w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors border ${
                         isActive ? 'bg-red-600/20 border-red-500/40' : 'border-transparent hover:bg-white/5'
@@ -248,10 +293,14 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           onEditCustom={onEditCustom}
                           onDeleteCustom={onDeleteCustom}
                           onCopyCustomize={onCopyCustomize}
+                          onReplaceWeaponA={onReplaceWeaponA}
+                          onReplaceWeaponB={onReplaceWeaponB}
                           labelEdit={t('custom.edit')}
                           labelDelete={t('custom.delete')}
                           labelCopy={t('gun.copyCustomize')}
                           labelMore={t('menu.more')}
+                          labelReplace1={t('gun.replaceWeapon1', { defaultValue: 'Replace Weapon 1' })}
+                          labelReplace2={t('gun.replaceWeapon2', { defaultValue: 'Replace Weapon 2' })}
                         />
                       </div>
                     </div>

@@ -232,6 +232,8 @@ export default function Home() {
               onStartEdit={handleStartEdit}
               onStartCopy={(name, steps, reloadTimeSeconds) => handleStartCopy(name, steps, reloadTimeSeconds)}
               onDeleteProfile={(id) => { removeProfile(id); }}
+              onReplaceWeaponA={(gun) => { setSelectedGunA(gun); }}
+              onReplaceWeaponB={(gun) => { setSelectedGunB(gun); }}
             />
           </aside>
 
@@ -256,7 +258,24 @@ export default function Home() {
                   {/* Top three boxes: Gun A, Center Toggle, Gun B */}
                   <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
                     {/* Gun A box */}
-                    <div className={`rounded-lg border border-white/10 bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-50' : ''}`}>
+                    <div
+                      className={`rounded-lg border border-white/10 bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-50' : ''}`}
+                      onDragOver={(e) => {
+                        if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'copy';
+                        }
+                      }}
+                      onDrop={(e) => {
+                        const id = e.dataTransfer.getData('application/x-gun-id') || e.dataTransfer.getData('text/plain');
+                        if (!id) return;
+                        const g = allGuns.find(x => x.id === id);
+                        if (g) {
+                          setSelectedGunA(g);
+                          setSelectionMode('A');
+                        }
+                      }}
+                    >
                       {selectedGunA ? (
                         <div className="flex items-start gap-3">
                           <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
@@ -337,7 +356,24 @@ export default function Home() {
 </div>
 
                     {/* Gun B box */}
-                    <div className={`rounded-lg border border-white/10 bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-50' : ''}`}>
+                    <div
+                      className={`rounded-lg border border-white/10 bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-50' : ''}`}
+                      onDragOver={(e) => {
+                        if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'copy';
+                        }
+                      }}
+                      onDrop={(e) => {
+                        const id = e.dataTransfer.getData('application/x-gun-id') || e.dataTransfer.getData('text/plain');
+                        if (!id) return;
+                        const g = allGuns.find(x => x.id === id);
+                        if (g) {
+                          setSelectedGunB(g);
+                          setSelectionMode('B');
+                        }
+                      }}
+                    >
                       {selectedGunB ? (
                         <div className="flex items-start gap-3">
                           <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">

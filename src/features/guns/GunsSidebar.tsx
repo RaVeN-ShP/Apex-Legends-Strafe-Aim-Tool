@@ -13,6 +13,8 @@ export default function GunsSidebar({
   onStartEdit,
   onStartCopy,
   onDeleteProfile,
+  onReplaceWeaponA,
+  onReplaceWeaponB,
 }: {
   guns: Gun[];
   selectedGun: Gun | null;
@@ -22,6 +24,8 @@ export default function GunsSidebar({
   onStartEdit: (profileId: string) => void;
   onStartCopy: (name: string, steps: Pattern[], reloadTimeSeconds?: number) => void;
   onDeleteProfile: (profileId: string) => void;
+  onReplaceWeaponA?: (gun: Gun) => void;
+  onReplaceWeaponB?: (gun: Gun) => void;
 }) {
   const { t } = useI18n();
 
@@ -40,6 +44,8 @@ export default function GunsSidebar({
         guns={guns}
         selectedGun={selectedGun}
         onGunSelect={(g) => { onSelectGun(g); }}
+        onReplaceWeaponA={onReplaceWeaponA}
+        onReplaceWeaponB={onReplaceWeaponB}
         onDeleteCustom={(g) => {
           if (g.category !== 'custom') return;
           const ok = window.confirm(t('custom.confirmDelete', { defaultValue: 'Delete this custom pattern?' }));

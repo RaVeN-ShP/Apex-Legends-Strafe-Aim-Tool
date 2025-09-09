@@ -68,6 +68,8 @@
   "custom.confirmDiscard": "Discard current changes?",
   "custom.dragToReorder": "Drag to reorder",
   "gun.copyCustomize": "Copy & Customize",
+  "gun.replaceWeapon1": "Replace Weapon 1",
+  "gun.replaceWeapon2": "Replace Weapon 2",
   "menu.more": "More",
   "gun.selectedLabel": "Selected:",
   "importPicker.importFrom": "Import from",
