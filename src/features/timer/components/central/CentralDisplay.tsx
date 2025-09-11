@@ -1,6 +1,8 @@
+"use client";
 import Image from 'next/image';
 import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export type CentralDisplayProps = {
   title: string;
@@ -11,13 +13,18 @@ export type CentralDisplayProps = {
   subtitleColor: string;
   gunName: string;
   gunImage: string;
+  gunBName?: string;
   isCompact: boolean;
+  isPlaying?: boolean;
+  onTogglePlay?: () => void;
   totalDurationMs: number;
   currentTimeMs: number;
   pattern: Pattern[];
   waitTimeSeconds: number;
   reloadTimeSeconds?: number;
   rootRef?: React.Ref<HTMLDivElement>;
+  selectionMode?: 'A' | 'B' | 'AB';
+  onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
 };
 
 export default function CentralDisplay(props: CentralDisplayProps) {
@@ -29,14 +36,21 @@ export default function CentralDisplay(props: CentralDisplayProps) {
     subtitleColor,
     gunName,
     gunImage,
+    gunBName,
     isCompact,
+    isPlaying,
+    onTogglePlay,
     totalDurationMs,
     currentTimeMs,
     pattern,
     waitTimeSeconds,
     reloadTimeSeconds,
     rootRef,
+    selectionMode,
+    onChangeSelectionMode,
   } = props;
+
+  const { t } = useI18n();
 
   const totalMs = Math.max(1, totalDurationMs);
   const progressPct = ((currentTimeMs % totalMs) / totalMs) * 100;
@@ -49,12 +63,15 @@ export default function CentralDisplay(props: CentralDisplayProps) {
   for (let i = 0; i < 3; i++) segments.push({ color: 'bg-amber-500', duration: 500, title: 'Start' });
   for (const step of pattern) {
     const { barColor, symbol: sym, label } = getStepStyle(step);
-    segments.push({ color: barColor, duration: step.duration, title: label, symbol: sym || undefined });
+    const dur = Math.max(0, step.duration);
+    segments.push({ color: barColor, duration: dur, title: label, symbol: sym || undefined });
   }
   const reloadMs = Math.round(((reloadTimeSeconds ?? 1)) * 1000);
   const startDurationMs = 1500;
-  const patternTotalMs = pattern.reduce((acc, s) => acc + s.duration, 0);
-  const endPhaseMs = Math.max(0, reloadMs - startDurationMs + waitTimeSeconds * 1000);
+  const patternTotalMs = pattern.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
+  // Match audio timeline rounding for user delay to keep visuals in lockstep with sound
+  const userDelayMs = Math.round(waitTimeSeconds * 1000);
+  const endPhaseMs = Math.max(0, reloadMs - startDurationMs + userDelayMs);
   segments.push({ color: 'bg-green-600', duration: endPhaseMs, title: 'Reload+Wait' });
 
   // Pre-calculated percentages for hatch overlay
@@ -122,16 +139,16 @@ export default function CentralDisplay(props: CentralDisplayProps) {
 
   return (
     <div
-      className={`relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden`}
+      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden`}
       style={{ minHeight: isCompact ? '135px' : '250px' }}
       ref={rootRef}
     >
-      <div className={`absolute left-3 font-semibold text-white/80 ${isCompact ? 'top-2 text-[10px]' : 'top-3 text-xs'}`}>{title}</div>
+      <div className={`absolute left-3 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'}`}>{title}</div>
       <div className={`absolute right-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
-        <span className={`${isCompact ? 'text-[9px]' : 'text-[11px]'} text-white/80 max-w-[25ch] truncate`} title={gunName}>{gunName}</span>
-        <div className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} relative opacity-80`}>
+        <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative opacity-80`}>
           <Image src={gunImage} alt={gunName} fill className="object-contain invert drop-shadow" sizes="20px" />
         </div>
+        <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold text-white/80 max-w-[25ch] truncate`} title={gunName}>{gunName}</span>
       </div>
 
       <div className={`flex items-center justify-center h-full ${isCompact ? 'pt-8' : 'pt-20'}`}>
@@ -158,6 +175,36 @@ export default function CentralDisplay(props: CentralDisplayProps) {
           </div>
         </div>
       </div>
+
+      {isCompact && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
+          <div className="flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={onTogglePlay}
+              className="rounded-full bg-white/90 text-black text-xs font-semibold px-2.5 py-1.5 shadow-md border border-black/10"
+              title={isPlaying ? t('display.stop') : t('display.play')}
+              data-central-toggle
+            >
+              {isPlaying ? '■ ' + t('display.stop') : '▶ ' + t('display.play')}
+            </button>
+            {onChangeSelectionMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  const next = selectionMode === 'A' ? 'B' : (selectionMode === 'B' ? 'AB' : 'A');
+                  onChangeSelectionMode(next);
+                }}
+                className="rounded-full bg-white/90 text-black text-xs font-semibold px-2.5 py-1.5 shadow-md border border-black/10"
+                title="Switch mode A/B/Dual"
+                data-central-mode
+              >
+                {selectionMode === 'A' ? `Single: ${gunBName ?? 'Weapon B'}` : (selectionMode === 'B' ? 'Dual' : `Single: ${gunName}`)}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

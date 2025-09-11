@@ -6,6 +6,7 @@ import PatternVisualizer from "@/features/patterns/components/PatternVisualizer"
 import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
 import Image from "next/image";
+import DualPatternVisualizer from "@/features/patterns/components/DualPatternVisualizer";
 
 export default function StandardView({
   gun,
@@ -16,6 +17,13 @@ export default function StandardView({
   onVolumeChange,
   hideHeader = false,
   hideModeSwitcher = false,
+  // Dual mode (optional)
+  dual = false,
+  gunB = null,
+  patternB = [],
+  selectedPatternKeyB = null,
+  selectionMode,
+  onChangeSelectionMode,
 }: {
   gun: Gun;
   pattern: Pattern[];
@@ -25,11 +33,17 @@ export default function StandardView({
   onVolumeChange: (v: number) => void;
   hideHeader?: boolean;
   hideModeSwitcher?: boolean;
+  dual?: boolean;
+  gunB?: Gun | null;
+  patternB?: Pattern[];
+  selectedPatternKeyB?: string | null;
+  selectionMode?: 'A' | 'B' | 'AB';
+  onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
 }) {
   const { t } = useI18n();
   return (
     <div className="space-y-6">
-      {!hideHeader && (
+      {!hideHeader && !dual && (
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
             <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
@@ -51,20 +65,43 @@ export default function StandardView({
         </div>
       )}
       {/* Mode switcher */}
-      {!hideModeSwitcher && (
+      {!hideModeSwitcher && !dual && (
         <div className="relative mt-2 z-10 md:absolute md:right-6 md:top-6 md:mt-0">
           <PatternModeSwitcher patternMap={gun.pattern} selectedKey={selectedPatternKey} onSelect={onSelectMode} />
         </div>
       )}
-      <PatternVisualizer gun={gun} pattern={pattern} />
+      {dual ? (
+        <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} />
+      ) : (
+        <PatternVisualizer gun={gun} pattern={pattern} />
+      )}
+
       <div className="pt-2">
-        <StrafeTimer
-          gun={gun}
-          pattern={pattern}
-          volume={volume}
-          onVolumeChange={onVolumeChange}
-          resetToken={selectedPatternKey ?? undefined}
-        />
+        {dual && gunB ? (
+          <StrafeTimer
+            gun={gun}
+            pattern={pattern}
+            volume={volume}
+            onVolumeChange={onVolumeChange}
+            resetToken={`${selectedPatternKey ?? 'default'}|${selectedPatternKeyB ?? 'default'}`}
+            dual
+            gunB={gunB}
+            patternB={patternB ?? []}
+            selectionMode={selectionMode}
+            onChangeSelectionMode={onChangeSelectionMode}
+          />
+        ) : (
+          <StrafeTimer
+            gun={gun}
+            pattern={pattern}
+            volume={volume}
+            onVolumeChange={onVolumeChange}
+            resetToken={selectedPatternKey ?? undefined}
+            gunB={gunB ?? undefined}
+            selectionMode={selectionMode}
+            onChangeSelectionMode={onChangeSelectionMode}
+          />
+        )}
       </div>
     </div>
   );

@@ -102,7 +102,7 @@ export function buildDualTimeline(
   {
     // Dual mode: ignore pattern duration. Ensure post-reload delay D after 1s reload.
     // We want: waitAB + countdownMs = 1000 + userDelayMs
-    const reloadBms = 1000;
+    const reloadBms = gunB.reloadTimeSeconds ?? 1000;
     const waitAB = Math.max(0, reloadBms + userDelayMs - countdownMs);
     const start = currentTime;
     const cues: AudioCue[] = [];
@@ -146,7 +146,7 @@ export function buildDualTimeline(
   {
     // Dual mode: ignore pattern duration. Ensure post-reload delay D after 1s reload.
     // We want: waitBA + countdownMs = 1000 + userDelayMs
-    const reloadAms = 1000;
+    const reloadAms = gunA.reloadTimeSeconds ?? 1000;
     const waitBA = Math.max(0, reloadAms + userDelayMs - countdownMs);
     const start = currentTime;
     const cues: AudioCue[] = [];

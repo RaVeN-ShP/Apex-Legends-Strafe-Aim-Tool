@@ -6,11 +6,20 @@ type DocumentPictureInPicture = {
 
 export function useDocumentPictureInPicture(
   targetRef: React.RefObject<HTMLElement | null>,
-  opts?: { width?: number; height?: number }
+  opts?: { width?: number; height?: number; onTogglePlay?: () => void; onToggleMode?: () => void }
 ) {
   const [isPopped, setIsPopped] = useState(false);
   const pipWindowRef = useRef<Window | null>(null);
   const placeholderRef = useRef<HTMLDivElement | null>(null);
+  const onTogglePlayRef = useRef(opts?.onTogglePlay);
+  const onToggleModeRef = useRef(opts?.onToggleMode);
+
+  useEffect(() => {
+    onTogglePlayRef.current = opts?.onTogglePlay;
+  }, [opts?.onTogglePlay]);
+  useEffect(() => {
+    onToggleModeRef.current = opts?.onToggleMode;
+  }, [opts?.onToggleMode]);
 
   const open = useCallback(async () => {
     const winWithDPIP = window as Window & { documentPictureInPicture?: DocumentPictureInPicture };
@@ -66,6 +75,29 @@ export function useDocumentPictureInPicture(
     pipWin.document.body.appendChild(container);
     setIsPopped(true);
 
+    // Wire native click for toggle inside PiP window since React events won't bubble across documents
+    const onPiPClick = (ev: MouseEvent) => {
+      try {
+        const target = ev.target as Element | null;
+        if (target && (target as Element).closest) {
+          const playBtn = (target as Element).closest('[data-central-toggle]');
+          if (playBtn) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            onTogglePlayRef.current?.();
+            return;
+          }
+          const modeBtn = (target as Element).closest('[data-central-mode]');
+          if (modeBtn) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            onToggleModeRef.current?.();
+          }
+        }
+      } catch {}
+    };
+    pipWin.document.addEventListener('click', onPiPClick, true);
+
     pipWin.addEventListener('pagehide', () => {
       try {
         if (targetRef.current && placeholderRef.current) {
@@ -77,6 +109,7 @@ export function useDocumentPictureInPicture(
         setIsPopped(false);
         pipWindowRef.current = null;
       }
+      try { pipWin.document.removeEventListener('click', onPiPClick, true); } catch {}
     });
   }, [opts?.height, opts?.width, targetRef]);
 
