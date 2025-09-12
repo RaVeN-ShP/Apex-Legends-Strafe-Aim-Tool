@@ -49,6 +49,25 @@ export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: num
 }
 
 /**
+ * Compute dual-mode inter-waits from each weapon's reload and the user delay.
+ * After A (A→B): waitAB = reloadA - 1.5s + userDelay
+ * After B (B→A): waitBA = reloadB - 1.5s + userDelay
+ */
+export function computeDualWaits(
+  reloadASec?: number,
+  reloadBSec?: number,
+  waitTimeSeconds: number = 0,
+  countdownMs: number = 1500,
+): { waitAB: number; waitBA: number; userDelayMs: number; countdownMs: number } {
+  const reloadAms = Math.round((reloadASec ?? 1) * 1000);
+  const reloadBms = Math.round((reloadBSec ?? 1) * 1000);
+  const userDelayMs = Math.round(waitTimeSeconds * 1000);
+  const waitAB = Math.max(0, reloadAms + userDelayMs - countdownMs);
+  const waitBA = Math.max(0, reloadBms + userDelayMs - countdownMs);
+  return { waitAB, waitBA, userDelayMs, countdownMs };
+}
+
+/**
  * Build a dual-weapon timeline that alternates A then B, inserting minimal inter-waits so that
  * each weapon auto-reloads while the other is firing plus during its own 1.5s pre-start countdown.
  *
@@ -66,7 +85,7 @@ export function buildDualTimeline(
   let currentTime = 0;
 
   const countdownMs = 1500;
-  const userDelayMs = Math.round(waitTimeSeconds * 1000);
+  const { waitAB, waitBA } = computeDualWaits(gunA.reloadTimeSeconds, gunB.reloadTimeSeconds, waitTimeSeconds, countdownMs);
 
   const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
   const patAms = patternDur(patternA);
@@ -98,12 +117,8 @@ export function buildDualTimeline(
     phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues });
   }
 
-  // Inter-wait A -> B (ensure B finished reloading + user delay)
+  // Inter-wait A -> B (after A reload buffer)
   {
-    // Dual mode: ignore pattern duration. Ensure post-reload delay D after 1s reload.
-    // We want: waitAB + countdownMs = 1000 + userDelayMs
-    const reloadBms = gunB.reloadTimeSeconds ?? 1000;
-    const waitAB = Math.max(0, reloadBms + userDelayMs - countdownMs);
     const start = currentTime;
     const cues: AudioCue[] = [];
     if (waitAB > 0) {
@@ -142,12 +157,8 @@ export function buildDualTimeline(
     phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues });
   }
 
-  // Inter-wait B -> A (ensure A finished reloading + user delay)
+  // Inter-wait B -> A (after B reload buffer)
   {
-    // Dual mode: ignore pattern duration. Ensure post-reload delay D after 1s reload.
-    // We want: waitBA + countdownMs = 1000 + userDelayMs
-    const reloadAms = gunA.reloadTimeSeconds ?? 1000;
-    const waitBA = Math.max(0, reloadAms + userDelayMs - countdownMs);
     const start = currentTime;
     const cues: AudioCue[] = [];
     if (waitBA > 0) {

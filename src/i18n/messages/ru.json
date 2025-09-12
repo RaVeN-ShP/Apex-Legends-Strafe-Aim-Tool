@@ -86,16 +86,6 @@
   "toggle.switch": "Переключить",
   "display.play": "Воспроизвести",
   "display.stop": "Остановить",
-  "display.switchMode": "Переключить режим A/B/двойной",
-  "display.singleWithName": "Одиночный: {name}",
-  "display.weaponB": "Оружие B",
-  "timer.reloading": "перезарядка",
-  "timer.segment.start": "Старт",
-  "timer.segment.reloadWait": "Перезарядка+ожидание",
-  "timer.segment.startA": "Старт A",
-  "timer.segment.startB": "Старт B",
-  "timer.segment.waitAtoB": "Ожидание A→B",
-  "timer.segment.waitBtoA": "Ожидание B→A",
   "remarks.usePurpleStockMag": "Используйте фиолетовые приклад и магазин",
   "remarks.nemesisFullyCharged": "Паттерн для полностью заряженной Nemesis"
 }

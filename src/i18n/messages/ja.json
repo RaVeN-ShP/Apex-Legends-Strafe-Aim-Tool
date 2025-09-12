@@ -86,16 +86,6 @@
   "toggle.switch": "切り替え",
   "display.play": "再生",
   "display.stop": "停止",
-  "display.switchMode": "モード切替 A/B/デュアル",
-  "display.singleWithName": "シングル: {name}",
-  "display.weaponB": "武器B",
-  "timer.reloading": "リロード中",
-  "timer.segment.start": "開始",
-  "timer.segment.reloadWait": "リロード＋待機",
-  "timer.segment.startA": "開始 A",
-  "timer.segment.startB": "開始 B",
-  "timer.segment.waitAtoB": "待機 A→B",
-  "timer.segment.waitBtoA": "待機 B→A",
   "remarks.usePurpleStockMag": "紫ストックと紫マガジンを使用",
   "remarks.nemesisFullyCharged": "フルチャージ時のネメシス用パターン"
 }

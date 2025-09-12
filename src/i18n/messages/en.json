@@ -85,15 +85,5 @@
   "tabs.dual": "Dual",
   "toggle.switch": "Switch",
   "display.play": "Play",
-  "display.stop": "Stop",
-  "display.switchMode": "Switch mode A/B/Dual",
-  "display.singleWithName": "Single: {name}",
-  "display.weaponB": "Weapon B",
-  "timer.reloading": "reloading",
-  "timer.segment.start": "Start",
-  "timer.segment.reloadWait": "Reload+Wait",
-  "timer.segment.startA": "Start A",
-  "timer.segment.startB": "Start B",
-  "timer.segment.waitAtoB": "Wait A→B",
-  "timer.segment.waitBtoA": "Wait B→A"
+  "display.stop": "Stop"
 }

@@ -86,16 +86,6 @@
   "toggle.switch": "전환",
   "display.play": "재생",
   "display.stop": "정지",
-  "display.switchMode": "모드 전환 A/B/듀얼",
-  "display.singleWithName": "단일: {name}",
-  "display.weaponB": "무기 B",
-  "timer.reloading": "재장전 중",
-  "timer.segment.start": "시작",
-  "timer.segment.reloadWait": "재장전+대기",
-  "timer.segment.startA": "시작 A",
-  "timer.segment.startB": "시작 B",
-  "timer.segment.waitAtoB": "대기 A→B",
-  "timer.segment.waitBtoA": "대기 B→A",
   "remarks.usePurpleStockMag": "보라색 스톡과 탄창 사용",
   "remarks.nemesisFullyCharged": "완충 네메시스용 패턴"
 }

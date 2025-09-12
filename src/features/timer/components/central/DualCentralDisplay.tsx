@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
+import { computeDualWaits } from '@/features/timer/audio/audio';
 
 export type DualCentralDisplayProps = {
   title: string;
@@ -67,16 +68,8 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const countdownMs = 1500;
   const patAms = patternA.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
   const patBms = patternB.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
-  // In dual mode, ignore individual reload times. Always use fixed 1.0s.
-  const reloadA = reloadTimeSecondsA ?? 1000;
-  const reloadB = reloadTimeSecondsB ?? 1000;
-  // Match audio rounding so visual bar lines up with audio scheduling
-  const userDelayMs = Math.round(waitTimeSeconds * 1000);
-
-  // Dual-mode policy: ensure post-reload user delay independent of pattern length
-  // We want: wait + countdownMs = 1000 + userDelayMs
-  const waitAB = Math.max(0, reloadB + userDelayMs - countdownMs);
-  const waitBA = Math.max(0, reloadA + userDelayMs - countdownMs);
+  // Unified wait computation to match audio exactly
+  const { waitAB, waitBA } = computeDualWaits(reloadTimeSecondsA, reloadTimeSecondsB, waitTimeSeconds, countdownMs);
 
   type Seg = { color: string; duration: number; title: string; symbol?: string };
   const segments: Seg[] = [];
