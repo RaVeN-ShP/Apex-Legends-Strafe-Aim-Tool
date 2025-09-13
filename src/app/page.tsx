@@ -14,7 +14,7 @@ import CustomProfileEditor from "@/features/customProfiles/CustomProfileEditor";
 import StandardView from "@/features/main/StandardView";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
 import Image from "next/image";
-import { DualPlaybackProvider, useDualPlayback } from "@/features/timer/context/DualPlaybackContext";
+// Dual playback context removed; state is lifted locally
 import { UIColors } from "@/config/styles";
 // Custom profiles are managed via hook for storage compatibility
 
@@ -223,16 +223,9 @@ export default function Home() {
     );
   };
 
-  // Helper consumer to access dual playback context within provider scope
-  function DualAware<T>({ children }: { children: (ctx: { activeSide: 'A' | 'B' | null; isPlaying: boolean }) => T }) {
-    try {
-      const { activeSide, isPlaying } = useDualPlayback();
-      return <>{children({ activeSide, isPlaying }) as any}</>;
-    } catch {
-      // Fallback if provider not present
-      return <>{children({ activeSide: null, isPlaying: false }) as any}</>;
-    }
-  }
+  // Dual playback state lifted here
+  const [activeSide, setActiveSide] = useState<'A' | 'B' | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4 text-white">
@@ -307,9 +300,7 @@ export default function Home() {
                   onSave={handleEditorSave}
                 />
               ) : displayGun ? (
-                <DualPlaybackProvider>
-                  <DualAware>
-                    {({ activeSide, isPlaying }) => (
+                    (
                       <div className="space-y-6">
                         {/* Top three boxes: Gun A, Center Toggle, Gun B */}
                         <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
@@ -509,12 +500,13 @@ export default function Home() {
                           selectedPatternKeyB={selectionMode === 'AB' ? selectedPatternKeyB : null}
                           selectionMode={selectionMode}
                           onChangeSelectionMode={(m) => setSelectionMode(m)}
+                          activeSide={activeSide}
+                          onPlayingChange={setIsPlaying}
+                          onActiveSideChange={setActiveSide}
                         />
 
                       </div>
-                    )}
-                  </DualAware>
-                </DualPlaybackProvider>
+                    )
               ) : (
                 <div className={UIColors.text.muted}>{t('main.selectPrompt')}</div>
               )}
@@ -533,13 +525,15 @@ export default function Home() {
 
         {/* Footer */}
         <footer className={`mt-8 text-center text-xs ${UIColors.text.subtle}`}>
-          {t('footer.credit', { name: 'RaVeN_ShP' })}
+          <div className="inline-flex gap-2">
+            <span>{t('footer.credit', { name: 'RaVeN_ShP' })}</span>
+            <span>•</span>
+            <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className={UIColors.link.default}>Mokeysniper</a>
+          </div>
           <div className="mt-1">
             <span className={UIColors.text.disabled}>{t('footer.contributors')}</span>
             <span className="ml-1 inline-flex gap-2">
               <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className={UIColors.link.default}>ahn99</a>
-              <span>•</span>
-              <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className={UIColors.link.default}>Mokeysniper</a>
             </span>
           </div>
         </footer>

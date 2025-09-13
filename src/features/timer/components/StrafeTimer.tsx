@@ -14,7 +14,7 @@ import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
 import DualCentralDisplay from '@/features/timer/components/central/DualCentralDisplay';
 import PopoutControls from '@/features/timer/components/popout/PopoutControls';
 import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
-import { useDualPlayback } from '@/features/timer/context/DualPlaybackContext';
+// Dual playback state is lifted to page-level and passed via props
 
 interface StrafeTimerProps {
   gun: Gun;
@@ -27,13 +27,13 @@ interface StrafeTimerProps {
   patternB?: Pattern[];
   selectionMode?: 'A' | 'B' | 'AB';
   onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
+  onPlayingChange?: (playing: boolean) => void;
+  onActiveSideChange?: (side: 'A' | 'B' | null) => void;
+  activeSide?: 'A' | 'B' | null;
 }
 
-export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide }: StrafeTimerProps) {
   const { t } = useI18n();
-  const dualPlayback = (() => {
-    try { return useDualPlayback(); } catch { return null; }
-  })();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [waitTimeSeconds, setWaitTimeSeconds] = useState<number>(RECOMMENDED_DELAY_SECONDS);
@@ -145,7 +145,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const startTimer = async () => {
     setIsPlaying(true);
-    dualPlayback?.setIsPlaying(true);
+    onPlayingChange?.(true);
     isPlayingRef.current = true;
     setCurrentTime(0);
 
@@ -176,15 +176,15 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       }
       setCurrentTime(elapsedMs);
 
-      // Determine active side during dual playback and publish to context
-      if (dual && gunB && patternB && dualPlayback) {
+      // Determine active side during dual playback and publish upward
+      if (dual && gunB && patternB && onActiveSideChange) {
         const totalMs = Math.max(1, totalDuration);
         const nowMs = ((elapsedMs % totalMs) + totalMs) % totalMs;
         const active = timeline.current.phases.find(p => nowMs >= p.startTime && nowMs < p.endTime) || null;
         if (active) {
           const name = active.name || '';
           const side: 'A' | 'B' | null = /Pattern A|Start A/.test(name) ? 'A' : (/Pattern B|Start B/.test(name) ? 'B' : null);
-          dualPlayback.setActiveSide(side);
+          onActiveSideChange(side);
         }
       }
       
@@ -199,8 +199,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const stopTimer = () => {
     setIsPlaying(false);
-    dualPlayback?.setIsPlaying(false);
-    dualPlayback?.setActiveSide(null);
+    onPlayingChange?.(false);
+    onActiveSideChange?.(null);
     isPlayingRef.current = false;
     setCurrentTime(0);
 
@@ -303,6 +303,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
             reloadTimeSecondsB={gunB.reloadTimeSeconds}
             selectionMode={selectionMode}
             onChangeSelectionMode={onChangeSelectionMode}
+            activeSide={activeSide}
           />
         )}
       </div>

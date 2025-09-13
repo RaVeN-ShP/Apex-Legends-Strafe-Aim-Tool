@@ -24,6 +24,9 @@ export default function StandardView({
   selectedPatternKeyB = null,
   selectionMode,
   onChangeSelectionMode,
+  activeSide = null,
+  onPlayingChange,
+  onActiveSideChange,
 }: {
   gun: Gun;
   pattern: Pattern[];
@@ -39,6 +42,9 @@ export default function StandardView({
   selectedPatternKeyB?: string | null;
   selectionMode?: 'A' | 'B' | 'AB';
   onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
+  activeSide?: 'A' | 'B' | null;
+  onPlayingChange?: (playing: boolean) => void;
+  onActiveSideChange?: (side: 'A' | 'B' | null) => void;
 }) {
   const { t } = useI18n();
   return (
@@ -72,7 +78,7 @@ export default function StandardView({
       )}
       {dual ? (
         <>
-          <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} />
+          <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} activeSide={activeSide ?? undefined} />
           <div className="pt-2">
             {gunB ? (
               <StrafeTimer
@@ -86,6 +92,8 @@ export default function StandardView({
                 patternB={patternB ?? []}
                 selectionMode={selectionMode}
                 onChangeSelectionMode={onChangeSelectionMode}
+                onPlayingChange={onPlayingChange}
+                onActiveSideChange={onActiveSideChange}
               />
             ) : (
               <StrafeTimer
@@ -97,6 +105,8 @@ export default function StandardView({
                 gunB={gunB ?? undefined}
                 selectionMode={selectionMode}
                 onChangeSelectionMode={onChangeSelectionMode}
+                onPlayingChange={onPlayingChange}
+                onActiveSideChange={onActiveSideChange}
               />
             )}
           </div>
@@ -114,6 +124,8 @@ export default function StandardView({
               gunB={gunB ?? undefined}
               selectionMode={selectionMode}
               onChangeSelectionMode={onChangeSelectionMode}
+              onPlayingChange={onPlayingChange}
+              onActiveSideChange={onActiveSideChange}
             />
           </div>
         </>

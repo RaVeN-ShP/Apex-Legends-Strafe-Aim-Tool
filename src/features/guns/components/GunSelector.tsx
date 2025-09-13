@@ -295,7 +295,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
                       </div>
                       <div className="min-w-0 pr-6 md:pr-8 text-center">
-                        <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
+                        <div className="text-sm font-medium truncate max-w-[10ch]" title={gun.name}>{gun.name}</div>
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
 
@@ -360,7 +360,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           {/* Right zone hint - only show for selected gun in slot B */}
                           {isB && (
                             <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
-                              1
+                              2
                               <ChevronRightIcon className="w-3 h-3" />
                             </span>
                           )}
@@ -421,67 +421,4 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
     );
   }
 
-  return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
-      <h2 className="text-xl font-bold text-white mb-4 text-center tracking-wide">Select Your Weapon</h2>
-      
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {guns.map((gun) => {
-          const isComingSoon = false;
-          const isActive = selectedGun?.id === gun.id;
-          // const [triggerRefCopy, containerRefCopy, repositionCopy] = useFixedPopper({ offsetY: 6 });
-          return (
-            <button
-              key={gun.id}
-              type="button"
-              disabled={isComingSoon}
-              onClick={() => {
-                if (isComingSoon) return;
-                onGunSelect(gun);
-              }}
-              className={`group relative p-4 rounded-lg border transition-all text-left overflow-hidden
-                ${isActive ? 'border-red-500 bg-red-600/10 shadow-[0_0_0_1px_rgba(239,68,68,.4)]' : 'border-white/10 hover:border-white/20 hover:bg-white/5'} ${
-                  isComingSoon ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-            >
-
-              <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16 shrink-0">
-                  <Image
-                    src={gun.image}
-                    alt={gun.name}
-                    fill
-                    className="object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                    sizes="64px"
-                  />
-                </div>
-                <div className="min-w-0 pr-6">
-                  <div className="text-white font-semibold truncate tracking-wide" title={gun.name}>
-                    {gun.name}
-                  </div>
-                  <div className="mt-1 inline-flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded bg-white/10 text-white/80 border border-white/15">
-                      {categoryLabel[gun.category]}
-                    </span>
-                    <span className="text-xs text-white/60">
-                      {(gun.pattern?.default ?? Object.values(gun.pattern ?? {})[0] ?? []).length} steps
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-
-              
-            </button>
-          );
-        })}
-      </div>
-
-      {selectedGun && (
-        <div className="mt-5 p-3 rounded-lg border border-red-500/30 bg-red-600/10 text-red-100">
-          <span className="font-semibold">{t('gun.selectedLabel', { defaultValue: 'Selected:' })}</span> {selectedGun.name}
-        </div>
-      )}
-    </div>
-  );
 }

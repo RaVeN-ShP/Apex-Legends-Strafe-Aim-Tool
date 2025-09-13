@@ -85,7 +85,5 @@
   "tabs.dual": "듀얼",
   "toggle.switch": "전환",
   "display.play": "재생",
-  "display.stop": "정지",
-  "remarks.usePurpleStockMag": "보라색 스톡과 탄창 사용",
-  "remarks.nemesisFullyCharged": "완충 네메시스용 패턴"
+  "display.stop": "정지"
 }

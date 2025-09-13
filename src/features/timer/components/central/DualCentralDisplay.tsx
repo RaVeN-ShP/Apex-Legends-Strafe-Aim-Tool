@@ -4,7 +4,6 @@ import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
 import { computeDualWaits } from '@/features/timer/audio/audio';
-import { useDualPlayback } from '@/features/timer/context/DualPlaybackContext';
 
 export type DualCentralDisplayProps = {
   title: string;
@@ -29,6 +28,7 @@ export type DualCentralDisplayProps = {
   rootRef?: React.Ref<HTMLDivElement>;
   selectionMode?: 'A' | 'B' | 'AB';
   onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
+  activeSide?: 'A' | 'B' | null;
 };
 
 export default function DualCentralDisplay(props: DualCentralDisplayProps) {
@@ -58,9 +58,6 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   } = props;
 
   const { t } = useI18n();
-  const dualPlayback = (() => {
-    try { return useDualPlayback(); } catch { return null; }
-  })();
 
   const totalMs = Math.max(1, totalDurationMs);
   const progressPct = ((currentTimeMs % totalMs) / totalMs) * 100;
@@ -96,8 +93,8 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const startBAfter = countdownMs + patAms + Math.max(0, waitAB);
   const startAAfter = startBAfter + countdownMs + patBms + Math.max(0, waitBA);
   const now = ((currentTimeMs % totalMs) + totalMs) % totalMs;
-  const inAPattern = dualPlayback?.activeSide ? dualPlayback.activeSide === 'A' : (now < (countdownMs + patAms));
-  const inBPattern = dualPlayback?.activeSide ? dualPlayback.activeSide === 'B' : (now >= (startBAfter) && now < (startBAfter + countdownMs + patBms));
+  const inAPattern = (props.activeSide != null) ? props.activeSide === 'A' : (now < (countdownMs + patAms));
+  const inBPattern = (props.activeSide != null) ? props.activeSide === 'B' : (now >= (startBAfter) && now < (startBAfter + countdownMs + patBms));
 
   const renderCycle = (keyPrefix: string) => (
     <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
