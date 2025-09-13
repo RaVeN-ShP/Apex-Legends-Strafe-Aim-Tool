@@ -11,13 +11,10 @@ import { createPortal } from 'react-dom';
 interface GunSelectorProps {
   guns: Gun[];
   selectedGun: Gun | null;
-  onGunSelect: (gun: Gun) => void;
+  onGunSelect: (gun: Gun, side?: 'A' | 'B') => void;
   listMode?: boolean; // when true, render compact vertical list (sidebar)
   onDeleteCustom?: (gun: Gun) => void;
   onEditCustom?: (gun: Gun) => void;
-  onCopyCustomize?: (gun: Gun) => void;
-  onReplaceWeaponA?: (gun: Gun) => void;
-  onReplaceWeaponB?: (gun: Gun) => void;
   activeSlot?: 'A' | 'B' | 'AB';
   highlightGunIdA?: string | null;
   highlightGunIdB?: string | null;
@@ -118,30 +115,31 @@ function GunActionsMenu({
   gun,
   onEditCustom,
   onDeleteCustom,
-  onCopyCustomize,
-  onReplaceWeaponA,
-  onReplaceWeaponB,
   labelEdit,
   labelDelete,
-  labelCopy,
   labelMore,
-  labelReplace1,
-  labelReplace2,
+  onOpenReady,
 }: {
   gun: Gun;
   onEditCustom?: (gun: Gun) => void;
   onDeleteCustom?: (gun: Gun) => void;
-  onCopyCustomize?: (gun: Gun) => void;
-  onReplaceWeaponA?: (gun: Gun) => void;
-  onReplaceWeaponB?: (gun: Gun) => void;
   labelEdit: string;
   labelDelete: string;
-  labelCopy: string;
   labelMore: string;
-  labelReplace1: string;
-  labelReplace2: string;
+  onOpenReady?: (opener: () => void) => void;
 }) {
   const [triggerRef, containerRef, reposition] = useFixedPopper({ offsetY: 6 });
+  // Expose imperative opener for long-press on mobile
+  useEffect(() => {
+    if (!onOpenReady) return;
+    const opener = () => {
+      try {
+        (triggerRef.current as unknown as HTMLButtonElement | null)?.click();
+      } catch {}
+    };
+    onOpenReady(opener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onOpenReady]);
   return (
     <Menu>
       <span>
@@ -160,33 +158,6 @@ function GunActionsMenu({
           className="outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 w-40 rounded-md border border-white/10 bg-black/80 text-white shadow-md backdrop-blur-sm"
         >
           <div className="py-1">
-            {/* Replace actions */}
-            {onReplaceWeaponA && (
-              <MenuItem>
-                {({ active }) => (
-                  <button
-                    type="button"
-                    className={`block w-full text-left px-2 py-1.5 text-[11px] ${active ? 'bg-white/5' : ''} focus:outline-none focus-visible:outline-none ring-0 focus:ring-0`}
-                    onClick={(e) => { e.stopPropagation(); onReplaceWeaponA(gun); }}
-                  >
-                    {labelReplace1}
-                  </button>
-                )}
-              </MenuItem>
-            )}
-            {onReplaceWeaponB && (
-              <MenuItem>
-                {({ active }) => (
-                  <button
-                    type="button"
-                    className={`block w-full text-left px-2 py-1.5 text-[11px] ${active ? 'bg-white/5' : ''} focus:outline-none focus-visible:outline-none ring-0 focus:ring-0`}
-                    onClick={(e) => { e.stopPropagation(); onReplaceWeaponB(gun); }}
-                  >
-                    {labelReplace2}
-                  </button>
-                )}
-              </MenuItem>
-            )}
             {gun.category === 'custom' && onEditCustom && (
               <MenuItem>
                 {({ active }) => (
@@ -213,19 +184,6 @@ function GunActionsMenu({
                 )}
               </MenuItem>
             )}
-            {onCopyCustomize && (
-              <MenuItem>
-                {({ active }) => (
-                  <button
-                    type="button"
-                    className={`block w-full text-left px-2 py-1.5 text-[11px] ${active ? 'bg-white/5' : ''} focus:outline-none focus-visible:outline-none ring-0 focus:ring-0`}
-                    onClick={(e) => { e.stopPropagation(); onCopyCustomize(gun); }}
-                  >
-                    {labelCopy}
-                  </button>
-                )}
-              </MenuItem>
-            )}
           </div>
         </MenuItems>
       </Portal>
@@ -233,7 +191,7 @@ function GunActionsMenu({
   );
 }
 
-export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, onCopyCustomize, onReplaceWeaponA, onReplaceWeaponB, activeSlot = 'A', highlightGunIdA = null, highlightGunIdB = null }: GunSelectorProps) {
+export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, activeSlot = 'A', highlightGunIdA = null, highlightGunIdB = null }: GunSelectorProps) {
   const { t } = useI18n();
   // Background accents removed per request
   if (listMode) {
@@ -291,6 +249,27 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                   const both = isA && isB;
                   const { bgClass, borderClass } = getGunHighlightClasses(isA, isB, activeSlot);
 
+                  // Long-press to open menu on mobile for custom guns
+                  let menuOpener: (() => void) | null = null;
+                  let longPressTimer: number | null = null;
+                  let lastLongPressAt = 0;
+                  const startLongPress = () => {
+                    if (gun.category !== 'custom') return;
+                    if (longPressTimer != null) window.clearTimeout(longPressTimer);
+                    longPressTimer = window.setTimeout(() => {
+                      lastLongPressAt = Date.now();
+                      try { (navigator as any).vibrate?.(10); } catch {}
+                      if (menuOpener) menuOpener();
+                    }, 500);
+                  };
+                  const cancelLongPress = () => {
+                    if (longPressTimer != null) {
+                      window.clearTimeout(longPressTimer);
+                      longPressTimer = null;
+                    }
+                  };
+                  const wasJustLongPressed = () => (Date.now() - lastLongPressAt) < 400;
+
                   return (
                     <div key={gun.id} className="relative rounded-md overflow-hidden">
                       <div
@@ -302,7 +281,16 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           e.dataTransfer.setData('text/plain', gun.id);
                           e.dataTransfer.effectAllowed = 'copyMove';
                         }}
-                        onClick={() => onGunSelect(gun)}
+                        onClick={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); return; } onGunSelect(gun, 'A'); }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGunSelect(gun, 'B');
+                        }}
+                        onTouchStart={() => { startLongPress(); }}
+                        onTouchEnd={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); } cancelLongPress(); }}
+                        onTouchCancel={() => { cancelLongPress(); }}
+                        onTouchMove={() => { cancelLongPress(); }}
                         className={`group relative overflow-hidden w-full text-left p-2 rounded-md flex items-center justify-center md:justify-start gap-3 transition-colors md:border ${borderClass} ${bgClass || 'hover:bg-white/5'}`}
                       >
                       {/* Dogear when both slots reference the same gun: show the deactivated color */}
@@ -315,27 +303,30 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
 
-                      {/* Unified menu */}
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-40">
-                        <GunActionsMenu
-                          gun={gun}
-                          onEditCustom={onEditCustom}
-                          onDeleteCustom={onDeleteCustom}
-                          onCopyCustomize={onCopyCustomize}
-                          onReplaceWeaponA={onReplaceWeaponA}
-                          onReplaceWeaponB={onReplaceWeaponB}
-                          labelEdit={t('custom.edit')}
-                          labelDelete={t('custom.delete')}
-                          labelCopy={t('gun.copyCustomize')}
-                          labelMore={t('menu.more')}
-                          labelReplace1={t('gun.replaceWeapon1', { defaultValue: 'Replace Weapon 1' })}
-                          labelReplace2={t('gun.replaceWeapon2', { defaultValue: 'Replace Weapon 2' })}
-                        />
-                      </div>
+                      {/* Context menu: only for custom guns */}
+                      {gun.category === 'custom' && (
+                        <div className="hidden md:block absolute right-2 top-1/2 -translate-y-1/2 opacity-0 md:group-hover:opacity-100 transition-opacity z-40">
+                          <GunActionsMenu
+                            gun={gun}
+                            onEditCustom={onEditCustom}
+                            onDeleteCustom={onDeleteCustom}
+                            labelEdit={t('custom.edit')}
+                            labelDelete={t('custom.delete')}
+                            labelMore={t('menu.more')}
+                            onOpenReady={(opener) => { menuOpener = opener; }}
+                          />
+                        </div>
+                      )}
                       </div>
 
                       {/* Mobile split-row overlay for one-tap assignment; leave right safe area for menu */}
-                      <div className="md:hidden absolute inset-y-0 left-0 right-10 z-30 flex">
+                      <div
+                        className="md:hidden absolute inset-y-0 left-0 right-10 z-30 flex"
+                        onTouchStart={() => { startLongPress(); }}
+                        onTouchEnd={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); } cancelLongPress(); }}
+                        onTouchCancel={() => { cancelLongPress(); }}
+                        onTouchMove={() => { cancelLongPress(); }}
+                      >
                         <button
                           type="button"
                           aria-label={t('gun.assignToA', { defaultValue: 'Assign to A' })}
@@ -345,11 +336,8 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                             if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
                               try { (navigator as any).vibrate(10); } catch {}
                             }
-                            if (onReplaceWeaponA) {
-                              onReplaceWeaponA(gun);
-                            } else {
-                              onGunSelect(gun);
-                            }
+                            if (wasJustLongPressed()) { e.preventDefault(); return; }
+                            onGunSelect(gun, 'A');
                           }}
                         >
                           {/* Left zone hint - subtle, not a button */}
@@ -367,11 +355,8 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                             if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
                               try { (navigator as any).vibrate(10); } catch {}
                             }
-                            if (onReplaceWeaponB) {
-                              onReplaceWeaponB(gun);
-                            } else {
-                              onGunSelect(gun);
-                            }
+                            if (wasJustLongPressed()) { e.preventDefault(); return; }
+                            onGunSelect(gun, 'B');
                           }}
                         >
                           {/* Right zone hint - subtle, not a button */}

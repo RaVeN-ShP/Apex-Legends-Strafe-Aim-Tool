@@ -11,10 +11,7 @@ export default function GunsSidebar({
   onSelectGun,
   onStartCreate,
   onStartEdit,
-  onStartCopy,
   onDeleteProfile,
-  onReplaceWeaponA,
-  onReplaceWeaponB,
   selectionMode,
   highlightGunIdA,
   highlightGunIdB,
@@ -22,13 +19,10 @@ export default function GunsSidebar({
   guns: Gun[];
   selectedGun: Gun | null;
   selectedPatternKey: string | null;
-  onSelectGun: (gun: Gun | null) => void;
+  onSelectGun: (gun: Gun | null, side?: 'A' | 'B') => void;
   onStartCreate: () => void;
   onStartEdit: (profileId: string) => void;
-  onStartCopy: (name: string, steps: Pattern[], reloadTimeSeconds?: number) => void;
   onDeleteProfile: (profileId: string) => void;
-  onReplaceWeaponA?: (gun: Gun) => void;
-  onReplaceWeaponB?: (gun: Gun) => void;
   selectionMode?: 'A' | 'B' | 'AB';
   highlightGunIdA?: string | null;
   highlightGunIdB?: string | null;
@@ -49,9 +43,7 @@ export default function GunsSidebar({
       <GunSelector
         guns={guns}
         selectedGun={selectedGun}
-        onGunSelect={(g) => { onSelectGun(g); }}
-        onReplaceWeaponA={onReplaceWeaponA}
-        onReplaceWeaponB={onReplaceWeaponB}
+        onGunSelect={(g, side) => { onSelectGun(g, side); }}
         activeSlot={selectionMode}
         highlightGunIdA={highlightGunIdA ?? null}
         highlightGunIdB={highlightGunIdB ?? null}
@@ -70,14 +62,6 @@ export default function GunsSidebar({
           if (g.category !== 'custom') return;
           const id = g.id.startsWith('custom:') ? g.id.slice('custom:'.length) : g.id;
           onStartEdit(id);
-        }}
-        onCopyCustomize={(g) => {
-          const keys = Object.keys(g.pattern ?? {});
-          const variantKey = (selectedGun?.id === g.id && selectedPatternKey && keys.includes(selectedPatternKey))
-            ? selectedPatternKey
-            : (keys.includes('default') ? 'default' : keys[0]);
-          const steps = (g.pattern?.[variantKey!] ?? []).map((s: Pattern) => ({ ...s }));
-          onStartCopy(`${g.name} - Copy`, steps, g.reloadTimeSeconds);
         }}
         listMode
       />

@@ -271,21 +271,15 @@ export default function Home() {
               selectionMode={selectionMode}
               highlightGunIdA={selectedGunA?.id ?? null}
               highlightGunIdB={selectedGunB?.id ?? null}
-              onSelectGun={(g) => {
-                if (selectionMode === 'B') {
-                  setSelectedGunB(g);
-                } else {
-                  // In 'A' or 'AB' modes, selecting updates A
-                  setSelectedGunA(g);
-                }
+              onSelectGun={(g, side) => {
+                const target = side ?? (selectionMode === 'B' ? 'B' : 'A');
+                if (target === 'B') setSelectedGunB(g);
+                else setSelectedGunA(g);
                 setIsEditing(false);
               }}
               onStartCreate={handleStartCreate}
               onStartEdit={handleStartEdit}
-              onStartCopy={(name, steps, reloadTimeSeconds) => handleStartCopy(name, steps, reloadTimeSeconds)}
               onDeleteProfile={(id) => { removeProfile(id); }}
-              onReplaceWeaponA={(gun) => { setSelectedGunA(gun); }}
-              onReplaceWeaponB={(gun) => { setSelectedGunB(gun); }}
             />
           </aside>
 
