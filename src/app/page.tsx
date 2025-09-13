@@ -27,6 +27,7 @@ export default function Home() {
   const [selectedModeBId, setSelectedModeBId] = useState<string | null>(null);
   // A/B/AB selection mode
   const [selectionMode, setSelectionMode] = useState<SelectionMode>('A');
+  const [lastSingleMode, setLastSingleMode] = useState<Exclude<SelectionMode, 'AB'>>('A');
   // Preserved for future features; currently unused
   // const [waitTimeSeconds] = useState(DEFAULT_DELAY_SECONDS);
   const [volume, setVolume] = useState(0.8);
@@ -70,6 +71,13 @@ export default function Home() {
       }
     }
   }, [selectedGunB]);
+
+  // Track last single mode (A or B) to return to when toggling dual
+  useEffect(() => {
+    if (selectionMode !== 'AB') {
+      setLastSingleMode(selectionMode);
+    }
+  }, [selectionMode]);
 
   // Effective selections per slot
   const selectedPatternKeyA: string | null = useMemo(() => {
@@ -329,60 +337,56 @@ export default function Home() {
                     <div className="flex flex-col items-center justify-center order-3 col-span-2 md:order-none md:col-span-1 md:col-start-2">
   <button
     type="button"
-    onClick={() =>
-      setSelectionMode(
-        selectionMode === 'A'
-          ? 'B'
-          : selectionMode === 'B'
-          ? 'AB'
-          : 'A'
-      )
-    }
-    className="relative w-full h-12 md:w-10 md:h-10 rounded-md border border-white/15 bg-black/30 hover:bg-black/40 transition-colors"
-    aria-label="Toggle A/B/Dual"
-    title="Toggle A/B/Dual"
+    onClick={() => {
+      if (selectionMode === 'AB') {
+        setSelectionMode(lastSingleMode);
+      } else {
+        setLastSingleMode(selectionMode);
+        setSelectionMode('AB');
+      }
+    }}
+    className={`${selectionMode === 'AB' ? 'border-emerald-400/40 bg-emerald-500/10 hover:bg-emerald-500/15' : 'border-white/15 bg-black/20 hover:bg-black/30'} relative w-full h-12 md:w-14 md:h-20 rounded-md border transition-colors flex flex-col items-center justify-center`}
+    aria-label="Toggle Dual"
+    title="Toggle Dual"
   >
-    {/* Desktop: dual R-301 icons */}
-    <div className="hidden md:block relative w-full h-full">
-      <Image
-        src="/weapons/ar/R-301_Carbine_Icon.svg"
-        alt="R301 A"
-        fill
-        className={`object-contain invert drop-shadow transition-opacity ${
-          selectionMode === 'B' ? 'opacity-30' : 'opacity-100'
-        }`}
-        sizes="64px"
-        style={{
-          transform: 'rotate(-45deg) scale(-1) translate(0, 15%)',
-          transformOrigin: '50% 50%',
-        }}
-      />
-
-      <Image
-        src="/weapons/ar/R-301_Carbine_Icon.svg"
-        alt="R301 B"
-        fill
-        className={`object-contain invert drop-shadow transition-opacity ${
-          selectionMode === 'A' ? 'opacity-30' : 'opacity-100'
-        }`}
-        sizes="64px"
-        style={{
-          transform: 'rotate(-225deg) scale(-1) translate(0, 15%)',
-          transformOrigin: '50% 50%',
-        }}
-      />
-    </div>
-    {/* Mobile: clear text label */}
-    <span className="md:hidden text-xs font-semibold text-white">
-      {t('toggle.switch')}: {selectionMode === 'AB' ? t('tabs.dual') : `${t('tabs.single')} (${selectionMode})`}
+    {/* Top text label (plain text) */}
+    <span className={`mt-1 text-xs font-semibold ${selectionMode === 'AB' ? 'text-emerald-200' : 'text-white/60'}`}>
+      {t('tabs.dual')}
     </span>
-  </button> 
-  {/* Mode label container (desktop only) */}
-  <div className="hidden md:block mt-1">
-    <div className={`inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium text-center ${selectionMode === 'AB' ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200' : 'border-sky-400/30 bg-sky-500/10 text-sky-200'}`}>
-      {selectionMode === 'AB' ? t('tabs.dual') : t('tabs.single')}
+
+    {/* Bottom icon area (fixed size, centered) */}
+    <div className="hidden md:flex items-center justify-center mb-1">
+      <div className="relative h-10 w-10">
+        <Image
+          src="/weapons/ar/R-301_Carbine_Icon.svg"
+          alt="R301 A"
+          fill
+          className={`object-contain invert drop-shadow transition-opacity ${
+            selectionMode === 'B' ? 'opacity-30' : 'opacity-100'
+          }`}
+          sizes="40px"
+          style={{
+            transform: 'rotate(-45deg) scale(-1) translate(0, 15%)',
+            transformOrigin: '50% 50%',
+          }}
+        />
+
+        <Image
+          src="/weapons/ar/R-301_Carbine_Icon.svg"
+          alt="R301 B"
+          fill
+          className={`object-contain invert drop-shadow transition-opacity ${
+            selectionMode === 'A' ? 'opacity-30' : 'opacity-100'
+          }`}
+          sizes="40px"
+          style={{
+            transform: 'rotate(-225deg) scale(-1) translate(0, 15%)',
+            transformOrigin: '50% 50%',
+          }}
+        />
+      </div>
     </div>
-  </div>
+  </button> 
 </div>
 
                     {/* Gun B box */}

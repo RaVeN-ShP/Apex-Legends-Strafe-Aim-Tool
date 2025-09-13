@@ -7,6 +7,7 @@ import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
 import Image from "next/image";
 import DualPatternVisualizer from "@/features/patterns/components/DualPatternVisualizer";
+import { DualPlaybackProvider } from "@/features/timer/context/DualPlaybackContext";
 
 export default function StandardView({
   gun,
@@ -71,38 +72,53 @@ export default function StandardView({
         </div>
       )}
       {dual ? (
-        <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} />
+        <DualPlaybackProvider>
+          <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} />
+          <div className="pt-2">
+            {gunB ? (
+              <StrafeTimer
+                gun={gun}
+                pattern={pattern}
+                volume={volume}
+                onVolumeChange={onVolumeChange}
+                resetToken={`${selectedPatternKey ?? 'default'}|${selectedPatternKeyB ?? 'default'}`}
+                dual
+                gunB={gunB}
+                patternB={patternB ?? []}
+                selectionMode={selectionMode}
+                onChangeSelectionMode={onChangeSelectionMode}
+              />
+            ) : (
+              <StrafeTimer
+                gun={gun}
+                pattern={pattern}
+                volume={volume}
+                onVolumeChange={onVolumeChange}
+                resetToken={selectedPatternKey ?? undefined}
+                gunB={gunB ?? undefined}
+                selectionMode={selectionMode}
+                onChangeSelectionMode={onChangeSelectionMode}
+              />
+            )}
+          </div>
+        </DualPlaybackProvider>
       ) : (
-        <PatternVisualizer gun={gun} pattern={pattern} />
+        <>
+          <PatternVisualizer gun={gun} pattern={pattern} />
+          <div className="pt-2">
+            <StrafeTimer
+              gun={gun}
+              pattern={pattern}
+              volume={volume}
+              onVolumeChange={onVolumeChange}
+              resetToken={selectedPatternKey ?? undefined}
+              gunB={gunB ?? undefined}
+              selectionMode={selectionMode}
+              onChangeSelectionMode={onChangeSelectionMode}
+            />
+          </div>
+        </>
       )}
-
-      <div className="pt-2">
-        {dual && gunB ? (
-          <StrafeTimer
-            gun={gun}
-            pattern={pattern}
-            volume={volume}
-            onVolumeChange={onVolumeChange}
-            resetToken={`${selectedPatternKey ?? 'default'}|${selectedPatternKeyB ?? 'default'}`}
-            dual
-            gunB={gunB}
-            patternB={patternB ?? []}
-            selectionMode={selectionMode}
-            onChangeSelectionMode={onChangeSelectionMode}
-          />
-        ) : (
-          <StrafeTimer
-            gun={gun}
-            pattern={pattern}
-            volume={volume}
-            onVolumeChange={onVolumeChange}
-            resetToken={selectedPatternKey ?? undefined}
-            gunB={gunB ?? undefined}
-            selectionMode={selectionMode}
-            onChangeSelectionMode={onChangeSelectionMode}
-          />
-        )}
-      </div>
     </div>
   );
 }

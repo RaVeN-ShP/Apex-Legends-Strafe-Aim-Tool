@@ -4,6 +4,7 @@ import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
 import { computeDualWaits } from '@/features/timer/audio/audio';
+import { useDualPlayback } from '@/features/timer/context/DualPlaybackContext';
 
 export type DualCentralDisplayProps = {
   title: string;
@@ -57,6 +58,9 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   } = props;
 
   const { t } = useI18n();
+  const dualPlayback = (() => {
+    try { return useDualPlayback(); } catch { return null; }
+  })();
 
   const totalMs = Math.max(1, totalDurationMs);
   const progressPct = ((currentTimeMs % totalMs) / totalMs) * 100;
@@ -92,8 +96,8 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const startBAfter = countdownMs + patAms + Math.max(0, waitAB);
   const startAAfter = startBAfter + countdownMs + patBms + Math.max(0, waitBA);
   const now = ((currentTimeMs % totalMs) + totalMs) % totalMs;
-  const inAPattern = now < (countdownMs + patAms);
-  const inBPattern = now >= (startBAfter) && now < (startBAfter + countdownMs + patBms);
+  const inAPattern = dualPlayback?.activeSide ? dualPlayback.activeSide === 'A' : (now < (countdownMs + patAms));
+  const inBPattern = dualPlayback?.activeSide ? dualPlayback.activeSide === 'B' : (now >= (startBAfter) && now < (startBAfter + countdownMs + patBms));
 
   const renderCycle = (keyPrefix: string) => (
     <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
@@ -116,17 +120,17 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
       <div className={`absolute left-3 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'}`}>{title}</div>
 
       <div className={`absolute right-3 flex flex-col items-center ${isCompact ? 'top-2' : 'top-3'}`}>
-        <div className={`flex items-center gap-2 ${inBPattern ? 'opacity-60' : 'opacity-100'}`}>
-          <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inBPattern ? 'opacity-50' : 'opacity-80'}`}>
+        <div className={`flex items-center gap-2 ${inAPattern ? 'opacity-100' : 'opacity-50'}`}>
+          <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inAPattern ? '' : 'opacity-60'}`}>
             <Image src={gunAImage} alt={gunAName} fill className="object-contain invert drop-shadow" sizes="20px" />
           </div>
-          <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold text-white/80 max-w-[20ch] truncate`} title={gunAName}>{gunAName}</span>
+          <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[20ch] truncate ${inAPattern ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={gunAName}>{gunAName}</span>
         </div>
-        <div className={`flex items-center gap-2 ${inAPattern ? 'opacity-60' : 'opacity-100'}`}>
-          <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inAPattern ? 'opacity-50' : 'opacity-80'}`}>
+        <div className={`flex items-center gap-2 ${inBPattern ? 'opacity-100' : 'opacity-50'}`}>
+          <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inBPattern ? '' : 'opacity-60'}`}>
             <Image src={gunBImage} alt={gunBName} fill className="object-contain invert drop-shadow" sizes="20px" />
           </div>
-          <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold text-white/80 max-w-[20ch] truncate`} title={gunBName}>{gunBName}</span>
+          <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[20ch] truncate ${inBPattern ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={gunBName}>{gunBName}</span>
         </div>
       </div>
 

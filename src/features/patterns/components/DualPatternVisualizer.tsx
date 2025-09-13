@@ -1,6 +1,7 @@
 import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle, PatternTypeStyles } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useDualPlayback } from '@/features/timer/context/DualPlaybackContext';
 
 interface DualPatternVisualizerProps {
   patternA: Pattern[];
@@ -9,6 +10,7 @@ interface DualPatternVisualizerProps {
 
 export default function DualPatternVisualizer({ patternA, patternB }: DualPatternVisualizerProps) {
   const { t } = useI18n();
+  const dualPlayback = (() => { try { return useDualPlayback(); } catch { return null; } })();
   const totalA = Math.max(0, patternA.reduce((acc, s) => acc + Math.max(0, s.duration), 0));
   const totalB = Math.max(0, patternB.reduce((acc, s) => acc + Math.max(0, s.duration), 0));
   const connectorPct = 4; // width percentage for middle green divider
@@ -55,7 +57,7 @@ export default function DualPatternVisualizer({ patternA, patternB }: DualPatter
             return (
               <div
                 key={`A-${idx}`}
-                className={`${barColor} relative h-full`}
+                className={`${barColor} relative h-full ${dualPlayback?.activeSide && dualPlayback.activeSide !== 'A' ? 'opacity-40 grayscale' : ''}`}
                 style={{ width: `${widthPctWithinHalf(dur, totalA, halfPct, countA)}%` }}
                 title={`A • ${tLabel} • ${dur}${t('pattern.units.ms')}`}
               >
@@ -82,7 +84,7 @@ export default function DualPatternVisualizer({ patternA, patternB }: DualPatter
             return (
               <div
                 key={`B-${idx}`}
-                className={`${barColor} relative h-full`}
+                className={`${barColor} relative h-full ${dualPlayback?.activeSide && dualPlayback.activeSide !== 'B' ? 'opacity-40 grayscale' : ''}`}
                 style={{ width: `${widthPctWithinHalf(dur, totalB, halfPct, countB)}%` }}
                 title={`B • ${tLabel} • ${dur}${t('pattern.units.ms')}`}
               >
