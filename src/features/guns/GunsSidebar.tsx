@@ -15,6 +15,9 @@ export default function GunsSidebar({
   onDeleteProfile,
   onReplaceWeaponA,
   onReplaceWeaponB,
+  selectionMode,
+  highlightGunIdA,
+  highlightGunIdB,
 }: {
   guns: Gun[];
   selectedGun: Gun | null;
@@ -26,6 +29,9 @@ export default function GunsSidebar({
   onDeleteProfile: (profileId: string) => void;
   onReplaceWeaponA?: (gun: Gun) => void;
   onReplaceWeaponB?: (gun: Gun) => void;
+  selectionMode?: 'A' | 'B' | 'AB';
+  highlightGunIdA?: string | null;
+  highlightGunIdB?: string | null;
 }) {
   const { t } = useI18n();
 
@@ -46,6 +52,9 @@ export default function GunsSidebar({
         onGunSelect={(g) => { onSelectGun(g); }}
         onReplaceWeaponA={onReplaceWeaponA}
         onReplaceWeaponB={onReplaceWeaponB}
+        activeSlot={selectionMode}
+        highlightGunIdA={highlightGunIdA ?? null}
+        highlightGunIdB={highlightGunIdB ?? null}
         onDeleteCustom={(g) => {
           if (g.category !== 'custom') return;
           const ok = window.confirm(t('custom.confirmDelete', { defaultValue: 'Delete this custom pattern?' }));

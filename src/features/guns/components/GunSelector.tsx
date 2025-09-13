@@ -18,6 +18,9 @@ interface GunSelectorProps {
   onCopyCustomize?: (gun: Gun) => void;
   onReplaceWeaponA?: (gun: Gun) => void;
   onReplaceWeaponB?: (gun: Gun) => void;
+  activeSlot?: 'A' | 'B' | 'AB';
+  highlightGunIdA?: string | null;
+  highlightGunIdB?: string | null;
 }
 
 const categoryLabel: Record<Gun['category'], string> = {
@@ -212,7 +215,7 @@ function GunActionsMenu({
   );
 }
 
-export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, onCopyCustomize, onReplaceWeaponA, onReplaceWeaponB }: GunSelectorProps) {
+export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, onCopyCustomize, onReplaceWeaponA, onReplaceWeaponB, activeSlot = 'A', highlightGunIdA = null, highlightGunIdB = null }: GunSelectorProps) {
   const { t } = useI18n();
   // Background accents removed per request
   if (listMode) {
@@ -260,23 +263,47 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
               </div>
               <div className="mt-1">
                 {group.items.sort((a, b) => a.name.localeCompare(b.name)).map((gun) => {
-                  const isActive = selectedGun?.id === gun.id;
+                  const isA = highlightGunIdA === gun.id;
+                  const isB = highlightGunIdB === gun.id;
+
+                  let bgClass = '';
+                  let borderClass = 'border-transparent';
+                  const both = isA && isB;
+                  if (both) {
+                    const mainIsA = activeSlot === 'A' || (activeSlot === 'AB');
+                    if (mainIsA) {
+                      bgClass = 'bg-red-600/20';
+                      borderClass = 'border-red-500/40';
+                    } else {
+                      bgClass = 'bg-sky-600/20';
+                      borderClass = 'border-sky-500/40';
+                    }
+                  } else if (isA) {
+                    const active = activeSlot === 'A' || activeSlot === 'AB';
+                    bgClass = active ? 'bg-red-600/20' : 'bg-red-600/10';
+                    borderClass = active ? 'border-red-500/40' : 'border-red-500/10';
+                  } else if (isB) {
+                    const active = activeSlot === 'B' || activeSlot === 'AB';
+                    bgClass = active ? 'bg-sky-600/20' : 'bg-sky-600/10';
+                    borderClass = active ? 'border-sky-500/40' : 'border-sky-500/10';
+                  }
+
                   return (
-                    <div
-                      key={gun.id}
-                      draggable
-                      onDragStart={(e) => {
-                        try {
-                          e.dataTransfer.setData('application/x-gun-id', gun.id);
-                        } catch {}
-                        e.dataTransfer.setData('text/plain', gun.id);
-                        e.dataTransfer.effectAllowed = 'copyMove';
-                      }}
-                      onClick={() => onGunSelect(gun)}
-                      className={`group relative w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors border ${
-                        isActive ? 'bg-red-600/20 border-red-500/40' : 'border-transparent hover:bg-white/5'
-                      }`}
-                    >
+                    <div key={gun.id} className="relative">
+                      <div
+                        draggable
+                        onDragStart={(e) => {
+                          try {
+                            e.dataTransfer.setData('application/x-gun-id', gun.id);
+                          } catch {}
+                          e.dataTransfer.setData('text/plain', gun.id);
+                          e.dataTransfer.effectAllowed = 'copyMove';
+                        }}
+                        onClick={() => onGunSelect(gun)}
+                        className={`group w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors border ${borderClass} ${bgClass || 'hover:bg-white/5'} ${both && activeSlot !== 'AB' ? 'overflow-hidden' : ''}`}
+                        style={both && activeSlot !== 'AB' ? { clipPath: 'polygon(0 0, calc(100% - 2rem) 0, 100% 2rem, 100% 100%, 0 100%)' } as any : undefined}
+                      >
+                      {/* Dogear when both slots reference the same gun: show the deactivated color */}
                       {/* Background ammo accents removed */}
                       <div className="relative z-10 w-10 h-10 shrink-0">
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
@@ -303,6 +330,14 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           labelReplace2={t('gun.replaceWeapon2', { defaultValue: 'Replace Weapon 2' })}
                         />
                       </div>
+                      </div>
+
+                      {isA && isB && activeSlot !== 'AB' && (
+                        <span
+                          className={`pointer-events-none absolute top-0 right-0 w-8 h-8 rounded-tr-md border ${activeSlot === 'A' ? 'bg-sky-600/10 border-sky-500/20' : 'bg-red-600/10 border-red-500/20'}`}
+                          style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
+                        />
+                      )}
                     </div>
                   );
                 })}

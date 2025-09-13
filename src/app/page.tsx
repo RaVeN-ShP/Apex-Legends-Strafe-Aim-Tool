@@ -268,6 +268,9 @@ export default function Home() {
               guns={allGuns}
               selectedGun={displayGun}
               selectedPatternKey={displayPatternKey}
+              selectionMode={selectionMode}
+              highlightGunIdA={selectedGunA?.id ?? null}
+              highlightGunIdB={selectedGunB?.id ?? null}
               onSelectGun={(g) => {
                 if (selectionMode === 'B') {
                   setSelectedGunB(g);
@@ -311,7 +314,7 @@ export default function Home() {
                   <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
                     {/* Gun A box */}
                     <div
-                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-sky-400/40'} bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
+                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-red-500/40'} bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
                       onClick={() => setSelectionMode('A')}
                       onDragOver={(e) => {
                         if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
@@ -555,11 +558,6 @@ export default function Home() {
               <span>•</span>
               <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className="underline hover:text-white/80">Mokeysniper</a>
             </span>
-            <div className="mt-3">
-              <a href="/advanced" className="inline-flex items-center text-white/70 hover:text-white underline underline-offset-2">
-                {t('advanced.link', { defaultValue: 'Switch to Advanced Mode (two-gun combine)' })}
-              </a>
-            </div>
           </div>
         </footer>
       </div>

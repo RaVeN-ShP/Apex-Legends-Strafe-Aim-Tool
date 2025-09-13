@@ -81,6 +81,14 @@ export default function CentralDisplay(props: CentralDisplayProps) {
   const startPct = (startDurationMs / totalMs) * 100;
   const endPct = (endPhaseMs / totalMs) * 100;
 
+  // Determine if we're currently within the pattern window for active styling
+  const now = ((currentTimeMs % totalMs) + totalMs) % totalMs;
+  const inPattern = now >= startDurationMs && now < (startDurationMs + patternTotalMs);
+  const showOnRight = selectionMode === 'B';
+  const headerSideClass = showOnRight ? 'absolute right-3' : 'absolute left-3';
+  const headerTopClass = isCompact ? 'top-2' : 'top-3';
+  const displayedName = showOnRight ? (gunBName ?? gunName) : gunName;
+
   const renderCycle = (keyPrefix: string) => (
     <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
       {segments.map((s, idx) => (
@@ -143,13 +151,14 @@ export default function CentralDisplay(props: CentralDisplayProps) {
       style={{ minHeight: isCompact ? '135px' : '250px' }}
       ref={rootRef}
     >
-      <div className={`absolute left-3 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'}`}>{title}</div>
-      <div className={`absolute right-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
-        <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative opacity-80`}>
+      <div className={`${headerSideClass} flex items-center gap-2 ${headerTopClass}`}>
+        <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inPattern ? '' : 'opacity-60'}`}>
           <Image src={gunImage} alt={gunName} fill className="object-contain invert drop-shadow" sizes="20px" />
         </div>
-        <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold text-white/80 max-w-[25ch] truncate`} title={gunName}>{gunName}</span>
+        <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${inPattern ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={displayedName}>{displayedName}</span>
       </div>
+
+      <div className={`absolute left-1/2 -translate-x-1/2 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'} text-center max-w-[40ch] truncate`}>{title}</div>
 
       <div className={`flex items-center justify-center h-full ${isCompact ? 'pt-8' : 'pt-20'}`}>
         <div className="text-center">
