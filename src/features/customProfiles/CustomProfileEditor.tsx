@@ -8,7 +8,7 @@ import PatternImportPicker from "@/features/customProfiles/PatternImportPicker";
 import { useI18n } from "@/i18n/I18nProvider";
 import { Listbox, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import { PlusIcon, TrashIcon, ClockIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PatternTypeStyles } from "@/config/styles";
 import { DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
@@ -33,21 +33,6 @@ function SortableStepRow({ id, idx, s, onUpdate, onRemove, durationLabel, t }: {
   t: (key: string, options?: any) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const [isCoarsePointer, setIsCoarsePointer] = useState<boolean>(false);
-  useEffect(() => {
-    if (typeof window === 'undefined' || !(window as any).matchMedia) return;
-    const mq = window.matchMedia('(pointer: coarse)');
-    const update = () => setIsCoarsePointer(mq.matches);
-    update();
-    // Older Safari support
-    if ((mq as any).addEventListener) {
-      mq.addEventListener('change', update);
-      return () => mq.removeEventListener('change', update);
-    } else if ((mq as any).addListener) {
-      (mq as any).addListener(update);
-      return () => (mq as any).removeListener(update);
-    }
-  }, []);
   const style = { transform: CSS.Transform.toString(transform), transition } as React.CSSProperties;
   const actionValue: 'shoot' | 'left' | 'right' = s.type === 'shoot' ? 'shoot' : s.direction;
   const gradient = s.type === 'shoot'
@@ -57,18 +42,10 @@ function SortableStepRow({ id, idx, s, onUpdate, onRemove, durationLabel, t }: {
   return (
     <div ref={setNodeRef} style={style}>
       <div
-        className={`${containerClass} ${isCoarsePointer ? 'cursor-grab active:cursor-grabbing select-none' : ''}`}
+        className={`${containerClass} cursor-grab active:cursor-grabbing select-none`}
         {...attributes}
-        {...(isCoarsePointer ? (listeners as any) : {})}
+        {...(listeners as any)}
       >
-        <div className="hidden sm:inline-flex items-center justify-center w-8 h-8 mr-1 rounded border border-white/15 bg-black/20 hover:bg-white/10 cursor-grab active:cursor-grabbing"
-          aria-label={t('custom.dragToReorder')}
-          title={t('custom.dragToReorder')}
-          {...(!isCoarsePointer ? (listeners as any) : {})}
-        >
-          <Bars3Icon className="w-4 h-4" />
-        </div>
-
         <div className="grid grid-cols-12 gap-2 w-full items-center">
           <div className="col-span-12 sm:col-span-9 flex flex-wrap items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-white/10 text-white/80 text-[11px] inline-flex items-center justify-center select-none">{idx + 1}</div>
@@ -106,7 +83,7 @@ function SortableStepRow({ id, idx, s, onUpdate, onRemove, durationLabel, t }: {
               </div>
             </div>
           </div>
-          <div className="col-span-12 sm:col-span-3">
+          <div className="col-span-12 sm:col-span-3 flex justify-end">
             <button
               type="button"
               onClick={() => onRemove(idx)}

@@ -224,10 +224,6 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
 
     return (
       <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)] custom-scroll">
-        {/* Mobile assign hint */}
-        <div className="md:hidden px-2 pb-2 text-[11px] text-white/70">
-          {t('gun.assignHint', { defaultValue: 'Tap left for A, right for B' })}
-        </div>
         {groups.map((group, gi) => (
           group.items.length > 0 && (
             <div key={group.key} className={gi > 0 ? 'mt-4' : ''}>
@@ -340,11 +336,13 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                             onGunSelect(gun, 'A');
                           }}
                         >
-                          {/* Left zone hint - subtle, not a button */}
-                          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
-                            <ChevronLeftIcon className="w-3 h-3" />
-                            {t('gun.hintA', { defaultValue: 'Left' })}
-                          </span>
+                          {/* Left zone hint - only show for selected gun in slot A */}
+                          {isA && (
+                            <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
+                              <ChevronLeftIcon className="w-3 h-3" />
+                              1
+                            </span>
+                          )}
                         </button>
                         <button
                           type="button"
@@ -359,11 +357,13 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                             onGunSelect(gun, 'B');
                           }}
                         >
-                          {/* Right zone hint - subtle, not a button */}
-                          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
-                            {t('gun.hintB', { defaultValue: 'Right' })}
-                            <ChevronRightIcon className="w-3 h-3" />
-                          </span>
+                          {/* Right zone hint - only show for selected gun in slot B */}
+                          {isB && (
+                            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
+                              1
+                              <ChevronRightIcon className="w-3 h-3" />
+                            </span>
+                          )}
                         </button>
                       </div>
 

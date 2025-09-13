@@ -49,4 +49,99 @@ export function getPhaseStyle(id: PhaseId): { label: string; barColor?: string; 
   return PhaseStyles[id];
 }
 
+// UI Color Configuration
+export const UIColors = {
+  // Base colors
+  background: {
+    primary: 'bg-black/20',
+    secondary: 'bg-white/5',
+    hover: 'bg-black/30',
+  },
+  border: {
+    primary: 'border-white/10',
+    secondary: 'border-white/15',
+  },
+  text: {
+    primary: 'text-white',
+    secondary: 'text-white/90',
+    tertiary: 'text-white/80',
+    muted: 'text-white/70',
+    disabled: 'text-white/60',
+    subtle: 'text-white/50',
+  },
+  
+  // Gun slot colors
+  gunSlot: {
+    a: {
+      active: {
+        border: 'border-red-600/60',
+        background: 'bg-gradient-to-br from-red-600/20 to-red-600/5',
+      },
+      inactive: {
+        border: 'border-red-600/10',
+        background: 'bg-gradient-to-br from-red-700/10 to-red-700/5',
+        content: 'opacity-25 filter saturate-[.5]',
+      },
+    },
+    b: {
+      active: {
+        border: 'border-sky-600/60',
+        background: 'bg-gradient-to-br from-sky-600/20 to-sky-600/5',
+      },
+      inactive: {
+        border: 'border-sky-600/10',
+        background: 'bg-gradient-to-br from-sky-800/10 to-sky-800/5',
+        content: 'opacity-25 filter saturate-[.5]',
+      },
+    },
+    dual: {
+      border: 'border-emerald-500/40',
+      background: 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5',
+      contentInactive: 'opacity-40 filter saturate-50',
+    },
+  },
+  
+  // Dual mode toggle
+  dualToggle: {
+    active: {
+      border: 'border-emerald-400/40',
+      background: 'bg-emerald-500/10',
+      hover: 'hover:bg-emerald-500/15',
+      text: 'text-emerald-200',
+    },
+    inactive: {
+      border: 'border-white/15',
+      background: 'bg-black/20',
+      hover: 'hover:bg-black/30',
+      text: 'text-white/60',
+    },
+  },
+  
+  // Attachment badges
+  attachment: {
+    magazine: {
+      border: 'border-amber-400/50',
+      background: 'bg-amber-500/30',
+      text: 'text-amber-200',
+    },
+    stock: {
+      border: 'border-purple-400/50',
+      background: 'bg-purple-500/30',
+      text: 'text-purple-200',
+    },
+  },
+  
+  // Remarks/tags
+  remarks: {
+    border: 'border-purple-400/30',
+    background: 'bg-purple-500/10',
+    text: 'text-purple-200',
+  },
+  
+  // Links
+  link: {
+    default: 'underline hover:text-white/80',
+  },
+} as const;
+
 

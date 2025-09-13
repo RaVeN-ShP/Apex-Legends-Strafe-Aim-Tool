@@ -15,6 +15,7 @@ import StandardView from "@/features/main/StandardView";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
 import Image from "next/image";
 import { DualPlaybackProvider, useDualPlayback } from "@/features/timer/context/DualPlaybackContext";
+import { UIColors } from "@/config/styles";
 // Custom profiles are managed via hook for storage compatibility
 
 type SelectionMode = 'A' | 'B' | 'AB';
@@ -142,6 +143,8 @@ export default function Home() {
     setIsEditing(true);
     setEditorContext({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: 1.5 });
     setEditorResetToken((v) => v + 1);
+    // Scroll to top of the page when editor opens
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleStartEdit = (profileId: string) => {
@@ -151,6 +154,8 @@ export default function Home() {
     setIsEditing(true);
     setEditorContext({ id: p.id, name: p.name, steps: p.strafePattern.map((s) => ({ ...s })), reloadTimeSeconds: p.reloadTimeSeconds });
     setEditorResetToken((v) => v + 1);
+    // Scroll to top of the page when editor opens
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleStartCopy = (name: string, steps: Pattern[], reloadTimeSeconds?: number) => {
@@ -158,6 +163,8 @@ export default function Home() {
     setIsEditing(true);
     setEditorContext({ id: null, name, steps: steps.map((s) => ({ ...s })), reloadTimeSeconds });
     setEditorResetToken((v) => v + 1);
+    // Scroll to top of the page when editor opens
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleEditorCancel = () => {
@@ -188,22 +195,22 @@ export default function Home() {
   const FaqSection = () => {
     if (isEditing || !displayGun) return null;
     return (
-      <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+      <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
         <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
         <div className="space-y-2">
-          {['q0','q1','q2','q3'].map((k) => (
+          {['q0', 'q1', 'q2', 'q3'].map((k) => (
             <Disclosure key={k}>
               {({ open }) => (
-                <div className="rounded-md border border-white/10 bg-white/5">
+                <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
                   <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
-                    <span className="text-sm font-semibold text-white/90">{t(`faq.${k}.question`)}</span>
-                    <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
+                    <span className={`text-sm font-semibold ${UIColors.text.secondary}`}>{t(`faq.${k}.question`)}</span>
+                    <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
                   </Disclosure.Button>
-                  <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
+                  <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
                     {k === 'q3' ? (
                       <div>
                         <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
-                        <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
+                        <div className={`mt-1 ${UIColors.text.disabled}`}>{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
                       </div>
                     ) : t(`faq.${k}.answer`)}
                   </Disclosure.Panel>
@@ -235,26 +242,26 @@ export default function Home() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{t('app.title')}</h1>
-              <p className="text-white/80 mt-2 text-sm md:text-base">
-            {t('app.subtitle.before')}
-            <a href="https://x.com/ahn99fps" target="_blank" rel="noreferrer" className="underline hover:text-white">
-              ahn99
-            </a>
-            {t('app.subtitle.after')}
+              <p className={`${UIColors.text.tertiary} mt-2 text-sm md:text-base`}>
+                {t('app.subtitle.before')}
+                <a href="https://x.com/ahn99fps" target="_blank" rel="noreferrer" className={UIColors.link.default}>
+                  ahn99
+                </a>
+                {t('app.subtitle.after')}
               </p>
             </div>
             <div className="shrink-0">
-              <div className="rounded-md border border-white/10 bg-black/20 px-3 py-2">
+              <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.primary} px-3 py-2`}>
                 <LanguageSwitcher />
               </div>
             </div>
           </div>
-          <p className="text-white/60 mt-2 text-xs md:text-sm">
+          <p className={`${UIColors.text.disabled} mt-2 text-xs md:text-sm`}>
             References: {" "}
-            <a href="https://docs.google.com/document/d/1olISc98UQ2ucUlvm3pGEt5sqG7Qf4LC7I2HnmTOB7w4/edit?tab=t.0" target="_blank" rel="noreferrer" className="underline hover:text-white/80">
+            <a href="https://docs.google.com/document/d/1olISc98UQ2ucUlvm3pGEt5sqG7Qf4LC7I2HnmTOB7w4/edit?tab=t.0" target="_blank" rel="noreferrer" className={UIColors.link.default}>
               {t('refs.doc')}
             </a>{" "}•{" "}
-            <a href="https://www.youtube.com/watch?v=fPLSisfQGlE" target="_blank" rel="noreferrer" className="underline hover:text-white/80">
+            <a href="https://www.youtube.com/watch?v=fPLSisfQGlE" target="_blank" rel="noreferrer" className={UIColors.link.default}>
               {t('refs.video')}
             </a>
           </p>
@@ -286,7 +293,7 @@ export default function Home() {
           {/* Right Column: Main + FAQ stacked */}
           <div className="order-1 md:order-2 md:col-start-2 self-start flex flex-col gap-6">
             {/* Main Section */}
-            <section className="relative rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+            <section className={`relative rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
               {isEditing ? (
                 <CustomProfileEditor
                   allGuns={allGuns}
@@ -301,233 +308,215 @@ export default function Home() {
                 />
               ) : displayGun ? (
                 <DualPlaybackProvider>
-                <DualAware>
-                {({ activeSide, isPlaying }) => (
-                <div className="space-y-6">
-                  {/* Top three boxes: Gun A, Center Toggle, Gun B */}
-                  <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
-                    {/* Gun A box */}
-                    <div
-                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-red-600/20 bg-gradient-to-br from-red-600/10 to-red-600/5' : selectionMode === 'AB' ? 'border-emerald-500/40 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5' : 'border-red-600/40 bg-gradient-to-br from-red-600/20 to-red-600/5'} p-3 ${selectionMode === 'B' ? 'opacity-60 filter saturate-50' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 filter saturate-50' : ''} cursor-pointer transition-colors order-1 md:order-none`}
-                      onClick={() => setSelectionMode('A')}
-                      onDragOver={(e) => {
-                        if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
-                          e.preventDefault();
-                          e.dataTransfer.dropEffect = 'copy';
-                        }
-                      }}
-                      onDrop={(e) => {
-                        const id = e.dataTransfer.getData('application/x-gun-id') || e.dataTransfer.getData('text/plain');
-                        if (!id) return;
-                        const g = allGuns.find(x => x.id === id);
-                        if (g) {
-                          setSelectedGunA(g);
-                        }
-                      }}
-                    >
-                      {selectedGunA ? (
-                        <div className="flex items-start gap-3">
-                          <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
-                            <Image src={selectedGunA.image} alt={selectedGunA.name} fill className="object-contain invert" sizes="64px" />
-                          </div>
-                          <div className="min-w-0 flex-1 flex flex-col md:flex-row items-start md:items-start md:justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-base font-bold tracking-wide truncate max-w-[35ch]" title={selectedGunA.name}>{selectedGunA.name}</div>
-                              {selectedGunA.remarks && selectedGunA.remarks.length > 0 && (
-                                <div className="mt-1 flex flex-wrap items-center gap-2">
-                                  {selectedGunA.remarks.map((r, i) => (
-                                    <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
-                                      {t(r)}
-                                    </span>
-                                  ))}
+                  <DualAware>
+                    {({ activeSide, isPlaying }) => (
+                      <div className="space-y-6">
+                        {/* Top three boxes: Gun A, Center Toggle, Gun B */}
+                        <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
+                          {/* Gun A box */}
+                          <div
+                            className={`rounded-lg border ${selectionMode === 'B' ? `${UIColors.gunSlot.a.inactive.border} ${UIColors.gunSlot.a.inactive.background}` : selectionMode === 'AB' ? `${UIColors.gunSlot.dual.border} ${UIColors.gunSlot.dual.background}` : `${UIColors.gunSlot.a.active.border} ${UIColors.gunSlot.a.active.background}`} p-3 cursor-pointer transition-colors order-1 md:order-none`}
+                            onClick={() => setSelectionMode('A')}
+                            onDragOver={(e) => {
+                              if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'copy';
+                              }
+                            }}
+                            onDrop={(e) => {
+                              const id = e.dataTransfer.getData('application/x-gun-id') || e.dataTransfer.getData('text/plain');
+                              if (!id) return;
+                              const g = allGuns.find(x => x.id === id);
+                              if (g) {
+                                setSelectedGunA(g);
+                              }
+                            }}
+                          >
+                            {selectedGunA ? (
+                              <div className={`flex items-start gap-3 ${selectionMode === 'B' ? UIColors.gunSlot.a.inactive.content : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? UIColors.gunSlot.dual.contentInactive : ''}`}>
+                                <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
+                                  <Image src={selectedGunA.image} alt={selectedGunA.name} fill className="object-contain invert" sizes="64px" />
                                 </div>
-                              )}
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-2 py-1">
-                                  <Image
-                                    src="/attachments/magazine/Extended_Light_Mag.svg"
-                                    alt="Extended Light Mag"
-                                    width={16}
-                                    height={16}
-                                    className="invert"
+                                <div className="min-w-0 flex-1 flex flex-col md:flex-row items-start md:items-start md:justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="text-base font-bold tracking-wide truncate max-w-[35ch]" title={selectedGunA.name}>{selectedGunA.name}</div>
+
+                                    <div className="mt-2 flex items-center gap-2">
+                                      <span className={`inline-flex items-center justify-center rounded-md border ${UIColors.attachment.magazine.border} ${UIColors.attachment.magazine.background} ${UIColors.attachment.magazine.text} px-2 py-1`}>
+                                        <Image
+                                          src="/attachments/magazine/Extended_Light_Mag.svg"
+                                          alt="Extended Light Mag"
+                                          width={16}
+                                          height={16}
+                                          className="invert"
+                                        />
+                                      </span>
+                                      <span className={`inline-flex items-center justify-center rounded-md border ${UIColors.attachment.stock.border} ${UIColors.attachment.stock.background} ${UIColors.attachment.stock.text} px-2 py-1`}>
+                                        <Image
+                                          src="/attachments/Standard_Stock.svg"
+                                          alt="Standard Stock"
+                                          width={16}
+                                          height={16}
+                                          className="invert"
+                                        />
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <PatternModeSwitcher
+                                    patternMap={selectedGunA.pattern}
+                                    selectedKey={selectedPatternKeyA}
+                                    onSelect={(k) => setSelectedModeAId(k)}
+                                    className="order-2 md:order-none w-full md:w-auto flex flex-row md:flex-col flex-wrap md:flex-nowrap items-start md:items-end gap-2"
                                   />
-                                </span>
-                                <span className="inline-flex items-center justify-center rounded-md border border-purple-400/50 bg-purple-500/30 text-purple-200 px-2 py-1">
-                                  <Image
-                                    src="/attachments/Standard_Stock.svg"
-                                    alt="Standard Stock"
-                                    width={16}
-                                    height={16}
-                                    className="invert"
-                                  />
-                                </span>
+                                </div>
                               </div>
-                            </div>
-                            <PatternModeSwitcher
-                              patternMap={selectedGunA.pattern}
-                              selectedKey={selectedPatternKeyA}
-                              onSelect={(k) => setSelectedModeAId(k)}
-                              className="order-2 md:order-none w-full md:w-auto flex flex-row md:flex-col flex-wrap md:flex-nowrap items-start md:items-end gap-2"
-                            />
+                            ) : (
+                              <div className={`${UIColors.text.disabled} text-sm`}>{t('main.selectPrompt')}</div>
+                            )}
+                          </div>
+
+                          {/* Center square toggle */}
+                          <div className="flex flex-col items-center justify-center order-3 col-span-2 md:order-none md:col-span-1 md:col-start-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectionMode === 'AB') {
+                                  setSelectionMode(lastSingleMode);
+                                } else {
+                                  setLastSingleMode(selectionMode);
+                                  setSelectionMode('AB');
+                                }
+                              }}
+                              className={`${selectionMode === 'AB' ? `${UIColors.dualToggle.active.border} ${UIColors.dualToggle.active.background} ${UIColors.dualToggle.active.hover}` : `${UIColors.dualToggle.inactive.border} ${UIColors.dualToggle.inactive.background} ${UIColors.dualToggle.inactive.hover}`} relative w-full h-12 md:w-14 md:h-20 rounded-md border transition-colors flex flex-col items-center justify-center`}
+                              aria-label="Toggle Dual"
+                              title="Toggle Dual"
+                            >
+                              {/* Top text label (plain text) */}
+                              <span className={`mt-1 text-xs font-semibold ${selectionMode === 'AB' ? UIColors.dualToggle.active.text : UIColors.dualToggle.inactive.text}`}>
+                                {t('tabs.dual')}
+                              </span>
+
+                              {/* Bottom icon area (fixed size, centered) */}
+                              <div className="hidden md:flex items-center justify-center mb-1">
+                                <div className="relative h-10 w-10">
+                                  <Image
+                                    src="/weapons/ar/R-301_Carbine_Icon.svg"
+                                    alt="R301 A"
+                                    fill
+                                    className={`object-contain invert drop-shadow transition-opacity ${selectionMode === 'B' ? 'opacity-30' : 'opacity-100'
+                                      }`}
+                                    sizes="40px"
+                                    style={{
+                                      transform: 'rotate(-45deg) scale(-1) translate(0, 15%)',
+                                      transformOrigin: '50% 50%',
+                                    }}
+                                  />
+
+                                  <Image
+                                    src="/weapons/ar/R-301_Carbine_Icon.svg"
+                                    alt="R301 B"
+                                    fill
+                                    className={`object-contain invert drop-shadow transition-opacity ${selectionMode === 'A' ? 'opacity-30' : 'opacity-100'
+                                      }`}
+                                    sizes="40px"
+                                    style={{
+                                      transform: 'rotate(-225deg) scale(-1) translate(0, 15%)',
+                                      transformOrigin: '50% 50%',
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+
+                          {/* Gun B box */}
+                          <div
+                            className={`rounded-lg border ${selectionMode === 'A' ? `${UIColors.gunSlot.b.inactive.border} ${UIColors.gunSlot.b.inactive.background}` : selectionMode === 'AB' ? `${UIColors.gunSlot.dual.border} ${UIColors.gunSlot.dual.background}` : `${UIColors.gunSlot.b.active.border} ${UIColors.gunSlot.b.active.background}`} p-3 cursor-pointer transition-colors order-2 md:order-none`}
+                            onClick={() => setSelectionMode('B')}
+                            onDragOver={(e) => {
+                              if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'copy';
+                              }
+                            }}
+                            onDrop={(e) => {
+                              const id = e.dataTransfer.getData('application/x-gun-id') || e.dataTransfer.getData('text/plain');
+                              if (!id) return;
+                              const g = allGuns.find(x => x.id === id);
+                              if (g) {
+                                setSelectedGunB(g);
+                              }
+                            }}
+                          >
+                            {selectedGunB ? (
+                              <div className={`flex items-start gap-3 ${selectionMode === 'A' ? UIColors.gunSlot.b.inactive.content : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'A' ? UIColors.gunSlot.dual.contentInactive : ''}`}>
+                                <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
+                                  <Image src={selectedGunB.image} alt={selectedGunB.name} fill className="object-contain invert" sizes="64px" />
+                                </div>
+                                <div className="min-w-0 flex-1 flex flex-col md:flex-row items-start md:items-start md:justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="text-base font-bold tracking-wide truncate max-w-[35ch]" title={selectedGunB.name}>{selectedGunB.name}</div>
+
+                                    <div className="mt-2 flex items-center gap-2">
+                                      <span className="inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-2 py-1">
+                                        <Image
+                                          src="/attachments/magazine/Extended_Light_Mag.svg"
+                                          alt="Extended Light Mag"
+                                          width={16}
+                                          height={16}
+                                          className="invert"
+                                        />
+                                      </span>
+                                      <span className={`inline-flex items-center justify-center rounded-md border ${UIColors.attachment.stock.border} ${UIColors.attachment.stock.background} ${UIColors.attachment.stock.text} px-2 py-1`}>
+                                        <Image
+                                          src="/attachments/Standard_Stock.svg"
+                                          alt="Standard Stock"
+                                          width={16}
+                                          height={16}
+                                          className="invert"
+                                        />
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <PatternModeSwitcher
+                                    patternMap={selectedGunB.pattern}
+                                    selectedKey={selectedPatternKeyB}
+                                    onSelect={(k) => setSelectedModeBId(k)}
+                                    className="order-2 md:order-none w-full md:w-auto flex flex-row md:flex-col flex-wrap md:flex-nowrap items-start md:items-end gap-2"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`${UIColors.text.disabled} text-sm`}>{t('main.selectPrompt')}</div>
+                            )}
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-white/60 text-sm">{t('main.selectPrompt')}</div>
-                      )}
-                    </div>
 
-                    {/* Center square toggle */}
-                    <div className="flex flex-col items-center justify-center order-3 col-span-2 md:order-none md:col-span-1 md:col-start-2">
-  <button
-    type="button"
-    onClick={() => {
-      if (selectionMode === 'AB') {
-        setSelectionMode(lastSingleMode);
-      } else {
-        setLastSingleMode(selectionMode);
-        setSelectionMode('AB');
-      }
-    }}
-    className={`${selectionMode === 'AB' ? 'border-emerald-400/40 bg-emerald-500/10 hover:bg-emerald-500/15' : 'border-white/15 bg-black/20 hover:bg-black/30'} relative w-full h-12 md:w-14 md:h-20 rounded-md border transition-colors flex flex-col items-center justify-center`}
-    aria-label="Toggle Dual"
-    title="Toggle Dual"
-  >
-    {/* Top text label (plain text) */}
-    <span className={`mt-1 text-xs font-semibold ${selectionMode === 'AB' ? 'text-emerald-200' : 'text-white/60'}`}>
-      {t('tabs.dual')}
-    </span>
+                        <StandardView
+                          gun={selectionMode === 'B' ? (selectedGunB ?? displayGun!) : (selectedGunA ?? displayGun!)}
+                          pattern={selectionMode === 'B' ? selectedPatternB : selectedPatternA}
+                          selectedPatternKey={selectionMode === 'B' ? selectedPatternKeyB : selectedPatternKeyA}
+                          onSelectMode={(k) => {
+                            if (selectionMode === 'B') setSelectedModeBId(k); else setSelectedModeAId(k);
+                          }}
+                          volume={volume}
+                          onVolumeChange={setVolume}
+                          hideHeader
+                          hideModeSwitcher
+                          dual={selectionMode === 'AB'}
+                          gunB={selectedGunB}
+                          patternB={selectionMode === 'AB' ? selectedPatternB : []}
+                          selectedPatternKeyB={selectionMode === 'AB' ? selectedPatternKeyB : null}
+                          selectionMode={selectionMode}
+                          onChangeSelectionMode={(m) => setSelectionMode(m)}
+                        />
 
-    {/* Bottom icon area (fixed size, centered) */}
-    <div className="hidden md:flex items-center justify-center mb-1">
-      <div className="relative h-10 w-10">
-        <Image
-          src="/weapons/ar/R-301_Carbine_Icon.svg"
-          alt="R301 A"
-          fill
-          className={`object-contain invert drop-shadow transition-opacity ${
-            selectionMode === 'B' ? 'opacity-30' : 'opacity-100'
-          }`}
-          sizes="40px"
-          style={{
-            transform: 'rotate(-45deg) scale(-1) translate(0, 15%)',
-            transformOrigin: '50% 50%',
-          }}
-        />
-
-        <Image
-          src="/weapons/ar/R-301_Carbine_Icon.svg"
-          alt="R301 B"
-          fill
-          className={`object-contain invert drop-shadow transition-opacity ${
-            selectionMode === 'A' ? 'opacity-30' : 'opacity-100'
-          }`}
-          sizes="40px"
-          style={{
-            transform: 'rotate(-225deg) scale(-1) translate(0, 15%)',
-            transformOrigin: '50% 50%',
-          }}
-        />
-      </div>
-    </div>
-  </button> 
-</div>
-
-                    {/* Gun B box */}
-                    <div
-                      className={`rounded-lg border ${selectionMode === 'A' ? 'border-sky-600/20 bg-gradient-to-br from-sky-600/10 to-sky-600/5' : selectionMode === 'AB' ? 'border-emerald-600/40 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5' : 'border-sky-600/40 bg-gradient-to-br from-sky-600/20 to-sky-600/5'} p-3 ${selectionMode === 'A' ? 'opacity-60 filter saturate-50' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'A' ? 'opacity-40 filter saturate-50' : ''} cursor-pointer transition-colors order-2 md:order-none`}
-                      onClick={() => setSelectionMode('B')}
-                      onDragOver={(e) => {
-                        if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
-                          e.preventDefault();
-                          e.dataTransfer.dropEffect = 'copy';
-                        }
-                      }}
-                      onDrop={(e) => {
-                        const id = e.dataTransfer.getData('application/x-gun-id') || e.dataTransfer.getData('text/plain');
-                        if (!id) return;
-                        const g = allGuns.find(x => x.id === id);
-                        if (g) {
-                          setSelectedGunB(g);
-                        }
-                      }}
-                    >
-                      {selectedGunB ? (
-                        <div className="flex items-start gap-3">
-                          <div className="relative w-12 h-12 md:w-16 md:h-16 shrink-0">
-                            <Image src={selectedGunB.image} alt={selectedGunB.name} fill className="object-contain invert" sizes="64px" />
-                          </div>
-                          <div className="min-w-0 flex-1 flex flex-col md:flex-row items-start md:items-start md:justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-base font-bold tracking-wide truncate max-w-[35ch]" title={selectedGunB.name}>{selectedGunB.name}</div>
-                              {selectedGunB.remarks && selectedGunB.remarks.length > 0 && (
-                                <div className="mt-1 flex flex-wrap items-center gap-2">
-                                  {selectedGunB.remarks.map((r, i) => (
-                                    <span key={i} className="rounded-md border border-purple-400/30 bg-purple-500/10 text-purple-200 text-[11px] px-2 py-0.5">
-                                      {t(r)}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="mt-2 flex items-center gap-2">
-                              <span className="inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-2 py-1">
-                              <Image
-                                    src="/attachments/magazine/Extended_Light_Mag.svg"
-                                    alt="Extended Light Mag"
-                                    width={16}
-                                    height={16}
-                                    className="invert"
-                                  />
-                                </span>
-                                <span className="inline-flex items-center justify-center rounded-md border border-purple-400/50 bg-purple-500/30 text-purple-200 px-2 py-1">
-                                  <Image
-                                    src="/attachments/Standard_Stock.svg"
-                                    alt="Standard Stock"
-                                    width={16}
-                                    height={16}
-                                    className="invert"
-                                  />
-                                </span>
-                              </div>
-                            </div>
-                            <PatternModeSwitcher
-                              patternMap={selectedGunB.pattern}
-                              selectedKey={selectedPatternKeyB}
-                              onSelect={(k) =>  setSelectedModeBId(k)}
-                              className="order-2 md:order-none w-full md:w-auto flex flex-row md:flex-col flex-wrap md:flex-nowrap items-start md:items-end gap-2"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-white/60 text-sm">{t('main.selectPrompt')}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  <StandardView
-                    gun={selectionMode === 'B' ? (selectedGunB ?? displayGun!) : (selectedGunA ?? displayGun!)}
-                    pattern={selectionMode === 'B' ? selectedPatternB : selectedPatternA}
-                    selectedPatternKey={selectionMode === 'B' ? selectedPatternKeyB : selectedPatternKeyA}
-                    onSelectMode={(k) => {
-                      if (selectionMode === 'B') setSelectedModeBId(k); else setSelectedModeAId(k);
-                    }}
-                    volume={volume}
-                    onVolumeChange={setVolume}
-                    hideHeader
-                    hideModeSwitcher
-                    dual={selectionMode === 'AB'}
-                    gunB={selectedGunB}
-                    patternB={selectionMode === 'AB' ? selectedPatternB : []}
-                    selectedPatternKeyB={selectionMode === 'AB' ? selectedPatternKeyB : null}
-                    selectionMode={selectionMode}
-                    onChangeSelectionMode={(m) => setSelectionMode(m)}
-                  />
-                
-                </div>
-                )}
-                </DualAware>
+                      </div>
+                    )}
+                  </DualAware>
                 </DualPlaybackProvider>
               ) : (
-                <div className="text-white/70">{t('main.selectPrompt')}</div>
+                <div className={UIColors.text.muted}>{t('main.selectPrompt')}</div>
               )}
             </section>
             {/* FAQ: visible here on md+ only */}
@@ -543,14 +532,14 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-white/50">
+        <footer className={`mt-8 text-center text-xs ${UIColors.text.subtle}`}>
           {t('footer.credit', { name: 'RaVeN_ShP' })}
           <div className="mt-1">
-            <span className="text-white/60">{t('footer.contributors')}</span>
+            <span className={UIColors.text.disabled}>{t('footer.contributors')}</span>
             <span className="ml-1 inline-flex gap-2">
-              <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className="underline hover:text-white/80">ahn99</a>
+              <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className={UIColors.link.default}>ahn99</a>
               <span>•</span>
-              <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className="underline hover:text-white/80">Mokeysniper</a>
+              <a href="https://www.youtube.com/@Mokeysniper" target="_blank" rel="noreferrer" className={UIColors.link.default}>Mokeysniper</a>
             </span>
           </div>
         </footer>

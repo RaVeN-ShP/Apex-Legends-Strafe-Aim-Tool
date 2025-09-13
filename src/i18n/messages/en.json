@@ -85,8 +85,5 @@
   "tabs.dual": "Dual",
   "toggle.switch": "Switch",
   "display.play": "Play",
-  "display.stop": "Stop",
-  "gun.assignHint": "Tap left for A, right for B",
-  "gun.hintA": "1",
-  "gun.hintB": "2"
+  "display.stop": "Stop"
 }
