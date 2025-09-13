@@ -7,7 +7,6 @@ import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
 import Image from "next/image";
 import DualPatternVisualizer from "@/features/patterns/components/DualPatternVisualizer";
-import { DualPlaybackProvider } from "@/features/timer/context/DualPlaybackContext";
 
 export default function StandardView({
   gun,
@@ -72,7 +71,7 @@ export default function StandardView({
         </div>
       )}
       {dual ? (
-        <DualPlaybackProvider>
+        <>
           <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} />
           <div className="pt-2">
             {gunB ? (
@@ -101,7 +100,7 @@ export default function StandardView({
               />
             )}
           </div>
-        </DualPlaybackProvider>
+        </>
       ) : (
         <>
           <PatternVisualizer gun={gun} pattern={pattern} />

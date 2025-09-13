@@ -14,6 +14,7 @@ import CustomProfileEditor from "@/features/customProfiles/CustomProfileEditor";
 import StandardView from "@/features/main/StandardView";
 import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitcher";
 import Image from "next/image";
+import { DualPlaybackProvider, useDualPlayback } from "@/features/timer/context/DualPlaybackContext";
 // Custom profiles are managed via hook for storage compatibility
 
 type SelectionMode = 'A' | 'B' | 'AB';
@@ -184,6 +185,48 @@ export default function Home() {
     setIsEditing(false);
   };
 
+  const FaqSection = () => {
+    if (isEditing || !displayGun) return null;
+    return (
+      <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
+        <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
+        <div className="space-y-2">
+          {['q0','q1','q2','q3'].map((k) => (
+            <Disclosure key={k}>
+              {({ open }) => (
+                <div className="rounded-md border border-white/10 bg-white/5">
+                  <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
+                    <span className="text-sm font-semibold text-white/90">{t(`faq.${k}.question`)}</span>
+                    <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
+                  </Disclosure.Button>
+                  <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
+                    {k === 'q3' ? (
+                      <div>
+                        <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
+                        <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
+                      </div>
+                    ) : t(`faq.${k}.answer`)}
+                  </Disclosure.Panel>
+                </div>
+              )}
+            </Disclosure>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // Helper consumer to access dual playback context within provider scope
+  function DualAware<T>({ children }: { children: (ctx: { activeSide: 'A' | 'B' | null; isPlaying: boolean }) => T }) {
+    try {
+      const { activeSide, isPlaying } = useDualPlayback();
+      return <>{children({ activeSide, isPlaying }) as any}</>;
+    } catch {
+      // Fallback if provider not present
+      return <>{children({ activeSide: null, isPlaying: false }) as any}</>;
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4 text-white">
       <div className="max-w-6xl mx-auto">
@@ -260,12 +303,15 @@ export default function Home() {
                   onSave={handleEditorSave}
                 />
               ) : displayGun ? (
+                <DualPlaybackProvider>
+                <DualAware>
+                {({ activeSide, isPlaying }) => (
                 <div className="space-y-6">
                   {/* Top three boxes: Gun A, Center Toggle, Gun B */}
                   <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
                     {/* Gun A box */}
                     <div
-                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-sky-400/40'} bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-25 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
+                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-sky-400/40'} bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
                       onClick={() => setSelectionMode('A')}
                       onDragOver={(e) => {
                         if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
@@ -391,7 +437,7 @@ export default function Home() {
 
                     {/* Gun B box */}
                     <div
-                      className={`rounded-lg border ${selectionMode === 'A' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-sky-400/40'} bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-25 grayscale' : ''} cursor-pointer transition-colors order-2 md:order-none`}
+                      className={`rounded-lg border ${selectionMode === 'A' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-sky-400/40'} bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'A' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-2 md:order-none`}
                       onClick={() => setSelectionMode('B')}
                       onDragOver={(e) => {
                         if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
@@ -480,41 +526,24 @@ export default function Home() {
                   />
                 
                 </div>
+                )}
+                </DualAware>
+                </DualPlaybackProvider>
               ) : (
                 <div className="text-white/70">{t('main.selectPrompt')}</div>
               )}
             </section>
-            {/* FAQ Container - show only with StandardView (not editing) */}
-            {!isEditing && displayGun ? (
-              <section className="rounded-xl border border-white/10 bg-black/20 p-4 md:p-6 text-white">
-                <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
-                <div className="space-y-2">
-                  {['q0','q1','q2','q3'].map((k) => (
-                    <Disclosure key={k}>
-                      {({ open }) => (
-                        <div className="rounded-md border border-white/10 bg-white/5">
-                          <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
-                            <span className="text-sm font-semibold text-white/90">{t(`faq.${k}.question`)}</span>
-                            <ChevronDownIcon className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
-                          </Disclosure.Button>
-                          <Disclosure.Panel className="px-3 pb-3 text-xs text-white/70">
-                            {k === 'q3' ? (
-                              <div>
-                                <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
-                                <div className="mt-1 text-white/60">{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
-                              </div>
-                            ) : t(`faq.${k}.answer`)}
-                          </Disclosure.Panel>
-                        </div>
-                      )}
-                    </Disclosure>
-                  ))}
-                </div>
-              </section>
-            ) : null}
+            {/* FAQ: visible here on md+ only */}
+            <div className="hidden md:block">
+              <FaqSection />
+            </div>
           </div>
         </div>
 
+        {/* FAQ: move to bottom on mobile */}
+        <div className="md:hidden mt-6">
+          <FaqSection />
+        </div>
 
         {/* Footer */}
         <footer className="mt-8 text-center text-xs text-white/50">
