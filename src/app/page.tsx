@@ -226,6 +226,40 @@ export default function Home() {
   // Dual playback state lifted here
   const [activeSide, setActiveSide] = useState<'A' | 'B' | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  
+  // Scroll-to-top button visibility state
+  const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
+
+  // Function to scroll to gun list on mobile
+  const scrollToGunList = () => {
+    // Only scroll on mobile (when sidebar is below main content)
+    const gunListElement = document.querySelector('aside');
+    if (gunListElement) {
+      gunListElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+  };
+
+  // Function to scroll back to top/main content
+  const scrollToTop = () => {
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'smooth' 
+    });
+  };
+
+  // Scroll detection effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 300; // Show button after scrolling 300px
+      setShowScrollToTop(window.scrollY > scrollThreshold);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4 text-white">
@@ -308,6 +342,7 @@ export default function Home() {
                           <div
                             className={`rounded-lg border ${selectionMode === 'B' ? `${UIColors.gunSlot.a.inactive.border} ${UIColors.gunSlot.a.inactive.background}` : selectionMode === 'AB' ? `${UIColors.gunSlot.dual.border} ${UIColors.gunSlot.dual.background}` : `${UIColors.gunSlot.a.active.border} ${UIColors.gunSlot.a.active.background}`} p-3 cursor-pointer transition-colors order-1 md:order-none`}
                             onClick={() => setSelectionMode('A')}
+                            onDoubleClick={scrollToGunList}
                             onDragOver={(e) => {
                               if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
                                 e.preventDefault();
@@ -424,6 +459,7 @@ export default function Home() {
                           <div
                             className={`rounded-lg border ${selectionMode === 'A' ? `${UIColors.gunSlot.b.inactive.border} ${UIColors.gunSlot.b.inactive.background}` : selectionMode === 'AB' ? `${UIColors.gunSlot.dual.border} ${UIColors.gunSlot.dual.background}` : `${UIColors.gunSlot.b.active.border} ${UIColors.gunSlot.b.active.background}`} p-3 cursor-pointer transition-colors order-2 md:order-none`}
                             onClick={() => setSelectionMode('B')}
+                            onDoubleClick={scrollToGunList}
                             onDragOver={(e) => {
                               if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
                                 e.preventDefault();
@@ -538,6 +574,33 @@ export default function Home() {
           </div>
         </footer>
       </div>
+
+      {/* Floating scroll-to-top button - mobile only */}
+      <button
+        onClick={scrollToTop}
+        className={`md:hidden fixed bottom-6 right-6 w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl z-50 transition-all duration-300 ease-out ${
+          showScrollToTop 
+            ? 'opacity-100 scale-100 translate-y-0' 
+            : 'opacity-0 scale-75 translate-y-2 pointer-events-none'
+        }`}
+        aria-label="Scroll to top"
+        title="Scroll to top"
+      >
+        <svg
+          className="w-6 h-6 text-white transition-transform duration-200 hover:scale-110"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 10l7-7m0 0l7 7m-7-7v18"
+          />
+        </svg>
+      </button>
     </main>
   );
 }
