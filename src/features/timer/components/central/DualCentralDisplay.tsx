@@ -117,15 +117,18 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
       style={{ minHeight: isCompact ? '135px' : '250px' }}
       ref={rootRef}
     >
-      <div className={`absolute left-3 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'}`}>{title}</div>
-
-      <div className={`absolute right-3 flex flex-col items-center ${isCompact ? 'top-2' : 'top-3'}`}>
+      <div className={`absolute left-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
         <div className={`flex items-center gap-2 ${inAPattern ? 'opacity-100' : 'opacity-50'}`}>
           <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inAPattern ? '' : 'opacity-60'}`}>
             <Image src={gunAImage} alt={gunAName} fill className="object-contain invert drop-shadow" sizes="20px" />
           </div>
           <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[20ch] truncate ${inAPattern ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={gunAName}>{gunAName}</span>
         </div>
+      </div>
+
+      <div className={`absolute left-1/2 -translate-x-1/2 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'} text-center max-w-[40ch] truncate`}>{title}</div>
+
+      <div className={`absolute right-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
         <div className={`flex items-center gap-2 ${inBPattern ? 'opacity-100' : 'opacity-50'}`}>
           <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${inBPattern ? '' : 'opacity-60'}`}>
             <Image src={gunBImage} alt={gunBName} fill className="object-contain invert drop-shadow" sizes="20px" />
