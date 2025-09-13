@@ -83,7 +83,7 @@ export default function CentralDisplay(props: CentralDisplayProps) {
 
   // Determine if we're currently within the pattern window for active styling
   const now = ((currentTimeMs % totalMs) + totalMs) % totalMs;
-  const inPattern = now >= startDurationMs && now < (startDurationMs + patternTotalMs);
+  const inPattern = now >= 0 && now < (startDurationMs + patternTotalMs);
   const showOnRight = selectionMode === 'B';
   const headerSideClass = showOnRight ? 'absolute right-3' : 'absolute left-3';
   const headerTopClass = isCompact ? 'top-2' : 'top-3';

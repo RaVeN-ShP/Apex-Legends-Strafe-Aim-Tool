@@ -25,7 +25,9 @@ export default function PatternModeSwitcher({
           <button
             key={key}
             type="button"
-            onClick={(e) => { e.preventDefault(); onSelect(key)}} 
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSelect(key)}}
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onTouchStart={(e) => { e.stopPropagation(); }} 
             className={`text-xs px-2 py-1 rounded border capitalize ${active ? 'border-red-500 bg-red-600/20 text-red-200' : 'border-white/15 bg-white/5 text-white/90 hover:bg-white/10'}`}
             title={label}
           >

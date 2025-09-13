@@ -33,6 +33,24 @@ const categoryLabel: Record<Gun['category'], string> = {
   custom: 'Custom',
 };
 
+// Map gun highlight state to classes to keep logic declarative and maintainable
+const highlightClassMap: Record<string, { bgClass: string; borderClass: string }> = {
+  'dual-either': { bgClass: 'bg-emerald-500/20', borderClass: 'border-emerald-400/40' },
+  'A-active': { bgClass: 'bg-red-500/20', borderClass: 'border-red-500/40' },
+  'A-inactive': { bgClass: 'bg-red-800/10', borderClass: 'border-red-700/10' },
+  'B-active': { bgClass: 'bg-sky-500/20', borderClass: 'border-sky-500/40' },
+  'B-inactive': { bgClass: 'bg-sky-800/10', borderClass: 'border-sky-700/10' },
+  'none': { bgClass: '', borderClass: 'border-transparent' },
+};
+
+function getGunHighlightClasses(isA: boolean, isB: boolean, activeSlot: 'A' | 'B' | 'AB') {
+  if (activeSlot === 'AB' && (isA || isB)) return highlightClassMap['dual-either'];
+  if (isA && isB) return highlightClassMap[activeSlot === 'A' ? 'A-active' : 'B-active'];
+  if (isA) return highlightClassMap[`A-${activeSlot === 'A' ? 'active' : 'inactive'}`];
+  if (isB) return highlightClassMap[`B-${activeSlot === 'B' ? 'active' : 'inactive'}`];
+  return highlightClassMap['none'];
+}
+
 function Portal(props: { children: ReactNode }) {
   const { children } = props;
   const [mounted, setMounted] = useState(false);
@@ -261,32 +279,13 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                   <span>{ammoLabel[group.key] || 'Other'}</span>
                 </div>
               </div>
-              <div className="mt-1">
+              <div className="mt-1 flex flex-col gap-1">
                 {group.items.sort((a, b) => a.name.localeCompare(b.name)).map((gun) => {
                   const isA = highlightGunIdA === gun.id;
                   const isB = highlightGunIdB === gun.id;
 
-                  let bgClass = '';
-                  let borderClass = 'border-transparent';
                   const both = isA && isB;
-                  if (both) {
-                    const mainIsA = activeSlot === 'A' || (activeSlot === 'AB');
-                    if (mainIsA) {
-                      bgClass = 'bg-red-600/20';
-                      borderClass = 'border-red-500/40';
-                    } else {
-                      bgClass = 'bg-sky-600/20';
-                      borderClass = 'border-sky-500/40';
-                    }
-                  } else if (isA) {
-                    const active = activeSlot === 'A' || activeSlot === 'AB';
-                    bgClass = active ? 'bg-red-600/20' : 'bg-red-600/10';
-                    borderClass = active ? 'border-red-500/40' : 'border-red-500/10';
-                  } else if (isB) {
-                    const active = activeSlot === 'B' || activeSlot === 'AB';
-                    bgClass = active ? 'bg-sky-600/20' : 'bg-sky-600/10';
-                    borderClass = active ? 'border-sky-500/40' : 'border-sky-500/10';
-                  }
+                  const { bgClass, borderClass } = getGunHighlightClasses(isA, isB, activeSlot);
 
                   return (
                     <div key={gun.id} className="relative">
