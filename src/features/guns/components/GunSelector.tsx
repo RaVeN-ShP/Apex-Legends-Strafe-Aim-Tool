@@ -36,7 +36,7 @@ const categoryLabel: Record<Gun['category'], string> = {
 // Map gun highlight state to classes to keep logic declarative and maintainable
 const highlightClassMap: Record<string, { bgClass: string; borderClass: string }> = {
   // Desktop backgrounds; mobile uses gradient overlays
-  'dual-either': { bgClass: 'md:bg-emerald-700/20', borderClass: 'border-emerald-500/40' },
+  'dual-either': { bgClass: 'md:bg-emerald-700/20', borderClass: 'border-emerald-700/40' },
   'A-active': { bgClass: 'md:bg-red-500/20', borderClass: 'border-red-500/40' },
   'A-inactive': { bgClass: 'md:bg-red-800/10', borderClass: 'border-red-700/10' },
   'B-active': { bgClass: 'md:bg-sky-500/20', borderClass: 'border-sky-500/40' },
@@ -388,18 +388,18 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                       {/* Mobile gradient overlays for A/B/dual highlights */}
                       {/* A gradient: left edge red -> transparent middle (mobile only; not in dual mode) */}
                       {activeSlot !== 'AB' && isA && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-red-500/25 via-red-500/0 to-transparent" />
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-[70%] bg-gradient-to-r from-red-500/25 via-red-500/0 to-transparent" />
                       )}
                       {/* B gradient: right edge sky -> transparent middle (mobile only; not in dual mode) */}
                       {activeSlot !== 'AB' && isB && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-sky-500/25 via-sky-500/0 to-transparent" />
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-[70%] bg-gradient-to-l from-sky-500/25 via-sky-500/0 to-transparent" />
                       )}
                       {/* Dual/AB: emerald fades only on the side(s) of assigned slot(s) (mobile only) */}
                       {activeSlot === 'AB' && isA && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-[70%] bg-gradient-to-r from-emerald-500/25 via-emerald-500/0 to-transparent" />
                       )}
                       {activeSlot === 'AB' && isB && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-[70%] bg-gradient-to-l from-emerald-500/25 via-emerald-500/0 to-transparent" />
                       )}
                     </div>
                   );

@@ -314,7 +314,7 @@ export default function Home() {
                   <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
                     {/* Gun A box */}
                     <div
-                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-500/40 bg-emerald-500/20' : 'border-red-500/40 bg-red-500/20'} p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
+                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-500/40 bg-emerald-500/20' : 'border-red-600/40 bg-red-600/20'} p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
                       onClick={() => setSelectionMode('A')}
                       onDragOver={(e) => {
                         if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
@@ -440,7 +440,7 @@ export default function Home() {
 
                     {/* Gun B box */}
                     <div
-                      className={`rounded-lg border ${selectionMode === 'A' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-sky-400/40'} bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'A' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-2 md:order-none`}
+                      className={`rounded-lg border ${selectionMode === 'A' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-600/40 bg-emerald-500/20' : 'border-sky-600/40 bg-sky-600/20'} bg-white/5 p-3 ${selectionMode === 'A' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'A' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-2 md:order-none`}
                       onClick={() => setSelectionMode('B')}
                       onDragOver={(e) => {
                         if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
