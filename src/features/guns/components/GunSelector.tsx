@@ -35,12 +35,11 @@ const categoryLabel: Record<Gun['category'], string> = {
 
 // Map gun highlight state to classes to keep logic declarative and maintainable
 const highlightClassMap: Record<string, { bgClass: string; borderClass: string }> = {
-  // Desktop backgrounds; mobile uses gradient overlays
-  'dual-either': { bgClass: 'md:bg-emerald-700/20', borderClass: 'border-emerald-700/40' },
-  'A-active': { bgClass: 'md:bg-red-500/20', borderClass: 'border-red-500/40' },
-  'A-inactive': { bgClass: 'md:bg-red-800/10', borderClass: 'border-red-700/10' },
-  'B-active': { bgClass: 'md:bg-sky-500/20', borderClass: 'border-sky-500/40' },
-  'B-inactive': { bgClass: 'md:bg-sky-800/10', borderClass: 'border-sky-700/10' },
+  'dual-either': { bgClass: 'md:bg-gradient-to-br md:from-emerald-500/20 md:to-emerald-500/5', borderClass: 'border-emerald-600/40' },
+  'A-active': { bgClass: 'md:bg-gradient-to-br md:from-red-600/20 md:to-red-600/5', borderClass: 'border-red-600/40' },
+  'A-inactive': { bgClass: 'md:bg-gradient-to-br md:from-red-600/5 md:to-transparent', borderClass: 'border-red-600/10' },
+  'B-active': { bgClass: 'md:bg-gradient-to-br md:from-sky-600/20 md:to-sky-600/5', borderClass: 'border-sky-600/40' },
+  'B-inactive': { bgClass: 'md:bg-gradient-to-br md:from-sky-600/5 md:to-transparent', borderClass: 'border-sky-600/10' },
   'none': { bgClass: '', borderClass: 'border-transparent' },
 };
 

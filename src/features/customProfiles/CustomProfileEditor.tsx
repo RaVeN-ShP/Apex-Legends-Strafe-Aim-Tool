@@ -78,7 +78,7 @@ function SortableStepRow({ id, idx, s, onUpdate, onRemove, durationLabel, t }: {
             }}>
               <div className="relative">
                 <Listbox.Button
-                  className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[110px] text-left"
+                  className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-20 sm:min-w-24 text-left"
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   {actionValue === 'shoot' ? t('custom.shoot') : actionValue === 'left' ? t('custom.left') : t('custom.right')}
@@ -99,10 +99,10 @@ function SortableStepRow({ id, idx, s, onUpdate, onRemove, durationLabel, t }: {
                 value={s.duration}
                 onChange={(e) => onUpdate(idx, { duration: Number(e.target.value) })}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30"
+                className="w-14 sm:w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30"
               />
               <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">
-                <ClockIcon className="w-3.5 h-3.5 -mt-px" /> {durationLabel}
+                 {durationLabel}
               </div>
             </div>
           </div>
