@@ -5,7 +5,7 @@ import { useState, ReactNode, useEffect, useRef } from 'react';
 import { Gun } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
+import { EllipsisVerticalIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { createPortal } from 'react-dom';
 
 interface GunSelectorProps {
@@ -35,11 +35,12 @@ const categoryLabel: Record<Gun['category'], string> = {
 
 // Map gun highlight state to classes to keep logic declarative and maintainable
 const highlightClassMap: Record<string, { bgClass: string; borderClass: string }> = {
-  'dual-either': { bgClass: 'bg-emerald-500/20', borderClass: 'border-emerald-400/40' },
-  'A-active': { bgClass: 'bg-red-500/20', borderClass: 'border-red-500/40' },
-  'A-inactive': { bgClass: 'bg-red-800/10', borderClass: 'border-red-700/10' },
-  'B-active': { bgClass: 'bg-sky-500/20', borderClass: 'border-sky-500/40' },
-  'B-inactive': { bgClass: 'bg-sky-800/10', borderClass: 'border-sky-700/10' },
+  // Desktop backgrounds; mobile uses gradient overlays
+  'dual-either': { bgClass: 'md:bg-emerald-700/20', borderClass: 'border-emerald-500/40' },
+  'A-active': { bgClass: 'md:bg-red-500/20', borderClass: 'border-red-500/40' },
+  'A-inactive': { bgClass: 'md:bg-red-800/10', borderClass: 'border-red-700/10' },
+  'B-active': { bgClass: 'md:bg-sky-500/20', borderClass: 'border-sky-500/40' },
+  'B-inactive': { bgClass: 'md:bg-sky-800/10', borderClass: 'border-sky-700/10' },
   'none': { bgClass: '', borderClass: 'border-transparent' },
 };
 
@@ -266,6 +267,10 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
 
     return (
       <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)] custom-scroll">
+        {/* Mobile assign hint */}
+        <div className="md:hidden px-2 pb-2 text-[11px] text-white/70">
+          {t('gun.assignHint', { defaultValue: 'Tap left for A, right for B' })}
+        </div>
         {groups.map((group, gi) => (
           group.items.length > 0 && (
             <div key={group.key} className={gi > 0 ? 'mt-4' : ''}>
@@ -288,7 +293,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                   const { bgClass, borderClass } = getGunHighlightClasses(isA, isB, activeSlot);
 
                   return (
-                    <div key={gun.id} className="relative">
+                    <div key={gun.id} className="relative rounded-md overflow-hidden">
                       <div
                         draggable
                         onDragStart={(e) => {
@@ -299,21 +304,20 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           e.dataTransfer.effectAllowed = 'copyMove';
                         }}
                         onClick={() => onGunSelect(gun)}
-                        className={`group w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors border ${borderClass} ${bgClass || 'hover:bg-white/5'} ${both && activeSlot !== 'AB' ? 'overflow-hidden' : ''}`}
-                        style={both && activeSlot !== 'AB' ? { clipPath: 'polygon(0 0, calc(100% - 2rem) 0, 100% 2rem, 100% 100%, 0 100%)' } as any : undefined}
+                        className={`group relative overflow-hidden w-full text-left p-2 rounded-md flex items-center justify-center md:justify-start gap-3 transition-colors md:border ${borderClass} ${bgClass || 'hover:bg-white/5'}`}
                       >
                       {/* Dogear when both slots reference the same gun: show the deactivated color */}
                       {/* Background ammo accents removed */}
                       <div className="relative z-10 w-10 h-10 shrink-0">
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
                       </div>
-                      <div className="min-w-0 pr-8">
+                      <div className="min-w-0 pr-6 md:pr-8 text-center md:text-left">
                         <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
 
                       {/* Unified menu */}
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-40">
                         <GunActionsMenu
                           gun={gun}
                           onEditCustom={onEditCustom}
@@ -331,11 +335,71 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                       </div>
                       </div>
 
-                      {isA && isB && activeSlot !== 'AB' && (
-                        <span
-                          className={`pointer-events-none absolute top-0 right-0 w-8 h-8 rounded-tr-md border ${activeSlot === 'A' ? 'bg-sky-600/10 border-sky-500/20' : 'bg-red-600/10 border-red-500/20'}`}
-                          style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
-                        />
+                      {/* Mobile split-row overlay for one-tap assignment; leave right safe area for menu */}
+                      <div className="md:hidden absolute inset-y-0 left-0 right-10 z-30 flex">
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToA', { defaultValue: 'Assign to A' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                              try { (navigator as any).vibrate(10); } catch {}
+                            }
+                            if (onReplaceWeaponA) {
+                              onReplaceWeaponA(gun);
+                            } else {
+                              onGunSelect(gun);
+                            }
+                          }}
+                        >
+                          {/* Left zone hint - subtle, not a button */}
+                          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
+                            <ChevronLeftIcon className="w-3 h-3" />
+                            {t('gun.hintA', { defaultValue: 'Left' })}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToB', { defaultValue: 'Assign to B' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                              try { (navigator as any).vibrate(10); } catch {}
+                            }
+                            if (onReplaceWeaponB) {
+                              onReplaceWeaponB(gun);
+                            } else {
+                              onGunSelect(gun);
+                            }
+                          }}
+                        >
+                          {/* Right zone hint - subtle, not a button */}
+                          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
+                            {t('gun.hintB', { defaultValue: 'Right' })}
+                            <ChevronRightIcon className="w-3 h-3" />
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* No desktop hints; A/B hints are mobile-only */}
+
+                      {/* Mobile gradient overlays for A/B/dual highlights */}
+                      {/* A gradient: left edge red -> transparent middle (mobile only; not in dual mode) */}
+                      {activeSlot !== 'AB' && isA && (
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-red-500/25 via-red-500/0 to-transparent" />
+                      )}
+                      {/* B gradient: right edge sky -> transparent middle (mobile only; not in dual mode) */}
+                      {activeSlot !== 'AB' && isB && (
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-sky-500/25 via-sky-500/0 to-transparent" />
+                      )}
+                      {/* Dual/AB: emerald fades only on the side(s) of assigned slot(s) (mobile only) */}
+                      {activeSlot === 'AB' && isA && (
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                      )}
+                      {activeSlot === 'AB' && isB && (
+                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-emerald-500/25 via-emerald-500/0 to-transparent" />
                       )}
                     </div>
                   );

@@ -314,7 +314,7 @@ export default function Home() {
                   <div className="grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-stretch gap-3">
                     {/* Gun A box */}
                     <div
-                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-400/40' : 'border-red-500/40'} bg-white/5 p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
+                      className={`rounded-lg border ${selectionMode === 'B' ? 'border-white/10' : selectionMode === 'AB' ? 'border-emerald-500/40 bg-emerald-500/20' : 'border-red-500/40 bg-red-500/20'} p-3 ${selectionMode === 'B' ? 'opacity-60 grayscale' : ''} ${selectionMode === 'AB' && isPlaying && activeSide === 'B' ? 'opacity-40 grayscale' : ''} cursor-pointer transition-colors order-1 md:order-none`}
                       onClick={() => setSelectionMode('A')}
                       onDragOver={(e) => {
                         if (e.dataTransfer.types.includes('application/x-gun-id') || e.dataTransfer.types.includes('text/plain')) {
