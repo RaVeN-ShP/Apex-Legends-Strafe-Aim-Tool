@@ -23,9 +23,9 @@
   "timer.subtitle.moveLeft": "왼쪽으로 이동",
   "timer.subtitle.moveRight": "오른쪽으로 이동",
   "timer.subtitle.shoot": "지금 사격",
-  "timer.phase.start": "카운트다운 단계",
-  "timer.phase.pattern": "스트레이프 단계",
-  "timer.phase.end": "재장전 단계",
+  "timer.phase.start": "카운트다운",
+  "timer.phase.pattern": "스트레이프",
+  "timer.phase.end": "재장전",
   "timer.phase.follow": "오디오 큐를 따라주세요",
   "timer.phase.prepare": "다음 사이클을 준비",
   "timer.info.startBeats": "시작 비트:",
@@ -68,6 +68,8 @@
   "custom.confirmDiscard": "현재 변경 사항을 버릴까요?",
   "custom.dragToReorder": "드래그하여 순서 변경",
   "gun.copyCustomize": "복사 후 사용자 지정",
+  "gun.replaceWeapon1": "무기 1 교체",
+  "gun.replaceWeapon2": "무기 2 교체",
   "menu.more": "더보기",
   "gun.selectedLabel": "선택됨:",
   "importPicker.importFrom": "가져오기 대상",
@@ -78,8 +80,10 @@
   "pattern.units.ms": "ms",
   "pattern.legend.left": "왼쪽 (A)",
   "pattern.legend.right": "오른쪽 (D)",
-  "pattern.legend.shoot": "사격"
-  ,
-  "remarks.usePurpleStockMag": "보라색 스톡과 탄창 사용",
-  "remarks.nemesisFullyCharged": "완충 네메시스용 패턴"
+  "pattern.legend.shoot": "사격",
+  "tabs.single": "단일",
+  "tabs.dual": "듀얼",
+  "toggle.switch": "전환",
+  "display.play": "재생",
+  "display.stop": "정지"
 }

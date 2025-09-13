@@ -8,9 +8,9 @@ import PatternImportPicker from "@/features/customProfiles/PatternImportPicker";
 import { useI18n } from "@/i18n/I18nProvider";
 import { Listbox, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import { PlusIcon, TrashIcon, ClockIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PatternTypeStyles } from "@/config/styles";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -38,47 +38,63 @@ function SortableStepRow({ id, idx, s, onUpdate, onRemove, durationLabel, t }: {
   const gradient = s.type === 'shoot'
     ? 'from-purple-500/20 to-purple-500/5'
     : (s.direction === 'left' ? PatternTypeStyles.direction.left.gradient : PatternTypeStyles.direction.right.gradient);
-  const containerClass = `rounded-md border border-white/10 bg-gradient-to-r ${gradient} px-2 py-2 flex flex-wrap items-center gap-2 ${isDragging ? 'ring-1 ring-white/20' : ''}`;
+  const containerClass = `rounded-md border border-white/10 bg-gradient-to-r ${gradient} px-2 py-2 ${isDragging ? 'ring-1 ring-white/20' : ''}`;
   return (
     <div ref={setNodeRef} style={style}>
-      <div className={containerClass}>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center w-8 h-8 rounded border border-white/15 bg-black/20 hover:bg-white/10 cursor-grab active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
-          aria-label={t('custom.dragToReorder')}
-          title={t('custom.dragToReorder')}
-        >
-          <Bars3Icon className="w-4 h-4" />
-        </button>
-        <div className="w-6 h-6 rounded-full bg-white/10 text-white/80 text-[11px] inline-flex items-center justify-center select-none">{idx + 1}</div>
-        <Listbox value={actionValue} onChange={(v: 'shoot' | 'left' | 'right') => {
-          if (v === 'shoot') onUpdate(idx, { type: 'shoot' });
-          else onUpdate(idx, { type: 'direction', direction: v });
-        }}>
-          <div className="relative">
-            <Listbox.Button className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-[110px] text-left">{actionValue === 'shoot' ? t('custom.shoot') : actionValue === 'left' ? t('custom.left') : t('custom.right')}</Listbox.Button>
-            <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-              <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
-                <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.shoot')}</Listbox.Option>
-                <Listbox.Option value="left" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.left')}</Listbox.Option>
-                <Listbox.Option value="right" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.right')}</Listbox.Option>
-              </Listbox.Options>
-            </Transition>
+      <div
+        className={`${containerClass} cursor-grab active:cursor-grabbing select-none`}
+        {...attributes}
+        {...(listeners as any)}
+      >
+        <div className="grid grid-cols-12 gap-2 w-full items-center">
+          <div className="col-span-12 sm:col-span-9 flex flex-wrap items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-white/10 text-white/80 text-[11px] inline-flex items-center justify-center select-none">{idx + 1}</div>
+            <Listbox value={actionValue} onChange={(v: 'shoot' | 'left' | 'right') => {
+              if (v === 'shoot') onUpdate(idx, { type: 'shoot' });
+              else onUpdate(idx, { type: 'direction', direction: v });
+            }}>
+              <div className="relative">
+                <Listbox.Button
+                  className="text-xs h-8 px-2 rounded border border-white/15 bg-black/30 min-w-20 sm:min-w-24 text-left"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  {actionValue === 'shoot' ? t('custom.shoot') : actionValue === 'left' ? t('custom.left') : t('custom.right')}
+                </Listbox.Button>
+                <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                  <Listbox.Options className="absolute z-20 mt-1 w-full rounded-md border border-white/15 bg-black/90 shadow-lg focus:outline-none">
+                    <Listbox.Option value="shoot" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.shoot')}</Listbox.Option>
+                    <Listbox.Option value="left" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.left')}</Listbox.Option>
+                    <Listbox.Option value="right" className={({ active }) => `px-2 py-1.5 text-xs ${active ? 'bg-white/10' : ''}`}>{t('custom.right')}</Listbox.Option>
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                value={s.duration}
+                onChange={(e) => onUpdate(idx, { duration: Number(e.target.value) })}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="w-14 sm:w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30"
+              />
+              <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">
+                 {durationLabel}
+              </div>
+            </div>
           </div>
-        </Listbox>
-        <div className="flex items-center gap-2">
-          <input type="number" min={1} value={s.duration} onChange={(e) => onUpdate(idx, { duration: Number(e.target.value) })} className="w-24 h-8 px-2 text-xs rounded bg-black/30 border border-white/10 outline-none focus:border-white/30" />
-          <div className="text-[11px] text-white/60 inline-flex items-center gap-1 whitespace-nowrap leading-none">
-            <ClockIcon className="w-3.5 h-3.5 -mt-px" /> {durationLabel}
+          <div className="col-span-12 sm:col-span-3 flex justify-end">
+            <button
+              type="button"
+              onClick={() => onRemove(idx)}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/30 hover:bg-white/10"
+              title={t('custom.delete')}
+            >
+              <TrashIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('custom.delete')}</span>
+            </button>
           </div>
-        </div>
-        <div className="w-full sm:w-auto sm:ml-auto">
-          <button type="button" onClick={() => onRemove(idx)} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 text-xs h-8 px-2 rounded border border-white/15 bg-black/30 hover:bg-white/10" title={t('custom.delete')}>
-            <TrashIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('custom.delete')}</span>
-          </button>
         </div>
       </div>
     </div>
@@ -114,7 +130,8 @@ export default function CustomProfileEditor({
   const [importVariantKey, setImportVariantKey] = useState<string | null>(null);
   const [localResetToken, setLocalResetToken] = useState<number>(0);
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 5 } })
   );
 
   const bumpReset = () => setLocalResetToken((v) => v + 1);

@@ -23,9 +23,9 @@
   "timer.subtitle.moveLeft": "左に移動",
   "timer.subtitle.moveRight": "右に移動",
   "timer.subtitle.shoot": "今撃つ",
-  "timer.phase.start": "カウントダウン フェーズ",
-  "timer.phase.pattern": "ストレイフ フェーズ",
-  "timer.phase.end": "リロード フェーズ",
+  "timer.phase.start": "カウントダウン",
+  "timer.phase.pattern": "ストレイフ",
+  "timer.phase.end": "リロード",
   "timer.phase.follow": "音声キューに従ってください",
   "timer.phase.prepare": "次のサイクルに備える",
   "timer.info.startBeats": "開始ビート:",
@@ -68,6 +68,8 @@
   "custom.confirmDiscard": "現在の変更を破棄しますか？",
   "custom.dragToReorder": "ドラッグして並び替え",
   "gun.copyCustomize": "コピーしてカスタマイズ",
+  "gun.replaceWeapon1": "武器1を置き換え",
+  "gun.replaceWeapon2": "武器2を置き換え",
   "menu.more": "その他",
   "gun.selectedLabel": "選択済み:",
   "importPicker.importFrom": "インポート元",
@@ -78,8 +80,10 @@
   "pattern.units.ms": "ms",
   "pattern.legend.left": "左（A）",
   "pattern.legend.right": "右（D）",
-  "pattern.legend.shoot": "射撃"
-  ,
-  "remarks.usePurpleStockMag": "紫ストックと紫マガジンを使用",
-  "remarks.nemesisFullyCharged": "フルチャージ時のネメシス用パターン"
+  "pattern.legend.shoot": "射撃",
+  "tabs.single": "シングル",
+  "tabs.dual": "デュアル",
+  "toggle.switch": "切り替え",
+  "display.play": "再生",
+  "display.stop": "停止"
 }

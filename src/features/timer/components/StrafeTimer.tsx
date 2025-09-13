@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
-import { buildTimeline } from '@/features/timer/audio/audio';
+import { buildTimeline, buildDualTimeline } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
 // import Image from 'next/image';
@@ -11,8 +11,10 @@ import { InformationCircleIcon } from '@heroicons/react/24/outline';
  
 import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS } from '@/config/constants';
 import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
+import DualCentralDisplay from '@/features/timer/components/central/DualCentralDisplay';
 import PopoutControls from '@/features/timer/components/popout/PopoutControls';
 import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
+// Dual playback state is lifted to page-level and passed via props
 
 interface StrafeTimerProps {
   gun: Gun;
@@ -20,9 +22,17 @@ interface StrafeTimerProps {
   volume: number;
   onVolumeChange: (v: number) => void;
   resetToken?: string | number; // when this changes, stop the timer
+  dual?: boolean;
+  gunB?: Gun;
+  patternB?: Pattern[];
+  selectionMode?: 'A' | 'B' | 'AB';
+  onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
+  onPlayingChange?: (playing: boolean) => void;
+  onActiveSideChange?: (side: 'A' | 'B' | null) => void;
+  activeSide?: 'A' | 'B' | null;
 }
 
-export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide }: StrafeTimerProps) {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -43,6 +53,13 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   // Flattened, per-cycle list of audio cues (leading source of direction/shoot state)
   const audioCuesRef = useRef<AudioCue[]>([]);
 
+  // Slider range depends on mode: dual mode uses 1s-5s
+  const waitMin = dual ? 1 : 0;
+  const waitMax = dual ? 5 : DELAY_SLIDER_MAX_SECONDS;
+  const sliderRange = Math.max(0.0001, waitMax - waitMin);
+  const showRecommendedMarker = RECOMMENDED_DELAY_SECONDS >= waitMin && RECOMMENDED_DELAY_SECONDS <= waitMax;
+  const showDefaultMarker = DEFAULT_DELAY_SECONDS >= waitMin && DEFAULT_DELAY_SECONDS <= waitMax;
+
   // Resume audio on tab visibility change if needed
   useEffect(() => {
     const onVisibility = () => {
@@ -57,7 +74,12 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  const timelineValue = useMemo(() => buildTimeline(pattern, gun, waitTimeSeconds), [gun, pattern, waitTimeSeconds]);
+  const timelineValue = useMemo(() => {
+    if (dual && gunB && patternB) {
+      return buildDualTimeline(pattern, gun, patternB, gunB, waitTimeSeconds);
+    }
+    return buildTimeline(pattern, gun, waitTimeSeconds);
+  }, [dual, gun, pattern, gunB, patternB, waitTimeSeconds]);
 
   useEffect(() => {
     timeline.current = timelineValue;
@@ -84,7 +106,16 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     if (isPlayingRef.current) {
       stopTimer();
     }
-  }, [gun.id]);
+  }, [gun.id, gunB?.id, dual]);
+
+  // Clamp wait time into current mode's range when mode changes
+  useEffect(() => {
+    setWaitTimeSeconds((prev) => {
+      const clamped = Math.min(waitMax, Math.max(waitMin, prev));
+      return clamped;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitMin, waitMax, dual]);
 
   // Stop when reset token changes (e.g., pattern edited)
   useEffect(() => {
@@ -114,6 +145,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const startTimer = async () => {
     setIsPlaying(true);
+    onPlayingChange?.(true);
     isPlayingRef.current = true;
     setCurrentTime(0);
 
@@ -143,6 +175,18 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
         elapsedMs = ((elapsedMs % Math.max(1, totalDuration)) + Math.max(1, totalDuration)) % Math.max(1, totalDuration);
       }
       setCurrentTime(elapsedMs);
+
+      // Determine active side during dual playback and publish upward
+      if (dual && gunB && patternB && onActiveSideChange) {
+        const totalMs = Math.max(1, totalDuration);
+        const nowMs = ((elapsedMs % totalMs) + totalMs) % totalMs;
+        const active = timeline.current.phases.find(p => nowMs >= p.startTime && nowMs < p.endTime) || null;
+        if (active) {
+          const name = active.name || '';
+          const side: 'A' | 'B' | null = /Pattern A|Start A/.test(name) ? 'A' : (/Pattern B|Start B/.test(name) ? 'B' : null);
+          onActiveSideChange(side);
+        }
+      }
       
       // Continue UI updates
       animationFrame.current = requestAnimationFrame(animate);
@@ -155,6 +199,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const stopTimer = () => {
     setIsPlaying(false);
+    onPlayingChange?.(false);
+    onActiveSideChange?.(null);
     isPlayingRef.current = false;
     setCurrentTime(0);
 
@@ -168,7 +214,17 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const totalDuration = timelineValue.totalDurationMs;
 
-  const centralTheme = useCentralTheme({ timeline: timelineValue, pattern, currentTimeMs: currentTime });
+  // Choose the appropriate pattern for the central theme in dual mode
+  const patternForTheme: Pattern[] = useMemo(() => {
+    if (!dual || !gunB || !patternB) return pattern;
+    const totalMs = Math.max(1, totalDuration);
+    const nowMs = ((currentTime % totalMs) + totalMs) % totalMs;
+    const active = timelineValue.phases.find(p => nowMs >= p.startTime && nowMs < p.endTime) || null;
+    if (active && /Pattern B/.test(active.name || '')) return patternB;
+    return pattern;
+  }, [dual, gunB, patternB, pattern, timelineValue, currentTime, totalDuration]);
+
+  const centralTheme = useCentralTheme({ timeline: timelineValue, pattern: patternForTheme, currentTimeMs: currentTime });
 
   // Live volume updates via AudioEngine
   useEffect(() => {
@@ -188,23 +244,69 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
         )}
       </div>
 
-      {/* Central Display */}
-      <CentralDisplay
-        title={centralTheme.title}
-        subtitle={centralTheme.subtitle}
-        symbol={centralTheme.symbol}
-        containerBg={centralTheme.containerBg}
-        subtitleColor={centralTheme.subtitleColor}
-        gunName={gun.name}
-        gunImage={gun.image}
-        isCompact={isPopped}
-        totalDurationMs={totalDuration}
-        currentTimeMs={currentTime}
-        pattern={pattern}
-        waitTimeSeconds={waitTimeSeconds}
-        reloadTimeSeconds={gun.reloadTimeSeconds}
-        rootRef={centralRef}
-      />
+      {/* Central Display - wrapped in a stable container so PiP target doesn't unmount on mode switch */}
+      <div ref={centralRef}>
+        {!dual || !gunB || !patternB ? (
+          <CentralDisplay
+            title={centralTheme.title}
+            subtitle={centralTheme.subtitle}
+            symbol={centralTheme.symbol}
+            containerBg={centralTheme.containerBg}
+            subtitleColor={centralTheme.subtitleColor}
+            gunName={gun.name}
+            gunImage={gun.image}
+            gunBName={gunB?.name}
+            isCompact={isPopped}
+            isPlaying={isPlaying}
+            onTogglePlay={() => {
+              if (isPlaying) {
+                stopTimer();
+              } else {
+                startTimer();
+              }
+            }}
+            totalDurationMs={totalDuration}
+            currentTimeMs={currentTime}
+            pattern={pattern}
+            waitTimeSeconds={waitTimeSeconds}
+            reloadTimeSeconds={gun.reloadTimeSeconds}
+            selectionMode={selectionMode}
+            onChangeSelectionMode={onChangeSelectionMode}
+          />
+        ) : (
+          // Dual central display
+          <DualCentralDisplay
+            title={centralTheme.title}
+            subtitle={centralTheme.subtitle}
+            symbol={centralTheme.symbol}
+            containerBg={centralTheme.containerBg}
+            subtitleColor={centralTheme.subtitleColor}
+            gunAName={gun.name}
+            gunAImage={gun.image}
+            gunBName={gunB.name}
+            gunBImage={gunB.image}
+            isCompact={isPopped}
+            isPlaying={isPlaying}
+            onTogglePlay={() => {
+              if (isPlaying) {
+                stopTimer();
+              } else {
+                startTimer();
+              }
+            }}
+            totalDurationMs={totalDuration}
+            currentTimeMs={currentTime}
+            patternA={pattern}
+            patternB={patternB}
+            waitTimeSeconds={waitTimeSeconds}
+            reloadTimeSecondsA={gun.reloadTimeSeconds}
+            reloadTimeSecondsB={gunB.reloadTimeSeconds}
+            selectionMode={selectionMode}
+            onChangeSelectionMode={onChangeSelectionMode}
+            activeSide={activeSide}
+          />
+        )}
+      </div>
 
 
 
@@ -226,7 +328,22 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
         )}
 
         {/* Popout / Return buttons */}
-        <PopoutControls targetRef={centralRef} onStateChange={setIsPopped} />
+        <PopoutControls
+          targetRef={centralRef}
+          onStateChange={setIsPopped}
+          onTogglePlay={() => {
+            if (isPlayingRef.current) {
+              stopTimer();
+            } else {
+              startTimer();
+            }
+          }}
+          onToggleMode={() => {
+            if (!onChangeSelectionMode) return;
+            const next = selectionMode === 'A' ? 'B' : (selectionMode === 'B' ? 'AB' : 'A');
+            onChangeSelectionMode(next);
+          }}
+        />
       </div>
 
       {/* Inline settings below buttons */}
@@ -260,8 +377,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
               <input
                 id="waitTimeSeconds"
                 type="range"
-                min="0"
-                max={DELAY_SLIDER_MAX_SECONDS}
+                min={waitMin}
+                max={waitMax}
                 step={DELAY_SLIDER_STEP_SECONDS}
                 value={waitTimeSeconds}
                 onChange={(e) => {
@@ -276,15 +393,19 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
               {/* Markers overlay (account for 14px thumb: 7px inset on both sides) */}
               <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">
                 {/* Recommended 0.5s marker (gray) */}
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[6px] h-3 bg-gray-600 rounded-full"
-                  style={{ left: `${(RECOMMENDED_DELAY_SECONDS / DELAY_SLIDER_MAX_SECONDS) * 100}%` }}
-                />
+                {showRecommendedMarker && (
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[6px] h-3 bg-gray-600 rounded-full"
+                    style={{ left: `${((RECOMMENDED_DELAY_SECONDS - waitMin) / sliderRange) * 100}%` }}
+                  />
+                )}
                 {/* Default 1.5s marker (amber) */}
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[4px] h-6 bg-amber-300 rounded-full"
-                  style={{ left: `${(DEFAULT_DELAY_SECONDS / DELAY_SLIDER_MAX_SECONDS) * 100}%` }}
-                />
+                {showDefaultMarker && (
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[4px] h-6 bg-amber-300 rounded-full"
+                    style={{ left: `${((DEFAULT_DELAY_SECONDS - waitMin) / sliderRange) * 100}%` }}
+                  />
+                )}
               </div>
             </div>
             <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{waitTimeSeconds}s</span>

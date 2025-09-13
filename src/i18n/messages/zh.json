@@ -23,9 +23,9 @@
   "timer.subtitle.moveLeft": "向左移动",
   "timer.subtitle.moveRight": "向右移动",
   "timer.subtitle.shoot": "现在开火",
-  "timer.phase.start": "倒计时阶段",
-  "timer.phase.pattern": "横移阶段",
-  "timer.phase.end": "换弹阶段",
+  "timer.phase.start": "倒计时",
+  "timer.phase.pattern": "横移",
+  "timer.phase.end": "换弹",
   "timer.phase.follow": "请跟随音频提示",
   "timer.phase.prepare": "准备下一轮",
   "timer.info.startBeats": "起始节拍：",
@@ -68,6 +68,8 @@
   "custom.confirmDiscard": "要放弃当前更改吗？",
   "custom.dragToReorder": "拖动以重新排序",
   "gun.copyCustomize": "复制并自定义",
+  "gun.replaceWeapon1": "替换武器1",
+  "gun.replaceWeapon2": "替换武器2",
   "menu.more": "更多",
   "gun.selectedLabel": "已选择：",
   "importPicker.importFrom": "导入来源",
@@ -78,8 +80,10 @@
   "pattern.units.ms": "ms",
   "pattern.legend.left": "左 (A)",
   "pattern.legend.right": "右 (D)",
-  "pattern.legend.shoot": "射击"
-  ,
-  "remarks.usePurpleStockMag": "使用紫色枪托与弹匣",
-  "remarks.nemesisFullyCharged": "适用于满充能的 Nemesis 模式"
+  "pattern.legend.shoot": "射击",
+  "tabs.single": "单",
+  "tabs.dual": "双",
+  "toggle.switch": "切换",
+  "display.play": "播放",
+  "display.stop": "停止"
 }

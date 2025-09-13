@@ -3,12 +3,11 @@ import { Gun } from '@/features/guns/types/gun';
 export const guns: Gun[] = [
   {
     id: 'r301',
-    name: 'R-301 Carbine',
+    name: 'R-301',
     category: 'ar',
     image: '/weapons/ar/R-301_Carbine_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 2.4,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 800 },
@@ -19,12 +18,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'r99',
-    name: 'R-99 SMG',
+    name: 'R-99',
     category: 'smg',
     image: '/weapons/smg/R-99_SMG_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 2.21,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 390 },
@@ -37,12 +35,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'spitfire',
-    name: 'M600 Spitfire',
+    name: 'Spitfire',
     category: 'lmg',
     image: '/weapons/lmg/M600_Spitfire_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 3.78,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 430 },
@@ -56,12 +53,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'alternator',
-    name: 'Alternator SMG',
+    name: 'Alternator',
     category: 'smg',
     image: '/weapons/smg/Alternator_SMG_Icon.svg',
     ammo: 'light',
     reloadTimeSeconds: 2.01,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 600 },
@@ -73,12 +69,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'havoc',
-    name: 'HAVOC Rifle',
+    name: 'HAVOC',
     category: 'ar',
     image: '/weapons/ar/HAVOC_Rifle_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 2.88,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       normal: [
         { type: 'shoot', duration: 350 },
@@ -97,12 +92,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'volt',
-    name: 'Volt SMG',
+    name: 'Volt',
     category: 'smg',
     image: '/weapons/smg/Volt_SMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 1.83,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'right', duration: 750 },
@@ -114,12 +108,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'devotion',
-    name: 'Devotion LMG',
+    name: 'Devotion',
     category: 'lmg',
     image: '/weapons/lmg/Devotion_LMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 3.27,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       normal: [
         { type: 'direction', direction: 'right', duration: 500 },
@@ -137,12 +130,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'lstar',
-    name: 'L-STAR EMG',
+    name: 'L-STAR',
     category: 'lmg',
     image: '/weapons/lmg/L-STAR_EMG_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 2.21,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 300 },
@@ -152,14 +144,13 @@ export const guns: Gun[] = [
   },
   {
     id: 'nemesis',
-    name: 'Nemesis Burst AR',
+    name: 'Nemesis',
     category: 'ar',
     image: '/weapons/ar/Nemesis_Burst_AR_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 2.43,
-    remarks: ['remarks.usePurpleStockMag', 'remarks.nemesisFullyCharged'],
     pattern: {
-      default: [
+      charged: [
         { type: 'direction', direction: 'right', duration: 330 },
         { type: 'direction', direction: 'left', duration: 330 },
         { type: 'direction', direction: 'left', duration: 330 },
@@ -173,12 +164,11 @@ export const guns: Gun[] = [
   },
   {
     id: 're45',
-    name: 'RE-45 Burst',
+    name: 'RE-45',
     category: 'pistol',
     image: '/weapons/pistol/RE-45_Auto_Icon.svg',
     ammo: 'energy',
     reloadTimeSeconds: 1.95,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'shoot', duration: 400 },
@@ -195,12 +185,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'flatline',
-    name: 'VK-47 Flatline',
+    name: 'Flatline',
     category: 'ar',
     image: '/weapons/ar/VK-47_Flatline_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.79,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 600 },
@@ -212,12 +201,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'car',
-    name: 'C.A.R. SMG',
+    name: 'C.A.R.',
     category: 'smg',
     image: '/weapons/smg/C.A.R._SMG_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 1.92,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 470 },
@@ -230,12 +218,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'prowler',
-    name: 'Prowler Burst PDW',
+    name: 'Prowler',
     category: 'smg',
     image: '/weapons/smg/Prowler_Burst_PDW_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.34,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       burst: [
         { type: 'direction', direction: 'left', duration: 450 },
@@ -256,12 +243,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'rampage',
-    name: 'Rampage LMG',
+    name: 'Rampage',
     category: 'lmg',
     image: '/weapons/lmg/Rampage_LMG_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 3.6,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       'normal': [
         { type: 'direction', direction: 'left', duration: 620 },
@@ -277,12 +263,11 @@ export const guns: Gun[] = [
   },
   {
     id: 'hemlok',
-    name: 'Hemlok Burst AR',
+    name: 'Hemlok',
     category: 'ar',
     image: '/weapons/ar/Hemlok_Burst_AR_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.57,
-    remarks: ['remarks.usePurpleStockMag'],
     pattern: {
       default: [
         { type: 'direction', direction: 'left', duration: 370 },

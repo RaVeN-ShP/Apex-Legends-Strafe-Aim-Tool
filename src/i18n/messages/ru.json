@@ -23,9 +23,9 @@
   "timer.subtitle.moveLeft": "Двигайтесь влево",
   "timer.subtitle.moveRight": "Двигайтесь вправо",
   "timer.subtitle.shoot": "Огонь",
-  "timer.phase.start": "Фаза отсчёта",
-  "timer.phase.pattern": "Фаза стрейфа",
-  "timer.phase.end": "Фаза перезарядки",
+  "timer.phase.start": "Отсчёт",
+  "timer.phase.pattern": "Стрейф",
+  "timer.phase.end": "Перезарядка",
   "timer.phase.follow": "Следуйте аудиоподсказкам",
   "timer.phase.prepare": "Готовьтесь к следующему циклу",
   "timer.info.startBeats": "Стартовые сигналы:",
@@ -68,6 +68,8 @@
   "custom.confirmDiscard": "Отменить текущие изменения?",
   "custom.dragToReorder": "Перетащите для изменения порядка",
   "gun.copyCustomize": "Скопировать и настроить",
+  "gun.replaceWeapon1": "Заменить оружие 1",
+  "gun.replaceWeapon2": "Заменить оружие 2",
   "menu.more": "Ещё",
   "gun.selectedLabel": "Выбрано:",
   "importPicker.importFrom": "Импорт из",
@@ -78,9 +80,11 @@
   "pattern.units.ms": "мс",
   "pattern.legend.left": "Влево (A)",
   "pattern.legend.right": "Вправо (D)",
-  "pattern.legend.shoot": "Стрелять"
-  ,
-  "remarks.usePurpleStockMag": "Используйте фиолетовые приклад и магазин",
-  "remarks.nemesisFullyCharged": "Паттерн для полностью заряженной Nemesis"
+  "pattern.legend.shoot": "Стрелять",
+  "tabs.single": "Одиночный",
+  "tabs.dual": "Двойной",
+  "toggle.switch": "Переключить",
+  "display.play": "Воспроизвести",
+  "display.stop": "Остановить"
 }
 

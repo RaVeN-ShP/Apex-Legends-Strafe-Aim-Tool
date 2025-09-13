@@ -23,9 +23,9 @@
   "timer.subtitle.moveLeft": "Move Left",
   "timer.subtitle.moveRight": "Move Right",
   "timer.subtitle.shoot": "Fire now",
-  "timer.phase.start": "Countdown Phase",
-  "timer.phase.pattern": "Strafe Phase",
-  "timer.phase.end": "Reloading Phase",
+  "timer.phase.start": "Countdown",
+  "timer.phase.pattern": "Strafe",
+  "timer.phase.end": "Reloading",
   "timer.phase.follow": "Follow the audio cues",
   "timer.phase.prepare": "Prepare for next cycle",
   "timer.info.startBeats": "Start Beats:",
@@ -68,6 +68,8 @@
   "custom.confirmDiscard": "Discard current changes?",
   "custom.dragToReorder": "Drag to reorder",
   "gun.copyCustomize": "Copy & Customize",
+  "gun.replaceWeapon1": "Replace Weapon 1",
+  "gun.replaceWeapon2": "Replace Weapon 2",
   "menu.more": "More",
   "gun.selectedLabel": "Selected:",
   "importPicker.importFrom": "Import from",
@@ -78,8 +80,10 @@
   "pattern.units.ms": "ms",
   "pattern.legend.left": "Left (A)",
   "pattern.legend.right": "Right (D)",
-  "pattern.legend.shoot": "Shoot"
-  ,
-  "remarks.usePurpleStockMag": "Use a purple stock & magazine",
-  "remarks.nemesisFullyCharged": "Pattern works for fully charged Nemesis"
+  "pattern.legend.shoot": "Shoot",
+  "tabs.single": "Single",
+  "tabs.dual": "Dual",
+  "toggle.switch": "Switch",
+  "display.play": "Play",
+  "display.stop": "Stop"
 }

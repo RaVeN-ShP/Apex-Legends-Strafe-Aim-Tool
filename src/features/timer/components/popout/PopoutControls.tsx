@@ -4,9 +4,9 @@ import Image from 'next/image';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useEffect } from 'react';
 
-export default function PopoutControls({ targetRef, onStateChange }: { targetRef: React.RefObject<HTMLElement | null>; onStateChange?: (isPopped: boolean) => void; }) {
+export default function PopoutControls({ targetRef, onStateChange, onTogglePlay, onToggleMode }: { targetRef: React.RefObject<HTMLElement | null>; onStateChange?: (isPopped: boolean) => void; onTogglePlay?: () => void; onToggleMode?: () => void; }) {
   const { t } = useI18n();
-  const { isPopped, open, close } = useDocumentPictureInPicture(targetRef, { width: 300, height: 150 });
+  const { isPopped, open, close } = useDocumentPictureInPicture(targetRef, { width: 300, height: 150, onTogglePlay, onToggleMode });
   // Notify parent when state changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { onStateChange?.(isPopped); }, [isPopped]);

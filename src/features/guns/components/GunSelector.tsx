@@ -5,17 +5,19 @@ import { useState, ReactNode, useEffect, useRef } from 'react';
 import { Gun } from '@/features/guns/types/gun';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
+import { EllipsisVerticalIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { createPortal } from 'react-dom';
 
 interface GunSelectorProps {
   guns: Gun[];
   selectedGun: Gun | null;
-  onGunSelect: (gun: Gun) => void;
+  onGunSelect: (gun: Gun, side?: 'A' | 'B') => void;
   listMode?: boolean; // when true, render compact vertical list (sidebar)
   onDeleteCustom?: (gun: Gun) => void;
   onEditCustom?: (gun: Gun) => void;
-  onCopyCustomize?: (gun: Gun) => void;
+  activeSlot?: 'A' | 'B' | 'AB';
+  highlightGunIdA?: string | null;
+  highlightGunIdB?: string | null;
 }
 
 const categoryLabel: Record<Gun['category'], string> = {
@@ -27,6 +29,24 @@ const categoryLabel: Record<Gun['category'], string> = {
   sniper: 'Sniper',
   custom: 'Custom',
 };
+
+// Map gun highlight state to classes to keep logic declarative and maintainable
+const highlightClassMap: Record<string, { bgClass: string; borderClass: string }> = {
+  'dual-either': { bgClass: 'md:bg-gradient-to-br md:from-emerald-500/20 md:to-emerald-500/5', borderClass: 'border-emerald-600/40' },
+  'A-active': { bgClass: 'md:bg-gradient-to-br md:from-red-600/20 md:to-red-600/5', borderClass: 'border-red-600/40' },
+  'A-inactive': { bgClass: 'md:bg-gradient-to-br md:from-red-600/5 md:to-transparent', borderClass: 'border-red-600/10' },
+  'B-active': { bgClass: 'md:bg-gradient-to-br md:from-sky-600/20 md:to-sky-600/5', borderClass: 'border-sky-600/40' },
+  'B-inactive': { bgClass: 'md:bg-gradient-to-br md:from-sky-600/5 md:to-transparent', borderClass: 'border-sky-600/10' },
+  'none': { bgClass: '', borderClass: 'border-transparent' },
+};
+
+function getGunHighlightClasses(isA: boolean, isB: boolean, activeSlot: 'A' | 'B' | 'AB') {
+  if (activeSlot === 'AB' && (isA || isB)) return highlightClassMap['dual-either'];
+  if (isA && isB) return highlightClassMap[activeSlot === 'A' ? 'A-active' : 'B-active'];
+  if (isA) return highlightClassMap[`A-${activeSlot === 'A' ? 'active' : 'inactive'}`];
+  if (isB) return highlightClassMap[`B-${activeSlot === 'B' ? 'active' : 'inactive'}`];
+  return highlightClassMap['none'];
+}
 
 function Portal(props: { children: ReactNode }) {
   const { children } = props;
@@ -95,22 +115,31 @@ function GunActionsMenu({
   gun,
   onEditCustom,
   onDeleteCustom,
-  onCopyCustomize,
   labelEdit,
   labelDelete,
-  labelCopy,
   labelMore,
+  onOpenReady,
 }: {
   gun: Gun;
   onEditCustom?: (gun: Gun) => void;
   onDeleteCustom?: (gun: Gun) => void;
-  onCopyCustomize?: (gun: Gun) => void;
   labelEdit: string;
   labelDelete: string;
-  labelCopy: string;
   labelMore: string;
+  onOpenReady?: (opener: () => void) => void;
 }) {
   const [triggerRef, containerRef, reposition] = useFixedPopper({ offsetY: 6 });
+  // Expose imperative opener for long-press on mobile
+  useEffect(() => {
+    if (!onOpenReady) return;
+    const opener = () => {
+      try {
+        (triggerRef.current as unknown as HTMLButtonElement | null)?.click();
+      } catch {}
+    };
+    onOpenReady(opener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onOpenReady]);
   return (
     <Menu>
       <span>
@@ -155,19 +184,6 @@ function GunActionsMenu({
                 )}
               </MenuItem>
             )}
-            {onCopyCustomize && (
-              <MenuItem>
-                {({ active }) => (
-                  <button
-                    type="button"
-                    className={`block w-full text-left px-2 py-1.5 text-[11px] ${active ? 'bg-white/5' : ''} focus:outline-none focus-visible:outline-none ring-0 focus:ring-0`}
-                    onClick={(e) => { e.stopPropagation(); onCopyCustomize(gun); }}
-                  >
-                    {labelCopy}
-                  </button>
-                )}
-              </MenuItem>
-            )}
           </div>
         </MenuItems>
       </Portal>
@@ -175,7 +191,7 @@ function GunActionsMenu({
   );
 }
 
-export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, onCopyCustomize }: GunSelectorProps) {
+export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, activeSlot = 'A', highlightGunIdA = null, highlightGunIdB = null }: GunSelectorProps) {
   const { t } = useI18n();
   // Background accents removed per request
   if (listMode) {
@@ -212,7 +228,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
           group.items.length > 0 && (
             <div key={group.key} className={gi > 0 ? 'mt-4' : ''}>
               <div>
-                <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center gap-2 px-2 py-2">
+                <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center justify-center gap-2 px-2 py-2">
                   {ammoIcon[group.key] && (
                     <span className="relative inline-block w-4 h-4">
                       <Image src={ammoIcon[group.key]!} alt={group.key} fill className="object-contain" sizes="16px" />
@@ -221,39 +237,179 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                   <span>{ammoLabel[group.key] || 'Other'}</span>
                 </div>
               </div>
-              <div className="mt-1">
+              <div className="mt-1 flex flex-col gap-1">
                 {group.items.sort((a, b) => a.name.localeCompare(b.name)).map((gun) => {
-                  const isActive = selectedGun?.id === gun.id;
+                  const isA = highlightGunIdA === gun.id;
+                  const isB = highlightGunIdB === gun.id;
+
+                  const both = isA && isB;
+                  const { bgClass, borderClass } = getGunHighlightClasses(isA, isB, activeSlot);
+
+                  // Long-press to open menu on mobile for custom guns
+                  let menuOpener: (() => void) | null = null;
+                  let longPressTimer: number | null = null;
+                  let lastLongPressAt = 0;
+                  const startLongPress = () => {
+                    if (gun.category !== 'custom') return;
+                    if (longPressTimer != null) window.clearTimeout(longPressTimer);
+                    longPressTimer = window.setTimeout(() => {
+                      lastLongPressAt = Date.now();
+                      try { (navigator as any).vibrate?.(10); } catch {}
+                      if (menuOpener) menuOpener();
+                    }, 500);
+                  };
+                  const cancelLongPress = () => {
+                    if (longPressTimer != null) {
+                      window.clearTimeout(longPressTimer);
+                      longPressTimer = null;
+                    }
+                  };
+                  const wasJustLongPressed = () => (Date.now() - lastLongPressAt) < 400;
+
                   return (
-                    <div
-                      key={gun.id}
-                      onClick={() => onGunSelect(gun)}
-                      className={`group relative w-full text-left p-2 rounded-md flex items-center gap-3 transition-colors border ${
-                        isActive ? 'bg-red-600/20 border-red-500/40' : 'border-transparent hover:bg-white/5'
-                      }`}
-                    >
+                    <div key={gun.id} className="relative rounded-md overflow-hidden">
+                      <div
+                        draggable
+                        onDragStart={(e) => {
+                          try {
+                            e.dataTransfer.setData('application/x-gun-id', gun.id);
+                          } catch {}
+                          e.dataTransfer.setData('text/plain', gun.id);
+                          e.dataTransfer.effectAllowed = 'copyMove';
+                        }}
+                        onClick={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); return; } onGunSelect(gun, 'A'); }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onGunSelect(gun, 'B');
+                        }}
+                        onTouchStart={() => { startLongPress(); }}
+                        onTouchEnd={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); } cancelLongPress(); }}
+                        onTouchCancel={() => { cancelLongPress(); }}
+                        onTouchMove={() => { cancelLongPress(); }}
+                        className={`group relative overflow-hidden w-full text-left p-2 rounded-md flex items-center justify-center md:justify-center gap-3 transition-colors hover:bg-white/5`}
+                      >
+                      {/* Dogear when both slots reference the same gun: show the deactivated color */}
                       {/* Background ammo accents removed */}
                       <div className="relative z-10 w-10 h-10 shrink-0">
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
                       </div>
-                      <div className="min-w-0 pr-8">
-                        <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
+                      <div className="min-w-0 pr-6 md:pr-8 text-center">
+                        <div className="text-sm font-medium truncate max-w-[10ch]" title={gun.name}>{gun.name}</div>
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
 
-                      {/* Unified menu */}
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        <GunActionsMenu
-                          gun={gun}
-                          onEditCustom={onEditCustom}
-                          onDeleteCustom={onDeleteCustom}
-                          onCopyCustomize={onCopyCustomize}
-                          labelEdit={t('custom.edit')}
-                          labelDelete={t('custom.delete')}
-                          labelCopy={t('gun.copyCustomize')}
-                          labelMore={t('menu.more')}
+                      {/* Context menu: only for custom guns */}
+                      {gun.category === 'custom' && (
+                        <div className="hidden md:block absolute right-2 top-1/2 -translate-y-1/2 opacity-0 md:group-hover:opacity-100 transition-opacity z-40">
+                          <GunActionsMenu
+                            gun={gun}
+                            onEditCustom={onEditCustom}
+                            onDeleteCustom={onDeleteCustom}
+                            labelEdit={t('custom.edit')}
+                            labelDelete={t('custom.delete')}
+                            labelMore={t('menu.more')}
+                            onOpenReady={(opener) => { menuOpener = opener; }}
+                          />
+                        </div>
+                      )}
+                      </div>
+
+                      {/* Mobile split-row overlay for one-tap assignment; leave right safe area for menu */}
+                      <div
+                        className="absolute inset-y-0 left-0 right-0 z-30 flex"
+                        onTouchStart={() => { startLongPress(); }}
+                        onTouchEnd={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); } cancelLongPress(); }}
+                        onTouchCancel={() => { cancelLongPress(); }}
+                        onTouchMove={() => { cancelLongPress(); }}
+                      >
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToA', { defaultValue: 'Assign to A' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                              try { (navigator as any).vibrate(10); } catch {}
+                            }
+                            if (wasJustLongPressed()) { e.preventDefault(); return; }
+                            onGunSelect(gun, 'A');
+                          }}
+                        >
+                          {/* Left zone hint - only show for selected gun in slot A */}
+                          {isA && (
+                            <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
+                              <ChevronLeftIcon className="w-3 h-3" />
+                              1
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToB', { defaultValue: 'Assign to B' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                              try { (navigator as any).vibrate(10); } catch {}
+                            }
+                            if (wasJustLongPressed()) { e.preventDefault(); return; }
+                            onGunSelect(gun, 'B');
+                          }}
+                        >
+                          {/* Right zone hint - only show for selected gun in slot B */}
+                          {isB && (
+                            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-[10px] text-white/60">
+                              2
+                              <ChevronRightIcon className="w-3 h-3" />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Desktop split-row overlay for one-click assignment; leave right safe area for menu */}
+                      <div
+                        className="hidden md:flex absolute inset-y-0 left-0 right-10 z-20"
+                      >
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToA', { defaultValue: 'Assign to A' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onGunSelect(gun, 'A');
+                          }}
+                        />
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToB', { defaultValue: 'Assign to B' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onGunSelect(gun, 'B');
+                          }}
                         />
                       </div>
+
+                      {/* No desktop hint; A/B hints are mobile-only */}
+
+                      {/* Mobile gradient overlays for A/B/dual highlights */}
+                      {/* A gradient: left edge red -> transparent middle (mobile only; not in dual mode) */}
+                      {activeSlot !== 'AB' && isA && (
+                        <span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-red-500/25 via-red-500/0 to-transparent" />
+                      )}
+                      {/* B gradient: right edge sky -> transparent middle (mobile only; not in dual mode) */}
+                      {activeSlot !== 'AB' && isB && (
+                        <span className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-sky-500/25 via-sky-500/0 to-transparent" />
+                      )}
+                      {/* Dual/AB: emerald fades only on the side(s) of assigned slot(s) (mobile only) */}
+                      {activeSlot === 'AB' && isA && (
+                        <span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                      )}
+                      {activeSlot === 'AB' && isB && (
+                        <span className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                      )}
+
                     </div>
                   );
                 })}
@@ -265,86 +421,4 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
     );
   }
 
-  return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/10">
-      <h2 className="text-xl font-bold text-white mb-4 text-center tracking-wide">Select Your Weapon</h2>
-      
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {guns.map((gun) => {
-          const isComingSoon = false;
-          const isActive = selectedGun?.id === gun.id;
-          // const [triggerRefCopy, containerRefCopy, repositionCopy] = useFixedPopper({ offsetY: 6 });
-          return (
-            <button
-              key={gun.id}
-              type="button"
-              disabled={isComingSoon}
-              onClick={() => {
-                if (isComingSoon) return;
-                onGunSelect(gun);
-              }}
-              className={`group relative p-4 rounded-lg border transition-all text-left overflow-hidden
-                ${isActive ? 'border-red-500 bg-red-600/10 shadow-[0_0_0_1px_rgba(239,68,68,.4)]' : 'border-white/10 hover:border-white/20 hover:bg-white/5'} ${
-                  isComingSoon ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-            >
-              {isComingSoon && (
-                <div className="absolute inset-0 z-10 grid place-items-center bg-black/60">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-white">Coming soon</span>
-                </div>
-              )}
-              <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16 shrink-0">
-                  <Image
-                    src={gun.image}
-                    alt={gun.name}
-                    fill
-                    className="object-contain invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                    sizes="64px"
-                  />
-                </div>
-                <div className="min-w-0 pr-6">
-                  <div className="text-white font-semibold truncate tracking-wide" title={gun.name}>
-                    {gun.name}
-                  </div>
-                  <div className="mt-1 inline-flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded bg-white/10 text-white/80 border border-white/15">
-                      {categoryLabel[gun.category]}
-                    </span>
-                    <span className="text-xs text-white/60">
-                      {(gun.pattern?.default ?? Object.values(gun.pattern ?? {})[0] ?? []).length} steps
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Apex accent angle */}
-              <span className={`pointer-events-none absolute -right-10 top-0 h-full w-20 skew-x-[-20deg] transition-opacity ${
-                isActive ? 'bg-red-600/20 opacity-100' : 'bg-white/10 opacity-0 group-hover:opacity-100'
-              }`} />
-
-              {/* Example of using popper in grid cards if needed in future
-              <Menu>
-                <span className="absolute right-2 top-2">
-                  <MenuButton ref={triggerRefCopy as any} className="inline-flex items-center justify-center w-7 h-7 rounded border border-white/20 bg-white/10 hover:bg-white/20" title="More">
-                    <EllipsisVerticalIcon className="w-4 h-4 text-white" />
-                  </MenuButton>
-                </span>
-                <Portal>
-                  <MenuItems ref={containerRefCopy as any} className="outline-hidden w-44 divide-y divide-white/10 rounded-md border border-white/15 bg-black/90 shadow-lg" />
-                </Portal>
-              </Menu>
-              */}
-            </button>
-          );
-        })}
-      </div>
-
-      {selectedGun && (
-        <div className="mt-5 p-3 rounded-lg border border-red-500/30 bg-red-600/10 text-red-100">
-          <span className="font-semibold">{t('gun.selectedLabel', { defaultValue: 'Selected:' })}</span> {selectedGun.name}
-        </div>
-      )}
-    </div>
-  );
 }
