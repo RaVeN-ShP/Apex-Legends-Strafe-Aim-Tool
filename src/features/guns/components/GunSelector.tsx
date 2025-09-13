@@ -232,7 +232,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
           group.items.length > 0 && (
             <div key={group.key} className={gi > 0 ? 'mt-4' : ''}>
               <div>
-                <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center gap-2 px-2 py-2">
+                <div className="w-full text-white/90 text-[12px] font-semibold uppercase tracking-wider flex items-center justify-center gap-2 px-2 py-2">
                   {ammoIcon[group.key] && (
                     <span className="relative inline-block w-4 h-4">
                       <Image src={ammoIcon[group.key]!} alt={group.key} fill className="object-contain" sizes="16px" />
@@ -291,14 +291,14 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                         onTouchEnd={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); } cancelLongPress(); }}
                         onTouchCancel={() => { cancelLongPress(); }}
                         onTouchMove={() => { cancelLongPress(); }}
-                        className={`group relative overflow-hidden w-full text-left p-2 rounded-md flex items-center justify-center md:justify-start gap-3 transition-colors md:border ${borderClass} ${bgClass || 'hover:bg-white/5'}`}
+                        className={`group relative overflow-hidden w-full text-left p-2 rounded-md flex items-center justify-center md:justify-center gap-3 transition-colors hover:bg-white/5`}
                       >
                       {/* Dogear when both slots reference the same gun: show the deactivated color */}
                       {/* Background ammo accents removed */}
                       <div className="relative z-10 w-10 h-10 shrink-0">
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
                       </div>
-                      <div className="min-w-0 pr-6 md:pr-8 text-center md:text-left">
+                      <div className="min-w-0 pr-6 md:pr-8 text-center">
                         <div className="text-sm font-medium truncate" title={gun.name}>{gun.name}</div>
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
@@ -321,7 +321,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
 
                       {/* Mobile split-row overlay for one-tap assignment; leave right safe area for menu */}
                       <div
-                        className="md:hidden absolute inset-y-0 left-0 right-10 z-30 flex"
+                        className="absolute inset-y-0 left-0 right-0 z-30 flex"
                         onTouchStart={() => { startLongPress(); }}
                         onTouchEnd={(e) => { if (wasJustLongPressed()) { e.preventDefault(); e.stopPropagation(); } cancelLongPress(); }}
                         onTouchCancel={() => { cancelLongPress(); }}
@@ -367,24 +367,49 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                         </button>
                       </div>
 
-                      {/* No desktop hints; A/B hints are mobile-only */}
+                      {/* Desktop split-row overlay for one-click assignment; leave right safe area for menu */}
+                      <div
+                        className="hidden md:flex absolute inset-y-0 left-0 right-10 z-20"
+                      >
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToA', { defaultValue: 'Assign to A' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onGunSelect(gun, 'A');
+                          }}
+                        />
+                        <button
+                          type="button"
+                          aria-label={t('gun.assignToB', { defaultValue: 'Assign to B' })}
+                          className="relative w-1/2 h-full focus:outline-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onGunSelect(gun, 'B');
+                          }}
+                        />
+                      </div>
+
+                      {/* No desktop hint; A/B hints are mobile-only */}
 
                       {/* Mobile gradient overlays for A/B/dual highlights */}
                       {/* A gradient: left edge red -> transparent middle (mobile only; not in dual mode) */}
                       {activeSlot !== 'AB' && isA && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-[70%] bg-gradient-to-r from-red-500/25 via-red-500/0 to-transparent" />
+                        <span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-red-500/25 via-red-500/0 to-transparent" />
                       )}
                       {/* B gradient: right edge sky -> transparent middle (mobile only; not in dual mode) */}
                       {activeSlot !== 'AB' && isB && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-[70%] bg-gradient-to-l from-sky-500/25 via-sky-500/0 to-transparent" />
+                        <span className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-sky-500/25 via-sky-500/0 to-transparent" />
                       )}
                       {/* Dual/AB: emerald fades only on the side(s) of assigned slot(s) (mobile only) */}
                       {activeSlot === 'AB' && isA && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 left-0 w-[70%] bg-gradient-to-r from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                        <span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-emerald-500/25 via-emerald-500/0 to-transparent" />
                       )}
                       {activeSlot === 'AB' && isB && (
-                        <span className="md:hidden pointer-events-none absolute inset-y-0 right-0 w-[70%] bg-gradient-to-l from-emerald-500/25 via-emerald-500/0 to-transparent" />
+                        <span className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-emerald-500/25 via-emerald-500/0 to-transparent" />
                       )}
+
                     </div>
                   );
                 })}
@@ -419,11 +444,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                   isComingSoon ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
             >
-              {isComingSoon && (
-                <div className="absolute inset-0 z-10 grid place-items-center bg-black/60">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-white">Coming soon</span>
-                </div>
-              )}
+
               <div className="flex items-center gap-4">
                 <div className="relative w-16 h-16 shrink-0">
                   <Image
@@ -449,23 +470,8 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                 </div>
               </div>
 
-              {/* Apex accent angle */}
-              <span className={`pointer-events-none absolute -right-10 top-0 h-full w-20 skew-x-[-20deg] transition-opacity ${
-                isActive ? 'bg-red-600/20 opacity-100' : 'bg-white/10 opacity-0 group-hover:opacity-100'
-              }`} />
 
-              {/* Example of using popper in grid cards if needed in future
-              <Menu>
-                <span className="absolute right-2 top-2">
-                  <MenuButton ref={triggerRefCopy as any} className="inline-flex items-center justify-center w-7 h-7 rounded border border-white/20 bg-white/10 hover:bg-white/20" title="More">
-                    <EllipsisVerticalIcon className="w-4 h-4 text-white" />
-                  </MenuButton>
-                </span>
-                <Portal>
-                  <MenuItems ref={containerRefCopy as any} className="outline-hidden w-44 divide-y divide-white/10 rounded-md border border-white/15 bg-black/90 shadow-lg" />
-                </Portal>
-              </Menu>
-              */}
+              
             </button>
           );
         })}
