@@ -3,9 +3,11 @@ import Image from 'next/image';
 // import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useEffect } from 'react';
+import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
 
 export default function PopoutControls({ targetRef, onStateChange, onTogglePlay, onToggleMode }: { targetRef: React.RefObject<HTMLElement | null>; onStateChange?: (isPopped: boolean) => void; onTogglePlay?: () => void; onToggleMode?: () => void; }) {
   const { t } = useI18n();
+  const triggerHaptic = useHapticFeedback({ duration: 'light' });
   const { isPopped, open, close } = useDocumentPictureInPicture(targetRef, { width: 300, height: 150, onTogglePlay, onToggleMode });
   // Notify parent when state changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -23,12 +25,12 @@ export default function PopoutControls({ targetRef, onStateChange, onTogglePlay,
               </div>
             </div>
           </div>
-          <button onClick={open} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors">
+          <button onClick={() => { triggerHaptic(); open(); }} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors">
             {t('timer.popout')}
           </button>
         </div>
       ) : (
-        <button onClick={close} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors">
+        <button onClick={() => { triggerHaptic(); close(); }} className="w-full h-12 px-4 text-sm font-semibold rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors">
           {t('timer.return')}
         </button>
       )}

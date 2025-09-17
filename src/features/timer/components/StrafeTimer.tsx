@@ -5,6 +5,7 @@ import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
 import { buildTimeline, buildDualTimeline } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
 // import Image from 'next/image';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
@@ -33,6 +34,7 @@ interface StrafeTimerProps {
 }
 
 export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide }: StrafeTimerProps) {
+  const triggerHaptic = useHapticFeedback({ duration: 'medium' });
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -144,6 +146,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   // Scheduling windows are handled by AudioEngine
 
   const startTimer = async () => {
+    triggerHaptic();
     setIsPlaying(true);
     onPlayingChange?.(true);
     isPlayingRef.current = true;
@@ -198,6 +201,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   };
 
   const stopTimer = () => {
+    triggerHaptic();
     setIsPlaying(false);
     onPlayingChange?.(false);
     onActiveSideChange?.(null);
@@ -235,9 +239,9 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   return (
     <div className="text-white">
-      <div className="mb-4">
+      <div>
         {isPopped && (
-          <div className="mt-1 relative overflow-hidden rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-100 px-3 py-2 text-center text-[13px] md:text-sm font-medium">
+          <div className="mb-4 mt-1 relative overflow-hidden rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-100 px-3 py-2 text-center text-[13px] md:text-sm font-medium">
             <span className="absolute left-0 top-0 h-full w-1 bg-amber-400/80" />
             {t('timer.popoutActive')}
           </div>
@@ -310,7 +314,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
 
 
-      <div className="grid grid-cols-2 gap-3 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
         {!isPlaying ? (
           <button
             onClick={startTimer}
@@ -327,23 +331,25 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           </button>
         )}
 
-        {/* Popout / Return buttons */}
-        <PopoutControls
-          targetRef={centralRef}
-          onStateChange={setIsPopped}
-          onTogglePlay={() => {
-            if (isPlayingRef.current) {
-              stopTimer();
-            } else {
-              startTimer();
-            }
-          }}
-          onToggleMode={() => {
-            if (!onChangeSelectionMode) return;
-            const next = selectionMode === 'A' ? 'B' : (selectionMode === 'B' ? 'AB' : 'A');
-            onChangeSelectionMode(next);
-          }}
-        />
+        {/* Popout / Return buttons - hidden on mobile */}
+        <div className="hidden md:block">
+          <PopoutControls
+            targetRef={centralRef}
+            onStateChange={setIsPopped}
+            onTogglePlay={() => {
+              if (isPlayingRef.current) {
+                stopTimer();
+              } else {
+                startTimer();
+              }
+            }}
+            onToggleMode={() => {
+              if (!onChangeSelectionMode) return;
+              const next = selectionMode === 'A' ? 'B' : (selectionMode === 'B' ? 'AB' : 'A');
+              onChangeSelectionMode(next);
+            }}
+          />
+        </div>
       </div>
 
       {/* Inline settings below buttons */}
@@ -411,7 +417,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
             <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{waitTimeSeconds}s</span>
           </div>
         </div>
-        <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
+        {/* Volume slider - hidden on mobile */}
+        <div className="hidden sm:block rounded-md border border-white/10 bg-white/5 px-3 py-2">
           <label htmlFor="volume" className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
             {t('settings.volume')}
           </label>

@@ -6,6 +6,7 @@ import { Gun, Pattern } from "@/features/guns/types/gun";
 import { guns } from "@/features/guns/data/guns";
 import { useI18n } from "@/i18n/I18nProvider";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher";
+import { useHapticFeedback } from "@/shared/hooks/useHapticFeedback";
 import { Disclosure } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useCustomProfiles, profileToGun } from "@/features/customProfiles/useCustomProfiles";
@@ -35,6 +36,7 @@ export default function Home() {
   const [volume, setVolume] = useState(0.8);
   const { t } = useI18n();
   const { profiles, addProfile, updateProfile, removeProfile, gunsFromProfiles } = useCustomProfiles();
+  const triggerHaptic = useHapticFeedback({ duration: 'light' });
   const [isEditing, setIsEditing] = useState(false);
   const [editorContext, setEditorContext] = useState<{ id: string | null; name: string; steps: Pattern[]; reloadTimeSeconds?: number }>({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: undefined });
   const [editorResetToken, setEditorResetToken] = useState<number>(0);
@@ -265,10 +267,17 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 py-6 px-4 text-white">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <header className="mb-6">
+        <header className="mb-6 relative">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{t('app.title')}</h1>
+            <div className="flex-1 pr-20 md:pr-0">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                <span className="block md:hidden">
+                  <span className="block">Apex</span>
+                  <span className="block">Legends</span>
+                  <span className="block">Recoil Strafe Trainer</span>
+                </span>
+                <span className="hidden md:block">{t('app.title')}</span>
+              </h1>
               <p className={`${UIColors.text.tertiary} mt-2 text-sm md:text-base`}>
                 {t('app.subtitle.before')}
                 <a href="https://x.com/ahn99fps" target="_blank" rel="noreferrer" className={UIColors.link.default}>
@@ -277,7 +286,7 @@ export default function Home() {
                 {t('app.subtitle.after')}
               </p>
             </div>
-            <div className="shrink-0">
+            <div className="absolute top-0 right-0 md:relative md:top-auto md:right-auto shrink-0">
               <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.primary} px-3 py-2`}>
                 <LanguageSwitcher />
               </div>
@@ -406,6 +415,7 @@ export default function Home() {
                             <button
                               type="button"
                               onClick={() => {
+                                triggerHaptic();
                                 if (selectionMode === 'AB') {
                                   setSelectionMode(lastSingleMode);
                                 } else {

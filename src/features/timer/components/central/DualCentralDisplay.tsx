@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
 import { computeDualWaits } from '@/features/timer/audio/audio';
 
 export type DualCentralDisplayProps = {
@@ -32,6 +33,7 @@ export type DualCentralDisplayProps = {
 };
 
 export default function DualCentralDisplay(props: DualCentralDisplayProps) {
+  const triggerHaptic = useHapticFeedback({ duration: 'light' });
   const {
     title,
     subtitle,
@@ -110,8 +112,7 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
 
   return (
     <div
-      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden`}
-      style={{ minHeight: isCompact ? '135px' : '250px' }}
+      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
       ref={rootRef}
     >
       <div className={`absolute left-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
@@ -134,9 +135,9 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
         </div>
       </div>
 
-      <div className={`flex items-center justify-center h-full ${isCompact ? 'pt-8' : 'pt-20'}`}>
+      <div className={`flex items-center justify-center h-full ${isCompact ? 'pt-8' : 'pt-12 md:pt-20'}`}>
         <div className="text-center">
-          <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[56px] md:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>{symbol}</div>
+          <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[40px] md:text-[56px] lg:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>{symbol}</div>
           {subtitle && (
             <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${subtitleColor}`}>{subtitle}</div>
           )}
@@ -163,7 +164,10 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
           <div className="flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
-              onClick={onTogglePlay}
+              onClick={() => {
+                triggerHaptic();
+                onTogglePlay?.();
+              }}
               className="rounded-full bg-white/90 text-black text-xs font-semibold px-2.5 py-1.5 shadow-md border border-black/10"
               title={isPlaying ? t('display.stop') : t('display.play')}
               data-central-toggle
@@ -174,6 +178,7 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
               <button
                 type="button"
                 onClick={() => {
+                  triggerHaptic();
                   const next = selectionMode === 'A' ? 'B' : (selectionMode === 'B' ? 'AB' : 'A');
                   onChangeSelectionMode(next);
                 }}

@@ -3,6 +3,7 @@
 import { Gun, Pattern } from "@/features/guns/types/gun";
 import GunSelector from "@/features/guns/components/GunSelector";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useHapticFeedback } from "@/shared/hooks/useHapticFeedback";
 
 export default function GunsSidebar({
   guns,
@@ -28,13 +29,17 @@ export default function GunsSidebar({
   highlightGunIdB?: string | null;
 }) {
   const { t } = useI18n();
+  const triggerHaptic = useHapticFeedback({ duration: 'light' });
 
   return (
     <div>
       <div className="mb-2">
         <button
           type="button"
-          onClick={onStartCreate}
+          onClick={() => {
+            triggerHaptic();
+            onStartCreate();
+          }}
           className="w-full text-sm font-semibold px-3 py-2 rounded-md border border-white/15 bg-white/5 hover:bg-white/10 text-white"
         >
           {t('custom.createTop', { defaultValue: 'Create Custom' })}

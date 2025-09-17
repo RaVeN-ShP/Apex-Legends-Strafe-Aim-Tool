@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { EllipsisVerticalIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { createPortal } from 'react-dom';
+import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
 
 interface GunSelectorProps {
   guns: Gun[];
@@ -193,6 +194,7 @@ function GunActionsMenu({
 
 export default function GunSelector({ guns, selectedGun, onGunSelect, listMode = false, onDeleteCustom, onEditCustom, activeSlot = 'A', highlightGunIdA = null, highlightGunIdB = null }: GunSelectorProps) {
   const { t } = useI18n();
+  const triggerHaptic = useHapticFeedback({ duration: 'light' });
   // Background accents removed per request
   if (listMode) {
     const ammoOrder: Gun['ammo'][] = ['light', 'heavy', 'energy', 'shotgun', 'sniper', 'arrow', 'care'];
@@ -223,7 +225,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
     groups.push({ key: 'other', items: guns.filter(g => !g.ammo) });
 
     return (
-      <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white overflow-auto max-h-[calc(100vh-220px)] custom-scroll">
+      <div className="rounded-lg border border-white/10 bg-black/30 p-2 text-white md:overflow-auto md:max-h-[calc(100vh-220px)] custom-scroll">
         {groups.map((group, gi) => (
           group.items.length > 0 && (
             <div key={group.key} className={gi > 0 ? 'mt-4' : ''}>
@@ -254,7 +256,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                     if (longPressTimer != null) window.clearTimeout(longPressTimer);
                     longPressTimer = window.setTimeout(() => {
                       lastLongPressAt = Date.now();
-                      try { (navigator as any).vibrate?.(10); } catch {}
+                      triggerHaptic();
                       if (menuOpener) menuOpener();
                     }, 500);
                   };
@@ -329,9 +331,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           className="relative w-1/2 h-full focus:outline-none"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                              try { (navigator as any).vibrate(10); } catch {}
-                            }
+                            triggerHaptic();
                             if (wasJustLongPressed()) { e.preventDefault(); return; }
                             onGunSelect(gun, 'A');
                           }}
@@ -350,9 +350,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                           className="relative w-1/2 h-full focus:outline-none"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                              try { (navigator as any).vibrate(10); } catch {}
-                            }
+                            triggerHaptic();
                             if (wasJustLongPressed()) { e.preventDefault(); return; }
                             onGunSelect(gun, 'B');
                           }}

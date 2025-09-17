@@ -65,7 +65,7 @@ export default function DualPatternVisualizer({ patternA, patternB, activeSide }
             );
           })}
           <div
-            className="relative h-full bg-green-500/80 border border-green-400/60"
+            className="relative h-full bg-emerald-500/80 border border-emerald-400/60"
             style={{ width: `${connectorPct}%` }}
             title={`A→B • ${t('pattern.legend.shoot')}`}
           >
