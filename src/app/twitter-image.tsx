@@ -4,12 +4,12 @@ import { join } from 'path';
 
 export const size = {
   width: 1200,
-  height: 630,
+  height: 628,
 };
 
 export const contentType = 'image/png';
 
-export default function OpengraphImage() {
+export default function TwitterImage() {
   const title = 'Apex Legends Recoil Strafe Trainer';
   const bannerPath = join(process.cwd(), 'public', 'banner.png');
   const bannerDataUrl = `data:image/png;base64,${readFileSync(bannerPath).toString('base64')}`;
@@ -36,7 +36,7 @@ export default function OpengraphImage() {
             objectFit: 'cover',
           }}
         />
-        
+
         <div
           style={{
             position: 'relative',
