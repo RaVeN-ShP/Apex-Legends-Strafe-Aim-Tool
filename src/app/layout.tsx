@@ -8,15 +8,15 @@ const inter = Inter({ subsets: ["latin"] });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const isProd = process.env.NODE_ENV === 'production';
-const defaultTitle = "Recoil Strafing Trainer";
-const defaultDescription = "Improve your recoil strafing in Apex Legends with audio cues and visual indicators. The popout timing guide helps you master left and right strafes while practicing in the training range.";
+const defaultTitle = "Apex Legends Recoil Strafe Trainer";
+const defaultDescription = "Improve your recoil strafing in Apex Legends with audio cues and visual indicators.";
 
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: defaultTitle,
-    template: "%s | Recoil Strafing Trainer",
+    template: "%s",
   },
   description: defaultDescription,
   keywords: [
@@ -36,6 +36,7 @@ export const metadata: Metadata = {
       'ja': '/?lang=ja',
       'ko': '/?lang=ko',
       'zh': '/?lang=zh',
+      'ru': '/?lang=ru',
       'x-default': '/',
     },
   },
