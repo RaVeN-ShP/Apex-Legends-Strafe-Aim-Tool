@@ -25,11 +25,14 @@ export default function LanguageSwitcher() {
     setLocale(newLocale);
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
-      if (newLocale === 'en') {
-        url.searchParams.delete('lang');
-      } else {
-        url.searchParams.set('lang', newLocale);
-      }
+      const segments = url.pathname.split('/').filter(Boolean);
+      const supported: Locale[] = ['en', 'ja', 'ko', 'zh', 'ru'];
+      const hasLocalePrefix = segments.length > 0 && supported.includes(segments[0] as Locale);
+      const rest = hasLocalePrefix ? segments.slice(1) : segments;
+      const prefix = newLocale === 'en' ? '' : `/${newLocale}`;
+      const newPath = `${prefix}/${rest.join('/')}`.replace(/\/+$/, '').replace(/\/\//g, '/');
+      url.pathname = newPath || '/';
+      url.searchParams.delete('lang');
       window.history.replaceState({}, '', url.toString());
     }
   };
