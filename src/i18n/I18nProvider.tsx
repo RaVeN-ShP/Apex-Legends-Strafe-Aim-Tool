@@ -28,11 +28,19 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Initialize locale priority:
-    // 1) URL ?lang=
-    // 2) persisted preference (localStorage)
-    // 3) browser language (navigator.language / navigator.languages)
+    // 1) URL pathname prefix /:lang
+    // 2) URL ?lang=
+    // 3) persisted preference (localStorage)
+    // 4) browser language (navigator.language / navigator.languages)
     if (typeof window !== 'undefined') {
       const supported: Locale[] = ['en', 'ja', 'ko', 'zh', 'ru'];
+
+      const fromPath = () => {
+        const segments = window.location.pathname.split('/').filter(Boolean);
+        const first = (segments[0] ?? '').toLowerCase();
+        if (supported.includes(first as Locale)) return first as Locale;
+        return null;
+      };
 
       const fromUrl = () => {
         const params = new URLSearchParams(window.location.search);
@@ -72,7 +80,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         return null;
       };
 
-      const chosen = fromUrl() ?? fromStorage() ?? fromNavigator() ?? 'en';
+      const chosen = fromPath() ?? fromUrl() ?? fromStorage() ?? fromNavigator() ?? 'en';
       setLocale(chosen);
     }
   }, []);
