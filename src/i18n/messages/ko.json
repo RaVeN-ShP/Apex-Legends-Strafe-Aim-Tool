@@ -85,5 +85,7 @@
   "tabs.dual": "듀얼",
   "toggle.switch": "전환",
   "display.play": "재생",
-  "display.stop": "정지"
+  "display.stop": "정지",
+  "footer.upToDate": "적용 시즌:",
+  "footer.lastUpdate": "웹사이트 최종 업데이트:"
 }

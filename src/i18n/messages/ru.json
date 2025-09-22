@@ -85,6 +85,8 @@
   "tabs.dual": "Двойной",
   "toggle.switch": "Переключить",
   "display.play": "Воспроизвести",
-  "display.stop": "Остановить"
+  "display.stop": "Остановить",
+  "footer.upToDate": "Актуально до:",
+  "footer.lastUpdate": "Последнее обновление сайта:"
 }
 
