@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   description: defaultDescription,
   keywords: [
     "apex legends",
+    "apex legends recoil control",
     "strafe aiming",
     "strafe control",
     "recoil control",

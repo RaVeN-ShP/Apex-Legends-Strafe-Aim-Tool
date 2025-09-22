@@ -85,5 +85,7 @@
   "tabs.dual": "Dual",
   "toggle.switch": "Switch",
   "display.play": "Play",
-  "display.stop": "Stop"
+  "display.stop": "Stop",
+  "footer.upToDate": "Up to date with:",
+  "footer.lastUpdate": "Last website update:"
 }

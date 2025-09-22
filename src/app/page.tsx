@@ -17,6 +17,7 @@ import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitc
 import Image from "next/image";
 // Dual playback context removed; state is lifted locally
 import { UIColors } from "@/config/styles";
+import { BUILD_DATE_ISO, CURRENT_APEX_SEASON } from "@/config/constants";
 // Custom profiles are managed via hook for storage compatibility
 
 type SelectionMode = 'A' | 'B' | 'AB';
@@ -582,6 +583,14 @@ export default function Home() {
               <a href="https://www.youtube.com/@ahn99fps" target="_blank" rel="noreferrer" className={UIColors.link.default}>ahn99</a>
             </span>
           </div>
+          <div className="mt-1">
+            <span className={UIColors.text.disabled}>{t('footer.upToDate')}</span>
+            <span className="ml-1">{CURRENT_APEX_SEASON}</span>
+          </div>
+          {/* <div className="mt-1">
+            <span className={UIColors.text.disabled}>{t('footer.lastUpdate')}</span>
+            <span className="ml-1">{new Date(BUILD_DATE_ISO || Date.now()).toLocaleDateString()}</span>
+          </div> */}
         </footer>
       </div>
 
