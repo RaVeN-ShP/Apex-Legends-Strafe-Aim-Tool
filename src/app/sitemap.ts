@@ -14,10 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const locales: Array<[string, string]> = [
     ['en', `${siteUrl}`],
-    ['ja', `${siteUrl}ja`],
-    ['ko', `${siteUrl}ko`],
-    ['zh', `${siteUrl}zh`],
-    ['ru', `${siteUrl}ru`],
+    ['ja', `${siteUrl}/ja`],
+    ['ko', `${siteUrl}/ko`],
+    ['zh', `${siteUrl}/zh`],
+    ['ru', `${siteUrl}/ru`],
   ];
 
   return locales.map(([, url]) => ({ url, ...base }));
