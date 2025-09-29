@@ -45,6 +45,8 @@
   "faq.q3.question": "How does the Reloading Phase work?",
   "faq.q3.answer": "The Reloading Phase is the part of the loop that covers the time your weapon reloads. Its length is: reload time (from empty) minus the 1.5s countdown, plus your Post-Reload delay.",
   "faq.q3.formula": "Length = reload time (from empty) − 1.5s countdown + your Post-Reload delay",
+  "faq.q4.question": "Why does the popout sometimes stutter or lag?",
+  "faq.q4.answer": "This usually happens when Apex and the browser popout are both competing for GPU resources. The most reliable fix is to disable Hardware Acceleration in Chrome (Settings → System → 'Use hardware acceleration when available' → Relaunch). This forces the popout to render on the CPU and should fix all lag.",
   "custom.title": "Custom Patterns",
   "custom.new": "New",
   "custom.empty": "No custom patterns yet.",
