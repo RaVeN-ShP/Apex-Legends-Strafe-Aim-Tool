@@ -201,7 +201,7 @@ export default function Home() {
       <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
         <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
         <div className="space-y-2">
-          {['q0', 'q1', 'q2', 'q3'].map((k) => (
+          {['q0', 'q1', 'q2', 'q3', 'q4'].map((k) => (
             <Disclosure key={k}>
               {({ open }) => (
                 <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>

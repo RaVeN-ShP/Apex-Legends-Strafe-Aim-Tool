@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     description: defaultDescription,
     images: [
       {
-        url: '/opengraph-image',
+        url: '/opengraph-image.png',
         width: 1200,
         height: 630,
         alt: defaultTitle,
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: defaultTitle,
     description: defaultDescription,
-    images: ['/opengraph-image'],
+    images: ['/twitter-image.png'],
   },
   icons: {
     icon: '/favicon.ico',
@@ -95,6 +95,46 @@ export default function RootLayout({
         {isProd && (
           <script defer src="/um.js" data-website-id="b87caea7-b860-43f7-aef8-14970c007d40"></script>
         )}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { try {
+              var w = window;
+              var path = w.location.pathname;
+              if (path !== '/') return; // only act on homepage
+              var supported = ['en','ja','ko','zh','ru'];
+              var segments = path.split('/').filter(Boolean);
+              var params = new URLSearchParams(w.location.search);
+              var qp = params.get('lang');
+              var stored = null;
+              try { stored = w.localStorage.getItem('preferred_locale'); } catch (e) {}
+              var ua = navigator.userAgent || '';
+              var isBot = /(bot|crawler|spider|crawling|facebookexternalhit|slackbot)/i.test(ua);
+              if (isBot) return;
+              var normalize = function(v){ if(!v) return null; v = String(v).toLowerCase();
+                if (v.startsWith('ja')) return 'ja';
+                if (v.startsWith('ko')) return 'ko';
+                if (v.startsWith('zh')) return 'zh';
+                if (v.startsWith('ru')) return 'ru';
+                if (v.startsWith('en')) return 'en';
+                return null; };
+              var fromNavigator = function(){
+                var nav = navigator; var list = Array.isArray(nav.languages) ? nav.languages.slice() : [];
+                if (nav.language) list.push(nav.language);
+                if (nav.userLanguage) list.push(nav.userLanguage);
+                for (var i=0;i<list.length;i++){ var n = normalize(list[i]); if (n) return n; }
+                return 'en'; };
+              var desired = null;
+              if (qp && supported.indexOf(qp) !== -1) desired = qp;
+              else if (stored && supported.indexOf(stored) !== -1) desired = stored;
+              else desired = fromNavigator();
+              if (!desired || desired === 'en') return; // keep English at root
+              var newUrl = new URL(w.location.href);
+              newUrl.pathname = '/' + desired + '/';
+              newUrl.searchParams.delete('lang');
+              w.location.replace(newUrl.toString());
+            } catch (e) {} })();`
+          }}
+        />
       </head>
       {isProd && <Analytics/>}
       <body className={inter.className}>

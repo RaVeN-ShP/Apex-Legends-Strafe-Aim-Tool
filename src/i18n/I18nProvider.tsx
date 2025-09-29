@@ -23,8 +23,8 @@ import ru from './messages/ru.json';
 
 const allMessages: Record<Locale, Messages> = { en, ja, ko, zh, ru };
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('en');
+export function I18nProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: Locale }) {
+  const [locale, setLocale] = useState<Locale>(initialLocale ?? 'en');
 
   useEffect(() => {
     // Initialize locale priority:
@@ -81,7 +81,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       };
 
       const chosen = fromPath() ?? fromUrl() ?? fromStorage() ?? fromNavigator() ?? 'en';
-      setLocale(chosen);
+      if (chosen !== locale) setLocale(chosen);
     }
   }, []);
 

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "preview": "npx serve -s out -p 3000",
     "lint": "eslint ."
   },
   "dependencies": {

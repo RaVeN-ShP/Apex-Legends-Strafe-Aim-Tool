@@ -66,7 +66,7 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const anchorPct = 10;
   const containerOffsetPct = (100 - anchorPct) + progressPct;
   const elementTranslatePct = (containerOffsetPct % 100) / 3;
-  const translateStyle = `translateX(-${elementTranslatePct.toFixed(2)}%)`;
+  const leftPct = -(elementTranslatePct * 3);
 
   const countdownMs = 1500;
   const patAms = patternA.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
@@ -146,8 +146,8 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
 
       <div className="absolute left-0 right-0 bottom-2 px-3">
         <div className="relative">
-          <div className="h-3 w-full rounded-md overflow-hidden bg-white/10 border border-white/10">
-            <div className="h-full flex relative" style={{ width: '300%', transform: translateStyle, willChange: 'transform' }}>
+          <div className="h-3 w-full rounded-md overflow-hidden bg-white/10 border border-white/10 relative">
+            <div className="h-full flex absolute top-0 left-0" style={{ width: '300%', left: `${leftPct.toFixed(2)}%` }}>
               {renderCycle('prev')}
               {renderCycle('curr')}
               {renderCycle('next')}
