@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next';
 
+export const dynamic = 'force-static';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -12,10 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const locales: Array<[string, string]> = [
     ['en', `${siteUrl}/`],
-    ['ja', `${siteUrl}/?lang=ja`],
-    ['ko', `${siteUrl}/?lang=ko`],
-    ['zh', `${siteUrl}/?lang=zh`],
-    ['ru', `${siteUrl}/?lang=ru`],
+    ['ja', `${siteUrl}/ja`],
+    ['ko', `${siteUrl}/ko`],
+    ['zh', `${siteUrl}/zh`],
+    ['ru', `${siteUrl}/ru`],
   ];
 
   return locales.map(([, url]) => ({ url, ...base }));

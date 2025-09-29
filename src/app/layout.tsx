@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     description: defaultDescription,
     images: [
       {
-        url: '/opengraph-image',
+        url: '/opengraph-image.png',
         width: 1200,
         height: 630,
         alt: defaultTitle,
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: defaultTitle,
     description: defaultDescription,
-    images: ['/opengraph-image'],
+    images: ['/twitter-image.png'],
   },
   icons: {
     icon: '/favicon.ico',
