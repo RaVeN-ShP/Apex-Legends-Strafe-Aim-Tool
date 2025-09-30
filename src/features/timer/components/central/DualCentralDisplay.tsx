@@ -112,7 +112,7 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
 
   return (
     <div
-      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
+      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden select-none ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
       ref={rootRef}
     >
       <div className={`absolute left-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
