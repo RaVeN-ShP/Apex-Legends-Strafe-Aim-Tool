@@ -342,6 +342,7 @@ export default function Home() {
                   resetToken={editorResetToken}
                   onCancel={handleEditorCancel}
                   onSave={handleEditorSave}
+                  existingProfiles={profiles}
                 />
               ) : displayGun ? (
                     (

@@ -55,6 +55,21 @@ function generateId(): string {
   return `${Date.now().toString(36)}-${rand}`;
 }
 
+export function generateUniqueCopyName(baseName: string, existingProfiles: CustomProfile[]): string {
+  const existingNames = new Set(existingProfiles.map(p => p.name));
+  
+  // Try baseName - 1, baseName - 2, etc.
+  let counter = 1;
+  let candidateName = `${baseName} - ${counter}`;
+  
+  while (existingNames.has(candidateName)) {
+    counter++;
+    candidateName = `${baseName} - ${counter}`;
+  }
+  
+  return candidateName;
+}
+
 export function useCustomProfiles() {
   const [profiles, setProfiles] = useState<CustomProfile[]>([]);
   const [hasLoaded, setHasLoaded] = useState<boolean>(false);

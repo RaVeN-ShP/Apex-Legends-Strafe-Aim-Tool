@@ -6,6 +6,7 @@ import PatternVisualizer from "@/features/patterns/components/PatternVisualizer"
 import StrafeTimer from "@/features/timer/components/StrafeTimer";
 import PatternImportPicker from "@/features/customProfiles/PatternImportPicker";
 import { useI18n } from "@/i18n/I18nProvider";
+import { CustomProfile, generateUniqueCopyName } from "./useCustomProfiles";
 import { Listbox, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -111,6 +112,7 @@ export default function CustomProfileEditor({
   resetToken,
   onCancel,
   onSave,
+  existingProfiles,
 }: {
   allGuns: Gun[];
   initialName: string;
@@ -121,6 +123,7 @@ export default function CustomProfileEditor({
   resetToken?: string | number;
   onCancel: () => void;
   onSave: (name: string, steps: Pattern[], reloadTimeSeconds: number) => void;
+  existingProfiles: CustomProfile[];
 }) {
   const { t } = useI18n();
   const [name, setName] = useState<string>(initialName);
@@ -207,9 +210,10 @@ export default function CustomProfileEditor({
               if (g && Number.isFinite(g.reloadTimeSeconds)) {
                 setReloadTimeSeconds(g.reloadTimeSeconds as number);
               }
-              // Update name to "{weapon name} - Copy" format
+              // Update name to "{weapon name} - 1" format (or next available number)
               if (g) {
-                setName(`${g.name} - Copy`);
+                const uniqueName = generateUniqueCopyName(g.name, existingProfiles);
+                setName(uniqueName);
               }
               bumpReset();
             }}

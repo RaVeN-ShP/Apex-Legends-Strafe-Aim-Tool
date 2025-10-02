@@ -206,7 +206,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
       sniper: 'Sniper Ammo',
       arrow: 'Arrows',
       care: 'Care Package',
-      other: 'Other',
+      other: 'Custom',
     };
     const ammoIcon: Record<string, string | undefined> = {
       light: '/ammo/Light_Rounds.svg',
