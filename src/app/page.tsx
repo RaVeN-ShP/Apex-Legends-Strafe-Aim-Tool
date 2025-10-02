@@ -17,7 +17,7 @@ import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitc
 import Image from "next/image";
 // Dual playback context removed; state is lifted locally
 import { UIColors } from "@/config/styles";
-import { BUILD_DATE_ISO, CURRENT_APEX_SEASON } from "@/config/constants";
+import { BUILD_DATE_ISO, CURRENT_APEX_SEASON, ENABLE_AUTO_RELOAD_TIMELINE } from "@/config/constants";
 // Custom profiles are managed via hook for storage compatibility
 
 type SelectionMode = 'A' | 'B' | 'AB';
@@ -41,6 +41,7 @@ export default function Home() {
   const [isEditing, setIsEditing] = useState(false);
   const [editorContext, setEditorContext] = useState<{ id: string | null; name: string; steps: Pattern[]; reloadTimeSeconds?: number }>({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: undefined });
   const [editorResetToken, setEditorResetToken] = useState<number>(0);
+  const [useAutoReloadTimeline, setUseAutoReloadTimeline] = useState<boolean>(false);
 
 
   const allGuns: Gun[] = useMemo(() => {
@@ -465,6 +466,26 @@ export default function Home() {
                                 </div>
                               </div>
                             </button>
+                            
+                            {/* Auto-reload timeline toggle - only show in dual mode when feature is enabled */}
+                            {ENABLE_AUTO_RELOAD_TIMELINE && selectionMode === 'AB' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic();
+                                  setUseAutoReloadTimeline(!useAutoReloadTimeline);
+                                }}
+                                className={`mt-2 w-full h-8 rounded border transition-colors flex items-center justify-center text-xs font-medium ${
+                                  useAutoReloadTimeline 
+                                    ? `${UIColors.dualToggle.active.border} ${UIColors.dualToggle.active.background} ${UIColors.dualToggle.active.text}` 
+                                    : `${UIColors.dualToggle.inactive.border} ${UIColors.dualToggle.inactive.background} ${UIColors.dualToggle.inactive.text}`
+                                }`}
+                                aria-label="Toggle Auto-reload Timeline"
+                                title="Auto-reload Timeline: Ensures weapons auto-reload after 4s holstered"
+                              >
+                                Auto-reload
+                              </button>
+                            )}
                           </div>
 
                           {/* Gun B box */}
@@ -551,6 +572,7 @@ export default function Home() {
                           activeSide={activeSide}
                           onPlayingChange={setIsPlaying}
                           onActiveSideChange={setActiveSide}
+                          useAutoReloadTimeline={useAutoReloadTimeline}
                         />
 
                       </div>

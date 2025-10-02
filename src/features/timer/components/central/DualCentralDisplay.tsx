@@ -4,7 +4,7 @@ import { Pattern } from '@/features/guns/types/gun';
 import { getStepStyle } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
-import { computeDualWaits } from '@/features/timer/audio/audio';
+import { computeDualWaits, computeAutoReloadWaits } from '@/features/timer/audio/audio';
 
 export type DualCentralDisplayProps = {
   title: string;
@@ -30,6 +30,7 @@ export type DualCentralDisplayProps = {
   selectionMode?: 'A' | 'B' | 'AB';
   onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
   activeSide?: 'A' | 'B' | null;
+  useAutoReloadTimeline?: boolean;
 };
 
 export default function DualCentralDisplay(props: DualCentralDisplayProps) {
@@ -57,6 +58,7 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
     rootRef,
     selectionMode,
     onChangeSelectionMode,
+    useAutoReloadTimeline = false,
   } = props;
 
   const { t } = useI18n();
@@ -71,8 +73,11 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const countdownMs = 1500;
   const patAms = patternA.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
   const patBms = patternB.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
+  
   // Unified wait computation to match audio exactly
-  const { waitAB, waitBA } = computeDualWaits(reloadTimeSecondsA, reloadTimeSecondsB, waitTimeSeconds, countdownMs);
+  const { waitAB, waitBA } = useAutoReloadTimeline 
+    ? computeAutoReloadWaits(patAms, patBms, countdownMs)
+    : computeDualWaits(reloadTimeSecondsA, reloadTimeSecondsB, waitTimeSeconds, countdownMs);
 
   type Seg = { color: string; duration: number; title: string; symbol?: string };
   const segments: Seg[] = [];

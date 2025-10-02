@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
-import { buildTimeline, buildDualTimeline } from '@/features/timer/audio/audio';
+import { buildTimeline, buildDualTimeline, buildAutoReloadDualTimeline } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
@@ -10,7 +10,7 @@ import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
  
-import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS } from '@/config/constants';
+import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS, ENABLE_AUTO_RELOAD_TIMELINE } from '@/config/constants';
 import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
 import DualCentralDisplay from '@/features/timer/components/central/DualCentralDisplay';
 import PopoutControls from '@/features/timer/components/popout/PopoutControls';
@@ -31,9 +31,10 @@ interface StrafeTimerProps {
   onPlayingChange?: (playing: boolean) => void;
   onActiveSideChange?: (side: 'A' | 'B' | null) => void;
   activeSide?: 'A' | 'B' | null;
+  useAutoReloadTimeline?: boolean; // Use auto-reload timeline mode for dual mode
 }
 
-export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide, useAutoReloadTimeline = false }: StrafeTimerProps) {
   const triggerHaptic = useHapticFeedback({ duration: 'medium' });
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -78,10 +79,14 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
   const timelineValue = useMemo(() => {
     if (dual && gunB && patternB) {
+      // Use auto-reload timeline if feature is enabled and prop is set
+      if (ENABLE_AUTO_RELOAD_TIMELINE && useAutoReloadTimeline) {
+        return buildAutoReloadDualTimeline(pattern, gun, patternB, gunB);
+      }
       return buildDualTimeline(pattern, gun, patternB, gunB, waitTimeSeconds);
     }
     return buildTimeline(pattern, gun, waitTimeSeconds);
-  }, [dual, gun, pattern, gunB, patternB, waitTimeSeconds]);
+  }, [dual, gun, pattern, gunB, patternB, waitTimeSeconds, useAutoReloadTimeline]);
 
   useEffect(() => {
     timeline.current = timelineValue;
@@ -308,6 +313,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
             selectionMode={selectionMode}
             onChangeSelectionMode={onChangeSelectionMode}
             activeSide={activeSide}
+            useAutoReloadTimeline={useAutoReloadTimeline}
           />
         )}
       </div>

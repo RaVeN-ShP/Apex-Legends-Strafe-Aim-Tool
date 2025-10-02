@@ -68,6 +68,41 @@ export function computeDualWaits(
 }
 
 /**
+ * Compute auto-reload timeline delays for dual mode.
+ * 
+ * Apex auto-reloads weapons after 4 seconds of being holstered.
+ * The delay must ensure: patternTime + delay + 1.5s countdown > 4s
+ * This means: delay > 4s - patternTime - 1.5s = 2.5s - patternTime
+ * Minimum delay is always 0.5s.
+ * 
+ * @param patternTimeA - Duration of pattern A in milliseconds
+ * @param patternTimeB - Duration of pattern B in milliseconds
+ * @param countdownMs - Countdown duration in milliseconds (default 1500)
+ * @param minDelayMs - Minimum delay in milliseconds (default 500)
+ * @returns Object with calculated delays
+ */
+export function computeAutoReloadWaits(
+  patternTimeA: number,
+  patternTimeB: number,
+  countdownMs: number = 1500,
+  minDelayMs: number = 500,
+): { waitAB: number; waitBA: number; autoReloadThresholdMs: number } {
+  const autoReloadThresholdMs = 4000 + 600; // 4 seconds + 600ms buffer
+  
+  // Calculate required delay for A→B transition
+  // delayAB > 4s - patternTimeA - 1.5s = 2.5s - patternTimeA
+  const requiredDelayAB = autoReloadThresholdMs - patternTimeB - countdownMs;
+  const waitAB = Math.max(minDelayMs, requiredDelayAB);
+  
+  // Calculate required delay for B→A transition  
+  // delayBA > 4s - patternTimeB - 1.5s = 2.5s - patternTimeB
+  const requiredDelayBA = autoReloadThresholdMs - patternTimeA - countdownMs;
+  const waitBA = Math.max(minDelayMs, requiredDelayBA);
+  
+  return { waitAB, waitBA, autoReloadThresholdMs };
+}
+
+/**
  * Build a dual-weapon timeline that alternates A then B, inserting minimal inter-waits so that
  * each weapon auto-reloads while the other is firing plus during its own 1.5s pre-start countdown.
  *
@@ -169,6 +204,114 @@ export function buildDualTimeline(
     }
     currentTime += Math.max(0, waitBA);
     phases.push({ id: 'end', name: 'Wait B→A', startTime: start, endTime: currentTime, cues });
+  }
+
+  return { phases, totalDurationMs: currentTime };
+}
+
+/**
+ * Build a dual-weapon timeline using auto-reload timing.
+ * 
+ * This timeline ensures that weapons auto-reload after being holstered for 4 seconds.
+ * The delay between weapons is calculated to ensure the holstered weapon has enough
+ * time to auto-reload before being used again.
+ * 
+ * Cycle layout:
+ *   Start(A) → Pattern(A) → Auto-reload delay A→B → Start(B) → Pattern(B) → Auto-reload delay B→A
+ */
+export function buildAutoReloadDualTimeline(
+  patternA: Pattern[],
+  gunA: Gun,
+  patternB: Pattern[],
+  gunB: Gun,
+): Timeline {
+  const phases: Phase[] = [];
+  let currentTime = 0;
+
+  const countdownMs = 1500;
+  
+  // Calculate pattern durations
+  const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
+  const patAms = patternDur(patternA);
+  const patBms = patternDur(patternB);
+  
+  // Calculate auto-reload delays
+  const { waitAB, waitBA } = computeAutoReloadWaits(patAms, patBms, countdownMs);
+
+  // A: Start
+  {
+    const cues: AudioCue[] = [];
+    for (let i = 0; i < 3; i++) {
+      cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
+      currentTime += 500;
+    }
+    phases.push({ id: 'start', name: 'Start A', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+  }
+
+  // A: Pattern
+  {
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    for (const step of patternA) {
+      if (step.type === 'shoot') {
+        cues.push({ type: 'shoot', timestamp: currentTime, phase: 'pattern', frequencyHz: 1500, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += Math.max(0, step.duration);
+      } else {
+        cues.push({ type: 'direction', direction: step.direction, timestamp: currentTime, phase: 'pattern', frequencyHz: step.direction === 'left' ? 400 : 800, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += step.duration;
+      }
+    }
+    phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues });
+  }
+
+  // Auto-reload delay A -> B
+  {
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    // Add a subtle cue at the end of the delay to indicate weapon swap
+    const safetyTailMs = 10;
+    const maxLen = Math.max(0, (waitAB - safetyTailMs) / 1000);
+    const len = Math.min(0.9, maxLen);
+    cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });    currentTime += waitAB;
+    phases.push({ id: 'end', name: 'Auto-reload delay A→B', startTime: start, endTime: currentTime, cues });
+  }
+
+  // B: Start
+  {
+    const cues: AudioCue[] = [];
+    for (let i = 0; i < 3; i++) {
+      cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
+      currentTime += 500;
+    }
+    phases.push({ id: 'start', name: 'Start B', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+  }
+
+  // B: Pattern
+  {
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    for (const step of patternB) {
+      if (step.type === 'shoot') {
+        cues.push({ type: 'shoot', timestamp: currentTime, phase: 'pattern', frequencyHz: 1500, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += Math.max(0, step.duration);
+      } else {
+        cues.push({ type: 'direction', direction: step.direction, timestamp: currentTime, phase: 'pattern', frequencyHz: step.direction === 'left' ? 400 : 800, lengthSec: 0.15, amplitude: 1.0 });
+        currentTime += step.duration;
+      }
+    }
+    phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues });
+  }
+
+  // Auto-reload delay B -> A
+  {
+    const start = currentTime;
+    const cues: AudioCue[] = [];
+    // Add a subtle cue at the end of the delay to indicate weapon swap
+    const safetyTailMs = 10;
+    const maxLen = Math.max(0, (waitBA - safetyTailMs) / 1000);
+    const len = Math.min(0.9, maxLen);
+    cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });    currentTime += waitBA;
+    phases.push({ id: 'end', name: 'Auto-reload delay B→A', startTime: start, endTime: currentTime, cues });
   }
 
   return { phases, totalDurationMs: currentTime };
