@@ -24,7 +24,7 @@ export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: num
       currentTime += step.duration;
     }
   }
-  phases.push({ id: 'pattern', name: 'Pattern', startTime: patternStartTime, endTime: currentTime, cues: patternCues });
+  phases.push({ id: 'pattern', name: 'Pattern', startTime: patternStartTime, endTime: currentTime, cues: patternCues, side: 'A' });
 
   // End phase: duration = reload - 1.5s + user delay (clamped to 0)
   const endStartTime = currentTime;
@@ -103,6 +103,59 @@ export function computeAutoReloadWaits(
 }
 
 /**
+ * Compute Swap/Delay/Reload buffer durations for dual auto-reload mode.
+ *
+ * Assumptions:
+ * - Swap time is a fixed 500ms between weapons
+ * - Countdown ("Start") is 1500ms and does not count toward holster time for the weapon being drawn
+ * - A weapon must be holstered for at least 4.0s (+buffer) before being drawn to guarantee auto-reload
+ * - The user-controlled delay is applied symmetrically in both directions (A→B and B→A)
+ *
+ * For B to be ready at Start(B): time since B was last used must be >= threshold.
+ * This includes: Swap B→A + Delay B→A + Start A + Pattern A + Swap A→B + Delay A→B.
+ *
+ * Similarly for A to be ready at Start(A): Swap A→B + Delay A→B + Start B + Pattern B + Swap B→A + Delay B→A.
+ */
+export function computeAutoReloadPhaseDurations(
+  patternTimeA: number,
+  patternTimeB: number,
+  userDelayMs: number,
+  countdownMs: number = 1500, 
+  swapMs: number = 500,
+  thresholdMs: number = 4000 + 600,
+): {
+  swapAB: number;
+  delayAB: number;
+  bufferAB: number;
+  swapBA: number;
+  delayBA: number;
+  bufferBA: number;
+  thresholdMs: number;
+} {
+  const holsterToEndA = swapMs + countdownMs + Math.max(0, patternTimeB);
+  const holsterToEndB = swapMs + countdownMs + Math.max(0, patternTimeA);
+  const bufferAB = Math.max(0, thresholdMs - holsterToEndA);
+  const bufferBA = Math.max(0, thresholdMs - holsterToEndB);
+
+  // User-defined post-swap delay should only add time beyond the mandatory wait
+  // Mandatory wait before next shots: Reload buffer + countdown
+  const desiredPostSwapDelayMs = Math.max(0, userDelayMs);
+  const baseWaitAB = bufferAB + countdownMs;
+  const baseWaitBA = bufferBA + countdownMs;
+  const delayAB = Math.max(0, desiredPostSwapDelayMs - baseWaitAB);
+  const delayBA = Math.max(0, desiredPostSwapDelayMs - baseWaitBA);
+  return {
+    swapAB: swapMs,
+    delayAB,
+    bufferAB,
+    swapBA: swapMs,
+    delayBA,
+    bufferBA,
+    thresholdMs,
+  };
+}
+
+/**
  * Build a dual-weapon timeline that alternates A then B, inserting minimal inter-waits so that
  * each weapon auto-reloads while the other is firing plus during its own 1.5s pre-start countdown.
  *
@@ -133,7 +186,7 @@ export function buildDualTimeline(
       cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
       currentTime += 500;
     }
-    phases.push({ id: 'start', name: 'Start A', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+    phases.push({ id: 'start', name: 'Start A', startTime: currentTime - countdownMs, endTime: currentTime, cues, side: 'A' });
   }
 
   // A: Pattern
@@ -149,7 +202,7 @@ export function buildDualTimeline(
         currentTime += step.duration;
       }
     }
-    phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues });
+    phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues, side: 'A' });
   }
 
   // Inter-wait A -> B (after A reload buffer)
@@ -173,7 +226,7 @@ export function buildDualTimeline(
       cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
       currentTime += 500;
     }
-    phases.push({ id: 'start', name: 'Start B', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+    phases.push({ id: 'start', name: 'Start B', startTime: currentTime - countdownMs, endTime: currentTime, cues, side: 'B' });
   }
 
   // B: Pattern
@@ -189,7 +242,7 @@ export function buildDualTimeline(
         currentTime += step.duration;
       }
     }
-    phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues });
+    phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues, side: 'B' });
   }
 
   // Inter-wait B -> A (after B reload buffer)
@@ -224,19 +277,22 @@ export function buildAutoReloadDualTimeline(
   gunA: Gun,
   patternB: Pattern[],
   gunB: Gun,
+  waitTimeSeconds: number,
 ): Timeline {
   const phases: Phase[] = [];
   let currentTime = 0;
 
   const countdownMs = 1500;
-  
+  const swapMs = 500;
+  const userDelayMs = Math.round(Math.max(0, waitTimeSeconds) * 1000);
+
   // Calculate pattern durations
   const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
   const patAms = patternDur(patternA);
   const patBms = patternDur(patternB);
   
-  // Calculate auto-reload delays
-  const { waitAB, waitBA } = computeAutoReloadWaits(patAms, patBms, countdownMs);
+  // Calculate Swap/Delay/Buffer durations for both directions
+  const { swapAB, delayAB, bufferAB, swapBA, delayBA, bufferBA } = computeAutoReloadPhaseDurations(patAms, patBms, userDelayMs, countdownMs, swapMs);
 
   // A: Start
   {
@@ -245,7 +301,7 @@ export function buildAutoReloadDualTimeline(
       cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
       currentTime += 500;
     }
-    phases.push({ id: 'start', name: 'Start A', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+    phases.push({ id: 'start', name: 'Start A', startTime: currentTime - countdownMs, endTime: currentTime, cues, side: 'A' });
   }
 
   // A: Pattern
@@ -261,19 +317,33 @@ export function buildAutoReloadDualTimeline(
         currentTime += step.duration;
       }
     }
-    phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues });
+    phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues, side: 'A' });
   }
 
-  // Auto-reload delay A -> B
+  // A -> B: Swap (audio cue), Delay (no audio), Reload buffer (no audio)
   {
-    const start = currentTime;
-    const cues: AudioCue[] = [];
-    // Add a subtle cue at the end of the delay to indicate weapon swap
-    const safetyTailMs = 10;
-    const maxLen = Math.max(0, (waitAB - safetyTailMs) / 1000);
-    const len = Math.min(0.9, maxLen);
-    cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });    currentTime += waitAB;
-    phases.push({ id: 'end', name: 'Auto-reload delay A→B', startTime: start, endTime: currentTime, cues });
+    // Swap
+    {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: swapAB / 1000  - 0.05, amplitude: 1.0 });
+      currentTime += swapAB;
+      phases.push({ id: 'swap', name: 'Swap A→B', startTime: start, endTime: currentTime, cues });
+    }
+    // Delay (user-controlled)
+    if (delayAB > 0) {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      currentTime += delayAB;
+      phases.push({ id: 'delay', name: 'Delay A→B', startTime: start, endTime: currentTime, cues });
+    }
+    // Reload buffer (to guarantee B is ready)
+    if (bufferAB > 0) {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      currentTime += bufferAB;
+      phases.push({ id: 'reload', name: 'Reload buffer A→B', startTime: start, endTime: currentTime, cues });
+    }
   }
 
   // B: Start
@@ -283,7 +353,7 @@ export function buildAutoReloadDualTimeline(
       cues.push({ type: 'start', timestamp: currentTime, phase: 'start', frequencyHz: 500, lengthSec: 0.2, amplitude: 1.0 });
       currentTime += 500;
     }
-    phases.push({ id: 'start', name: 'Start B', startTime: currentTime - countdownMs, endTime: currentTime, cues });
+    phases.push({ id: 'start', name: 'Start B', startTime: currentTime - countdownMs, endTime: currentTime, cues, side: 'B' });
   }
 
   // B: Pattern
@@ -299,19 +369,33 @@ export function buildAutoReloadDualTimeline(
         currentTime += step.duration;
       }
     }
-    phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues });
+    phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues, side: 'B' });
   }
 
-  // Auto-reload delay B -> A
+  // B -> A: Swap (audio cue), Delay (no audio), Reload buffer (no audio)
   {
-    const start = currentTime;
-    const cues: AudioCue[] = [];
-    // Add a subtle cue at the end of the delay to indicate weapon swap
-    const safetyTailMs = 10;
-    const maxLen = Math.max(0, (waitBA - safetyTailMs) / 1000);
-    const len = Math.min(0.9, maxLen);
-    cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });    currentTime += waitBA;
-    phases.push({ id: 'end', name: 'Auto-reload delay B→A', startTime: start, endTime: currentTime, cues });
+    // Swap
+    {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: swapBA / 1000 - 0.05, amplitude: 1.0 });
+      currentTime += swapBA;
+      phases.push({ id: 'swap', name: 'Swap B→A', startTime: start, endTime: currentTime, cues });
+    }
+    // Delay (user-controlled)
+    if (delayBA > 0) {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      currentTime += delayBA;
+      phases.push({ id: 'delay', name: 'Delay B→A', startTime: start, endTime: currentTime, cues });
+    }
+    // Reload buffer (to guarantee A is ready)
+    if (bufferBA > 0) {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      currentTime += bufferBA;
+      phases.push({ id: 'reload', name: 'Reload buffer B→A', startTime: start, endTime: currentTime, cues });
+    }
   }
 
   return { phases, totalDurationMs: currentTime };

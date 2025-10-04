@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
-import { buildTimeline, buildDualTimeline, buildAutoReloadDualTimeline } from '@/features/timer/audio/audio';
+import { buildTimeline, buildDualTimeline, buildAutoReloadDualTimeline, computeAutoReloadPhaseDurations } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
@@ -14,7 +14,7 @@ import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_
 import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
 import DualCentralDisplay from '@/features/timer/components/central/DualCentralDisplay';
 import PopoutControls from '@/features/timer/components/popout/PopoutControls';
-import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
+import { getCurrentPhase, getActiveSide } from '@/features/timer/core/timeline';
 // Dual playback state is lifted to page-level and passed via props
 
 interface StrafeTimerProps {
@@ -32,9 +32,10 @@ interface StrafeTimerProps {
   onActiveSideChange?: (side: 'A' | 'B' | null) => void;
   activeSide?: 'A' | 'B' | null;
   useAutoReloadTimeline?: boolean; // Use auto-reload timeline mode for dual mode
+  onChangeAutoReloadTimeline?: (v: boolean) => void;
 }
 
-export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide, useAutoReloadTimeline = false }: StrafeTimerProps) {
+export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange, resetToken, dual = false, gunB, patternB, selectionMode, onChangeSelectionMode, onPlayingChange, onActiveSideChange, activeSide, useAutoReloadTimeline = false, onChangeAutoReloadTimeline }: StrafeTimerProps) {
   const triggerHaptic = useHapticFeedback({ duration: 'medium' });
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -56,8 +57,10 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   // Flattened, per-cycle list of audio cues (leading source of direction/shoot state)
   const audioCuesRef = useRef<AudioCue[]>([]);
 
-  // Slider range depends on mode: dual mode uses 1s-5s
-  const waitMin = dual ? 1 : 0;
+  // Slider range depends on mode
+  // In auto-reload dual mode the delay can be 0; otherwise dual uses 1s-5s
+  const isAutoReloadMode = dual && ENABLE_AUTO_RELOAD_TIMELINE && useAutoReloadTimeline;
+  const waitMin = isAutoReloadMode ? 0 : (dual ? 1 : 0);
   const waitMax = dual ? 5 : DELAY_SLIDER_MAX_SECONDS;
   const sliderRange = Math.max(0.0001, waitMax - waitMin);
   const showRecommendedMarker = RECOMMENDED_DELAY_SECONDS >= waitMin && RECOMMENDED_DELAY_SECONDS <= waitMax;
@@ -81,12 +84,14 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     if (dual && gunB && patternB) {
       // Use auto-reload timeline if feature is enabled and prop is set
       if (ENABLE_AUTO_RELOAD_TIMELINE && useAutoReloadTimeline) {
-        return buildAutoReloadDualTimeline(pattern, gun, patternB, gunB);
+        return buildAutoReloadDualTimeline(pattern, gun, patternB, gunB, waitTimeSeconds);
       }
       return buildDualTimeline(pattern, gun, patternB, gunB, waitTimeSeconds);
     }
     return buildTimeline(pattern, gun, waitTimeSeconds);
   }, [dual, gun, pattern, gunB, patternB, waitTimeSeconds, useAutoReloadTimeline]);
+
+  const currentPhase = useMemo(() => getCurrentPhase(timelineValue, currentTime), [timelineValue, currentTime]);
 
   useEffect(() => {
     timeline.current = timelineValue;
@@ -142,14 +147,6 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // no-op; audio node graph is maintained by AudioEngine
-
-  // Removed legacy playDirectionCue; live audio is scheduled via scheduleCueAt
-
-  // Per-cue scheduling handled by AudioEngine
-
-  // Scheduling windows are handled by AudioEngine
-
   const startTimer = async () => {
     triggerHaptic();
     setIsPlaying(true);
@@ -188,12 +185,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       if (dual && gunB && patternB && onActiveSideChange) {
         const totalMs = Math.max(1, totalDuration);
         const nowMs = ((elapsedMs % totalMs) + totalMs) % totalMs;
-        const active = timeline.current.phases.find(p => nowMs >= p.startTime && nowMs < p.endTime) || null;
-        if (active) {
-          const name = active.name || '';
-          const side: 'A' | 'B' | null = /Pattern A|Start A/.test(name) ? 'A' : (/Pattern B|Start B/.test(name) ? 'B' : null);
-          onActiveSideChange(side);
-        }
+        const side = getActiveSide(timeline.current, nowMs);
+        onActiveSideChange(side);
       }
       
       // Continue UI updates
@@ -226,14 +219,10 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   // Choose the appropriate pattern for the central theme in dual mode
   const patternForTheme: Pattern[] = useMemo(() => {
     if (!dual || !gunB || !patternB) return pattern;
-    const totalMs = Math.max(1, totalDuration);
-    const nowMs = ((currentTime % totalMs) + totalMs) % totalMs;
-    const active = timelineValue.phases.find(p => nowMs >= p.startTime && nowMs < p.endTime) || null;
-    if (active && /Pattern B/.test(active.name || '')) return patternB;
-    return pattern;
-  }, [dual, gunB, patternB, pattern, timelineValue, currentTime, totalDuration]);
+    const side = getActiveSide(timelineValue, currentTime);
+    return side === 'B' ? patternB : pattern;
+  }, [dual, gunB, patternB, pattern, timelineValue, currentTime]);
 
-  const centralTheme = useCentralTheme({ timeline: timelineValue, pattern: patternForTheme, currentTimeMs: currentTime });
 
   // Live volume updates via AudioEngine
   useEffect(() => {
@@ -241,6 +230,21 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       engineRef.current.setVolume(volume);
     }
   }, [volume]);
+
+  // Auto-reload minimum effective post-swap delay (dead zone) in seconds
+  const minEffectiveDelaySeconds = useMemo(() => {
+    if (!(isAutoReloadMode && dual && gunB && patternB)) return waitMin;
+    const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
+    const patAms = patternDur(pattern);
+    const patBms = patternDur(patternB);
+    const { bufferAB, bufferBA } = computeAutoReloadPhaseDurations(patAms, patBms, 0);
+    const countdownMs = 1500;
+    const baseAB = bufferAB + countdownMs;
+    const baseBA = bufferBA + countdownMs;
+    const minMs = Math.min(baseAB, baseBA);
+    const minSec = Math.max(waitMin, Math.min(waitMax, minMs / 1000));
+    return minSec;
+  }, [isAutoReloadMode, dual, gunB, patternB, pattern, waitMin, waitMax]);
 
   return (
     <div className="text-white">
@@ -257,11 +261,6 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       <div ref={centralRef}>
         {!dual || !gunB || !patternB ? (
           <CentralDisplay
-            title={centralTheme.title}
-            subtitle={centralTheme.subtitle}
-            symbol={centralTheme.symbol}
-            containerBg={centralTheme.containerBg}
-            subtitleColor={centralTheme.subtitleColor}
             gunName={gun.name}
             gunImage={gun.image}
             gunBName={gunB?.name}
@@ -277,19 +276,14 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
             totalDurationMs={totalDuration}
             currentTimeMs={currentTime}
             pattern={pattern}
-            waitTimeSeconds={waitTimeSeconds}
-            reloadTimeSeconds={gun.reloadTimeSeconds}
+            timeline={timelineValue}
+            currentPhase={currentPhase}
             selectionMode={selectionMode}
             onChangeSelectionMode={onChangeSelectionMode}
           />
         ) : (
           // Dual central display
           <DualCentralDisplay
-            title={centralTheme.title}
-            subtitle={centralTheme.subtitle}
-            symbol={centralTheme.symbol}
-            containerBg={centralTheme.containerBg}
-            subtitleColor={centralTheme.subtitleColor}
             gunAName={gun.name}
             gunAImage={gun.image}
             gunBName={gunB.name}
@@ -307,13 +301,11 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
             currentTimeMs={currentTime}
             patternA={pattern}
             patternB={patternB}
-            waitTimeSeconds={waitTimeSeconds}
-            reloadTimeSecondsA={gun.reloadTimeSeconds}
-            reloadTimeSecondsB={gunB.reloadTimeSeconds}
             selectionMode={selectionMode}
             onChangeSelectionMode={onChangeSelectionMode}
             activeSide={activeSide}
-            useAutoReloadTimeline={useAutoReloadTimeline}
+            timeline={timelineValue}
+            currentPhase={currentPhase}
           />
         )}
       </div>
@@ -361,25 +353,55 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
       {/* Inline settings below buttons */}
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-          <label htmlFor="waitTimeSeconds" className="flex items-center gap-1 text-[10px] tracking-wider text-white/60 mb-1 h-4">
-            {t('settings.wait')}
-            <Popover className="relative inline-block align-middle">
-              <div
-                className="inline-block ml-1"
-                onMouseEnter={() => setWaitInfoOpen(true)}
-                onMouseLeave={() => setWaitInfoOpen(false)}
-              >
-                <PopoverButton className="text-white/50 hover:text-white/80 cursor-help inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 md:w-5 md:h-5" aria-hidden="true" />
-                </PopoverButton>
-                {waitInfoOpen && (
-                  <PopoverPanel static className="absolute left-0 mt-1 z-30 whitespace-nowrap rounded-md border border-white/10 bg-black px-2 py-1 text-[11px] text-white/80 shadow-lg">
-                    {t('settings.waitInfo')}
-                  </PopoverPanel>
-                )}
+          <div className="flex items-center justify-between mb-1 h-4">
+            <label htmlFor="waitTimeSeconds" className="flex items-center gap-1 text-[10px] tracking-wider text-white/60">
+              {isAutoReloadMode ? 'Minimum post-swap delay' : t('settings.wait')}
+              <Popover className="relative inline-block align-middle">
+                <div
+                  className="inline-block ml-1"
+                  onMouseEnter={() => setWaitInfoOpen(true)}
+                  onMouseLeave={() => setWaitInfoOpen(false)}
+                >
+                  <PopoverButton className="text-white/50 hover:text-white/80 cursor-help inline-flex items-center">
+                    <InformationCircleIcon className="w-4 h-4 md:w-5 md:h-5" aria-hidden="true" />
+                  </PopoverButton>
+                  {waitInfoOpen && (
+                    <PopoverPanel static className="absolute left-0 mt-1 z-30 whitespace-nowrap rounded-md border border-white/10 bg-black px-2 py-1 text-[11px] text-white/80 shadow-lg">
+                      {t('settings.waitInfo')}
+                    </PopoverPanel>
+                  )}
+                </div>
+              </Popover>
+            </label>
+            {ENABLE_AUTO_RELOAD_TIMELINE && dual && gunB && patternB && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] tracking-wider text-white/60 select-none">Manual reload</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={!useAutoReloadTimeline}
+                  onClick={() => {
+                    const nextManual = !(!useAutoReloadTimeline);
+                    onChangeAutoReloadTimeline?.(!nextManual);
+                    if (isPlayingRef.current) {
+                      stopTimer();
+                    }
+                  }}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full border transition-colors ${
+                    !useAutoReloadTimeline ? 'bg-emerald-500/80 border-emerald-400/60' : 'bg-white/10 border-white/20'
+                  }`}
+                  aria-label="Toggle manual reload"
+                  title="Manual reload"
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                      !useAutoReloadTimeline ? 'translate-x-4' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
-            </Popover>
-          </label>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               {/* Custom solid track (bottom layer) */}
@@ -402,23 +424,34 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 }}
                 className="uniform-slider relative z-20 w-full h-2 cursor-pointer appearance-none rounded outline-none"
               />
+              {/* Auto-reload: green dead-zone overlay up to minimum effective delay */}
+              {isAutoReloadMode && (
+                <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 h-2 bg-amber-500/60 rounded"
+                    style={{ left: 0, width: `${Math.max(0, Math.min(1, (minEffectiveDelaySeconds - waitMin) / sliderRange)) * 100}%` }}
+                  />
+                </div>
+              )}
               {/* Markers overlay (account for 14px thumb: 7px inset on both sides) */}
-              <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">
-                {/* Recommended 0.5s marker (gray) */}
-                {showRecommendedMarker && (
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[6px] h-3 bg-gray-600 rounded-full"
-                    style={{ left: `${((RECOMMENDED_DELAY_SECONDS - waitMin) / sliderRange) * 100}%` }}
-                  />
-                )}
-                {/* Default 1.5s marker (amber) */}
-                {showDefaultMarker && (
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[4px] h-6 bg-amber-300 rounded-full"
-                    style={{ left: `${((DEFAULT_DELAY_SECONDS - waitMin) / sliderRange) * 100}%` }}
-                  />
-                )}
-              </div>
+              {!isAutoReloadMode && (
+                <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">
+                  {/* Recommended 0.5s marker (gray) */}
+                  {showRecommendedMarker && (
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[6px] h-3 bg-gray-600 rounded-full"
+                      style={{ left: `${((RECOMMENDED_DELAY_SECONDS - waitMin) / sliderRange) * 100}%` }}
+                    />
+                  )}
+                  {/* Default 1.5s marker (amber) */}
+                  {showDefaultMarker && (
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[4px] h-6 bg-amber-300 rounded-full"
+                      style={{ left: `${((DEFAULT_DELAY_SECONDS - waitMin) / sliderRange) * 100}%` }}
+                    />
+                  )}
+                </div>
+              )}
             </div>
             <span className="text-sm font-semibold text-amber-300 min-w-[3rem] text-right">{waitTimeSeconds}s</span>
           </div>

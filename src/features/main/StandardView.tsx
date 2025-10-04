@@ -28,6 +28,7 @@ export default function StandardView({
   onPlayingChange,
   onActiveSideChange,
   useAutoReloadTimeline = false,
+  onChangeAutoReloadTimeline,
 }: {
   gun: Gun;
   pattern: Pattern[];
@@ -47,6 +48,7 @@ export default function StandardView({
   onPlayingChange?: (playing: boolean) => void;
   onActiveSideChange?: (side: 'A' | 'B' | null) => void;
   useAutoReloadTimeline?: boolean;
+  onChangeAutoReloadTimeline?: (v: boolean) => void;
 }) {
   const { t } = useI18n();
   return (
@@ -97,6 +99,8 @@ export default function StandardView({
                 onPlayingChange={onPlayingChange}
                 onActiveSideChange={onActiveSideChange}
                 useAutoReloadTimeline={useAutoReloadTimeline}
+                onChangeAutoReloadTimeline={onChangeAutoReloadTimeline}
+                activeSide={activeSide}
               />
             ) : (
               <StrafeTimer
@@ -111,6 +115,8 @@ export default function StandardView({
                 onPlayingChange={onPlayingChange}
                 onActiveSideChange={onActiveSideChange}
                 useAutoReloadTimeline={useAutoReloadTimeline}
+                onChangeAutoReloadTimeline={onChangeAutoReloadTimeline}
+                activeSide={activeSide}
               />
             )}
           </div>

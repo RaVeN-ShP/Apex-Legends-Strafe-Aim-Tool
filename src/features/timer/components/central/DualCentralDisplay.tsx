@@ -1,17 +1,16 @@
 "use client";
 import Image from 'next/image';
 import { Pattern } from '@/features/guns/types/gun';
-import { getStepStyle } from '@/config/styles';
+import { getPhaseStyle } from '@/config/styles';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
-import { computeDualWaits, computeAutoReloadWaits } from '@/features/timer/audio/audio';
+import { Timeline } from '@/features/guns/types/gun';
+import { Phase } from '@/features/guns/types/gun';
+import { timelineToSegments } from '@/features/timer/core/timelineView';
+import { findNextStartSide, getActiveSide } from '@/features/timer/core/timeline';
+import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
 
 export type DualCentralDisplayProps = {
-  title: string;
-  subtitle: string;
-  symbol: string;
-  containerBg: string;
-  subtitleColor: string;
   gunAName: string;
   gunAImage: string;
   gunBName: string;
@@ -23,24 +22,17 @@ export type DualCentralDisplayProps = {
   currentTimeMs: number;
   patternA: Pattern[];
   patternB: Pattern[];
-  waitTimeSeconds: number;
-  reloadTimeSecondsA?: number;
-  reloadTimeSecondsB?: number;
   rootRef?: React.Ref<HTMLDivElement>;
   selectionMode?: 'A' | 'B' | 'AB';
   onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
   activeSide?: 'A' | 'B' | null;
-  useAutoReloadTimeline?: boolean;
+  timeline: Timeline;
+  currentPhase?: Phase | null;
 };
 
 export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const triggerHaptic = useHapticFeedback({ duration: 'light' });
   const {
-    title,
-    subtitle,
-    symbol,
-    containerBg,
-    subtitleColor,
     gunAName,
     gunAImage,
     gunBName,
@@ -52,13 +44,11 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
     currentTimeMs,
     patternA,
     patternB,
-    waitTimeSeconds,
-    reloadTimeSecondsA,
-    reloadTimeSecondsB,
     rootRef,
     selectionMode,
     onChangeSelectionMode,
-    useAutoReloadTimeline = false,
+    timeline,
+    currentPhase,
   } = props;
 
   const { t } = useI18n();
@@ -70,45 +60,32 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
   const elementTranslatePct = (containerOffsetPct % 100) / 3;
   const leftPct = -(elementTranslatePct * 3);
 
-  const countdownMs = 1500;
-  const patAms = patternA.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
-  const patBms = patternB.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
-  
-  // Unified wait computation to match audio exactly
-  const { waitAB, waitBA } = useAutoReloadTimeline 
-    ? computeAutoReloadWaits(patAms, patBms, countdownMs)
-    : computeDualWaits(reloadTimeSecondsA, reloadTimeSecondsB, waitTimeSeconds, countdownMs);
-
-  type Seg = { color: string; duration: number; title: string; symbol?: string };
-  const segments: Seg[] = [];
-  for (let i = 0; i < 3; i++) segments.push({ color: 'bg-amber-500', duration: 500, title: 'Start A' });
-  for (const step of patternA) {
-    const { barColor, symbol: sym, label } = getStepStyle(step);
-    segments.push({ color: barColor, duration: Math.max(0, step.duration), title: `A ${label}`, symbol: sym || undefined });
-  }
-  if (waitAB > 0) segments.push({ color: 'bg-green-600', duration: waitAB, title: 'Wait A→B' });
-  for (let i = 0; i < 3; i++) segments.push({ color: 'bg-amber-500', duration: 500, title: 'Start B' });
-  for (const step of patternB) {
-    const { barColor, symbol: sym, label } = getStepStyle(step);
-    segments.push({ color: barColor, duration: Math.max(0, step.duration), title: `B ${label}`, symbol: sym || undefined });
-  }
-  if (waitBA > 0) segments.push({ color: 'bg-green-600', duration: waitBA, title: 'Wait B→A' });
-
-  // Use audio's total cycle duration to compute segment widths accurately
+  const segments = timelineToSegments(timeline, { patternA, patternB });
   const segTotal = segments.reduce((acc, s) => acc + s.duration, 0) || 1;
 
-  const startBAfter = countdownMs + patAms + Math.max(0, waitAB);
-  const startAAfter = startBAfter + countdownMs + patBms + Math.max(0, waitBA);
   const now = ((currentTimeMs % totalMs) + totalMs) % totalMs;
-  const inAPattern = (props.activeSide != null) ? props.activeSide === 'A' : (now < (countdownMs + patAms));
-  const inBPattern = (props.activeSide != null) ? props.activeSide === 'B' : (now >= (startBAfter) && now < (startBAfter + countdownMs + patBms));
+  // Determine pattern-active states (used for header emphasis)
+  const inAPattern = props.activeSide === 'A';
+  const inBPattern = props.activeSide === 'B';
+
+  // Determine if currently in swap/delay/buffer (auto-reload mode only)
+  let interPhase: { type: 'swap' | 'delay' | 'buffer'; target: 'A' | 'B' } | null = null;
+  if (currentPhase?.id === 'swap' || currentPhase?.id === 'delay' || currentPhase?.id === 'reload') {
+    const nextSide = findNextStartSide(timeline, now) || 'A';
+    interPhase = { type: currentPhase.id === 'swap' ? 'swap' : (currentPhase.id === 'delay' ? 'delay' : 'buffer'), target: nextSide };
+  }
+
+  // Determine which pattern to drive the central theme with
+  const themeSide = currentPhase?.id === 'pattern' ? (currentPhase.side ?? getActiveSide(timeline, now) ?? 'A') : (getActiveSide(timeline, now) ?? 'A');
+  const themePattern = themeSide === 'B' ? patternB : patternA;
+  const centralTheme = useCentralTheme({ timeline, pattern: themePattern, currentTimeMs: currentTimeMs });
 
   const renderCycle = (keyPrefix: string) => (
     <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
       {segments.map((s, idx) => (
-        <div key={`${keyPrefix}-${idx}`} className={`${s.color} relative h-full`} style={{ width: `${(s.duration / totalMs) * 100}%` }} title={`${s.title} • ${s.duration}ms`}>
+        <div key={`${keyPrefix}-${idx}`} className={`${s.colorClass} relative h-full`} style={{ width: `${(s.duration / segTotal) * 100}%` }} title={`${s.title} • ${s.duration}ms`}>
           {s.symbol && (
-            <span className="absolute inset-0 grid place-items-center text-[9px] leading-none text-white/90">{s.symbol}</span>
+            <span className={`absolute inset-0 grid place-items-center text-[9px] leading-none font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)] ${s.textColor ?? 'text-white/90'}`}>{s.symbol}</span>
           )}
         </div>
       ))}
@@ -117,7 +94,7 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
 
   return (
     <div
-      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden select-none ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
+      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${centralTheme.containerBg} min-w-0 overflow-hidden select-none ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
       ref={rootRef}
     >
       <div className={`absolute left-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
@@ -129,7 +106,22 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
         </div>
       </div>
 
-      <div className={`absolute left-1/2 -translate-x-1/2 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'} text-center max-w-[40ch] truncate`}>{title}</div>
+      <div className={`absolute left-1/2 -translate-x-1/2 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'} text-center max-w-[40ch] truncate`}>
+        <span className="inline-flex items-center gap-1 align-middle">
+          <span>{centralTheme.title}</span>
+          {currentPhase?.id === 'reload' && (
+            <span className="inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-1 py-1">
+              <Image
+                src="/attachments/magazine/Extended_Light_Mag.svg"
+                alt="Extended Light Mag"
+                width={8}
+                height={8}
+                className="invert"
+              />
+            </span>
+          )}
+        </span>
+      </div>
 
       <div className={`absolute right-3 flex items-center gap-2 ${isCompact ? 'top-2' : 'top-3'}`}>
         <div className={`flex items-center gap-2 ${inBPattern ? 'opacity-100' : 'opacity-50'}`}>
@@ -142,10 +134,26 @@ export default function DualCentralDisplay(props: DualCentralDisplayProps) {
 
       <div className={`flex items-center justify-center h-full ${isCompact ? 'pt-8' : 'pt-12 md:pt-20'}`}>
         <div className="text-center">
-          <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[40px] md:text-[56px] lg:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>{symbol}</div>
-          {subtitle && (
-            <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${subtitleColor}`}>{subtitle}</div>
-          )}
+          {interPhase && interPhase.type === 'swap' ? (
+              <>
+                <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[40px] md:text-[56px] lg:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>↔</div>
+                <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${centralTheme.subtitleColor} flex items-center justify-center gap-2`}>
+                  <span>Swap to</span>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="relative w-5 h-5 align-middle inline-block">
+                      <Image src={interPhase.target === 'B' ? gunBImage : gunAImage} alt={interPhase.target === 'B' ? gunBName : gunAName} fill className="object-contain invert drop-shadow" sizes="20px" />
+                    </span>
+                    <span>{interPhase.target === 'B' ? gunBName : gunAName}</span>
+                  </span>
+                </div>
+              </>
+            ) :  
+            <>    
+            <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[40px] md:text-[56px] lg:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>{centralTheme.symbol}</div>
+            {centralTheme.subtitle && (
+              <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${centralTheme.subtitleColor}`}>{centralTheme.subtitle}</div>
+              )}
+              </>}
         </div>
       </div>
 

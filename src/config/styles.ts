@@ -31,10 +31,13 @@ export const PatternTypeStyles = {
   },
 } as const;
 
-export const PhaseStyles: Record<PhaseId, { label: string; barColor?: string; gradient?: string; subtitleColor?: string }> = {
-  start: { label: 'Start', barColor: 'bg-amber-500', gradient: 'from-amber-500/20 to-amber-500/5', subtitleColor: 'text-white/70' },
+export const PhaseStyles: Record<PhaseId, { label: string; textColor?: string; barColor?: string; gradient?: string; subtitleColor?: string; symbol?: string; icon?: 'goldMag' | 'swap' | 'delay' | 'clock'; iconImage?: string }> = {
+  start: { label: 'Start', barColor: 'bg-amber-500', textColor: 'text-amber-800', gradient: 'from-amber-500/20 to-amber-500/5', subtitleColor: 'text-white/70', symbol: '', icon: 'clock' },
   pattern: { label: 'Pattern', subtitleColor: 'text-white/70' },
-  end: { label: 'Reload+Wait', barColor: 'bg-green-600', gradient: 'from-green-500/20 to-green-500/5', subtitleColor: 'text-green-200' },
+  end: { label: 'Reload+Wait', barColor: 'bg-emerald-600', gradient: 'from-emerald-500/20 to-emerald-500/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
+  swap: { label: 'Swap', barColor: 'bg-emerald-500', gradient: 'from-emerald-500/20 to-emerald-500/5', subtitleColor: 'text-emerald-200', symbol: '↔', icon: 'swap' },
+  delay: { label: 'Delay', barColor: 'bg-emerald-600', gradient: 'from-emerald-600/20 to-emerald-600/5', subtitleColor: 'text-emerald-200', symbol: '✔', icon: 'delay' },
+  reload: { label: 'Reload buffer', barColor: 'bg-emerald-700', gradient: 'from-emerald-700/20 to-emerald-700/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
 };
 
 export function getStepStyle(step: Pattern): { barColor: string; symbol: string | null; label: string } {
@@ -45,7 +48,7 @@ export function getStepStyle(step: Pattern): { barColor: string; symbol: string 
   return { barColor: d.barColor, symbol: d.symbol, label: d.label };
 }
 
-export function getPhaseStyle(id: PhaseId): { label: string; barColor?: string; gradient?: string; subtitleColor?: string } {
+export function getPhaseStyle(id: PhaseId): { label: string; textColor?: string; barColor?: string; gradient?: string; subtitleColor?: string; symbol?: string; icon?: 'goldMag' | 'swap' | 'delay' | 'clock'; iconImage?: string } {
   return PhaseStyles[id];
 }
 

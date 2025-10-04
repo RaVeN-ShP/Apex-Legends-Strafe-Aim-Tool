@@ -1,17 +1,14 @@
 "use client";
 import Image from 'next/image';
 import { Pattern } from '@/features/guns/types/gun';
-import { getStepStyle } from '@/config/styles';
+import { Timeline } from '@/features/guns/types/gun';
+import { Phase } from '@/features/guns/types/gun';
+import { timelineToSegments } from '@/features/timer/core/timelineView';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
+import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
 
 export type CentralDisplayProps = {
-  title: string;
-  subtitle: string;
-  symbol: string;
-  containerBg: string;
-  // movementDirection is not used; remove to avoid lint errors and keep API minimal
-  subtitleColor: string;
   gunName: string;
   gunImage: string;
   gunBName?: string;
@@ -21,8 +18,8 @@ export type CentralDisplayProps = {
   totalDurationMs: number;
   currentTimeMs: number;
   pattern: Pattern[];
-  waitTimeSeconds: number;
-  reloadTimeSeconds?: number;
+  timeline: Timeline;
+  currentPhase?: Phase | null;
   rootRef?: React.Ref<HTMLDivElement>;
   selectionMode?: 'A' | 'B' | 'AB';
   onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;
@@ -31,11 +28,6 @@ export type CentralDisplayProps = {
 export default function CentralDisplay(props: CentralDisplayProps) {
   const triggerHaptic = useHapticFeedback({ duration: 'light' });
   const {
-    title,
-    subtitle,
-    symbol,
-    containerBg,
-    subtitleColor,
     gunName,
     gunImage,
     gunBName,
@@ -45,14 +37,16 @@ export default function CentralDisplay(props: CentralDisplayProps) {
     totalDurationMs,
     currentTimeMs,
     pattern,
-    waitTimeSeconds,
-    reloadTimeSeconds,
+    timeline,
+    currentPhase,
     rootRef,
     selectionMode,
     onChangeSelectionMode,
   } = props;
 
   const { t } = useI18n();
+
+  const centralTheme = useCentralTheme({ timeline, pattern, currentTimeMs });
 
   const totalMs = Math.max(1, totalDurationMs);
   const progressPct = ((currentTimeMs % totalMs) / totalMs) * 100;
@@ -61,31 +55,13 @@ export default function CentralDisplay(props: CentralDisplayProps) {
   const elementTranslatePct = (containerOffsetPct % 100) / 3;
   const leftPct = -(elementTranslatePct * 3);
 
-  const segments: Array<{ color: string; duration: number; title: string; symbol?: string }>= [];
-  for (let i = 0; i < 3; i++) segments.push({ color: 'bg-amber-500', duration: 500, title: 'Start' });
-  for (const step of pattern) {
-    const { barColor, symbol: sym, label } = getStepStyle(step);
-    const dur = Math.max(0, step.duration);
-    segments.push({ color: barColor, duration: dur, title: label, symbol: sym || undefined });
-  }
-  const reloadMs = Math.round(((reloadTimeSeconds ?? 1)) * 1000);
-  const startDurationMs = 1500;
-  const patternTotalMs = pattern.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
-  // Match audio timeline rounding for user delay to keep visuals in lockstep with sound
-  const userDelayMs = Math.round(waitTimeSeconds * 1000);
-  const endPhaseMs = Math.max(0, reloadMs - startDurationMs + userDelayMs);
-  segments.push({ color: 'bg-green-600', duration: endPhaseMs, title: 'Reload+Wait' });
-
+  const segments = timelineToSegments(timeline, { patternA: pattern });
+  const segTotal = segments.reduce((acc, s) => acc + s.duration, 0) || 1;
   // Pre-calculated percentages for hatch overlay
-  const endPhaseStartMs = startDurationMs + patternTotalMs;
-  const endPhaseStartPct = (endPhaseStartMs / totalMs) * 100;
-  const reloadPct = (reloadMs / totalMs) * 100;
-  const startPct = (startDurationMs / totalMs) * 100;
-  const endPct = (endPhaseMs / totalMs) * 100;
+  // Reload hatch overlay is omitted in new unified model to keep UI simple and consistent
 
   // Determine if we're currently within the pattern window for active styling
-  const now = ((currentTimeMs % totalMs) + totalMs) % totalMs;
-  const inPattern = now >= 0 && now < (startDurationMs + patternTotalMs);
+  const inPattern = true;
   const showOnRight = selectionMode === 'B';
   const headerSideClass = showOnRight ? 'absolute right-3' : 'absolute left-3';
   const headerTopClass = isCompact ? 'top-2' : 'top-3';
@@ -94,62 +70,18 @@ export default function CentralDisplay(props: CentralDisplayProps) {
   const renderCycle = (keyPrefix: string) => (
     <div key={`cycle-${keyPrefix}`} className="relative h-full flex" style={{ width: '100%' }}>
       {segments.map((s, idx) => (
-        <div key={`${keyPrefix}-${idx}`} className={`${s.color} relative h-full`} style={{ width: `${(s.duration / totalMs) * 100}%` }} title={`${s.title} • ${s.duration}ms`}>
+        <div key={`${keyPrefix}-${idx}`} className={`${s.colorClass} relative h-full`} style={{ width: `${(s.duration / segTotal) * 100}%` }} title={`${s.title} • ${s.duration}ms`}>
           {s.symbol && (
-            <span className="absolute inset-0 grid place-items-center text-[9px] leading-none text-white/90">{s.symbol}</span>
+            <span className={`absolute inset-0 grid place-items-center text-[9px] leading-none font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)] ${s.textColor ?? 'text-white/90'}`}>{s.symbol}</span>
           )}
         </div>
       ))}
-      {(() => {
-        const tailPct = Math.max(0, Math.min(reloadPct, endPct));
-        const headPctRaw = Math.max(0, reloadPct - endPct);
-        const headPct = Math.min(headPctRaw, startPct);
-        return (
-          <>
-            {tailPct > 0 && (
-              <div
-                className="absolute top-0 bottom-0 z-10 cursor-help"
-                title="reloading"
-                style={{
-                  left: `${endPhaseStartPct}%`,
-                  width: `${tailPct}%`,
-                  backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
-                  backgroundBlendMode: 'overlay',
-                }}
-              />
-            )}
-            {headPct > 0 && (
-              <div
-                className="absolute top-0 bottom-0 z-10 cursor-help"
-                title="reloading"
-                style={{
-                  left: `0%`,
-                  width: `${headPct}%`,
-                  backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
-                  backgroundBlendMode: 'overlay',
-                }}
-              />
-            )}
-            {(() => {
-              const markerLeftPct = headPct > 0 ? headPct : (endPhaseStartPct + tailPct);
-              if ((headPct > 0) || (tailPct > 0)) {
-                return (
-                  <div className="pointer-events-none absolute z-20 top-0 bottom-0" style={{ left: `${markerLeftPct}%` }}>
-                    <div className="absolute -translate-x-1/2 top-0 bottom-0 w-[3px] bg-white rounded-full" />
-                  </div>
-                );
-              }
-              return null;
-            })()}
-          </>
-        );
-      })()}
     </div>
   );
 
   return (
     <div
-      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${containerBg} min-w-0 overflow-hidden select-none ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
+      className={`group relative mb-4 rounded-lg border border-white/10 bg-gradient-to-br ${centralTheme.containerBg} min-w-0 overflow-hidden select-none ${isCompact ? 'min-h-[135px]' : 'min-h-[140px] md:min-h-[250px]'}`}
       ref={rootRef}
     >
       <div className={`${headerSideClass} flex items-center gap-2 ${headerTopClass}`}>
@@ -159,13 +91,28 @@ export default function CentralDisplay(props: CentralDisplayProps) {
         <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${inPattern ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={displayedName}>{displayedName}</span>
       </div>
 
-      <div className={`absolute left-1/2 -translate-x-1/2 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'} text-center max-w-[40ch] truncate`}>{title}</div>
+    <div className={`absolute left-1/2 -translate-x-1/2 font-semibold text-white/80 ${isCompact ? 'top-2 text-[11px]' : 'top-3 text-xs'} text-center max-w-[40ch] truncate`}>
+        <span className="inline-flex items-center gap-1 align-middle">
+          <span>{centralTheme.title}</span>
+          {currentPhase?.id === 'reload' && (
+            <span className="inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-1 py-1">
+              <Image
+                src="/attachments/magazine/Extended_Light_Mag.svg"
+                alt="Extended Light Mag"
+                width={8}
+                height={8}
+                className="invert"
+              />
+            </span>
+          )}
+        </span>
+      </div>
 
       <div className={`flex items-center justify-center h-full ${isCompact ? 'pt-8' : 'pt-12 md:pt-20'}`}>
         <div className="text-center">
-          <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[40px] md:text-[56px] lg:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>{symbol}</div>
-          {subtitle && (
-            <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${subtitleColor}`}>{subtitle}</div>
+          <div className={`${isCompact ? 'text-[48px] md:text-[64px]' : 'text-[40px] md:text-[56px] lg:text-[84px]'} font-extrabold leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.4)]`}>{centralTheme.symbol}</div>
+          {centralTheme.subtitle && (
+            <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${centralTheme.subtitleColor}`}>{centralTheme.subtitle}</div>
           )}
         </div>
       </div>

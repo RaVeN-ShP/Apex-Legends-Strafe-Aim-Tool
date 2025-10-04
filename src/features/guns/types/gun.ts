@@ -25,7 +25,9 @@ export interface Gun {
   reloadTimeSeconds?: number; // base reload duration for this weapon
 }
 
-export type PhaseId = 'start' | 'pattern' | 'end';
+export type PhaseId = 'start' | 'pattern' | 'end' | 'swap' | 'delay' | 'reload';
+
+export type Side = 'A' | 'B';
 
 export interface AudioCue {
   /** Semantic cue type */
@@ -50,6 +52,8 @@ export interface Phase {
   startTime: number;
   endTime: number;
   cues: AudioCue[];
+  /** Which weapon side this phase belongs to, when applicable (e.g., Start/Pattern phases in dual mode) */
+  side?: Side;
 }
 
 export interface Timeline {
