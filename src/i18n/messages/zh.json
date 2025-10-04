@@ -89,5 +89,14 @@
   "display.play": "播放",
   "display.stop": "停止",
   "footer.upToDate": "已更新至:",
-  "footer.lastUpdate": "网站最近更新:"
+  "footer.lastUpdate": "网站最近更新:",
+  "settings.minPostSwap": "最小切换后延迟",
+  "settings.manualReload": "手动换弹",
+  "settings.toggleManualReload": "切换手动换弹",
+  "display.swapTo": "切换至",
+  "display.switchMode": "切换模式 A/B/双",
+  "timer.phase.swap": "切换",
+  "timer.phase.delay": "延迟",
+  "timer.phase.reloadBuffer": "换弹缓冲",
+  "attachments.mag.extendedLight": "轻型扩容弹匣"
 }

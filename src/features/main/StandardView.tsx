@@ -84,7 +84,6 @@ export default function StandardView({
         <>
           <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} activeSide={activeSide ?? undefined} />
           <div className="pt-2">
-            {gunB ? (
               <StrafeTimer
                 gun={gun}
                 pattern={pattern}
@@ -92,7 +91,7 @@ export default function StandardView({
                 onVolumeChange={onVolumeChange}
                 resetToken={`${selectedPatternKey ?? 'default'}|${selectedPatternKeyB ?? 'default'}`}
                 dual
-                gunB={gunB}
+                gunB={gunB!}
                 patternB={patternB ?? []}
                 selectionMode={selectionMode}
                 onChangeSelectionMode={onChangeSelectionMode}
@@ -102,23 +101,6 @@ export default function StandardView({
                 onChangeAutoReloadTimeline={onChangeAutoReloadTimeline}
                 activeSide={activeSide}
               />
-            ) : (
-              <StrafeTimer
-                gun={gun}
-                pattern={pattern}
-                volume={volume}
-                onVolumeChange={onVolumeChange}
-                resetToken={selectedPatternKey ?? undefined}
-                gunB={gunB ?? undefined}
-                selectionMode={selectionMode}
-                onChangeSelectionMode={onChangeSelectionMode}
-                onPlayingChange={onPlayingChange}
-                onActiveSideChange={onActiveSideChange}
-                useAutoReloadTimeline={useAutoReloadTimeline}
-                onChangeAutoReloadTimeline={onChangeAutoReloadTimeline}
-                activeSide={activeSide}
-              />
-            )}
           </div>
         </>
       ) : (
@@ -131,7 +113,7 @@ export default function StandardView({
               volume={volume}
               onVolumeChange={onVolumeChange}
               resetToken={selectedPatternKey ?? undefined}
-              gunB={gunB ?? undefined}
+              gunB={gunB!}
               selectionMode={selectionMode}
               onChangeSelectionMode={onChangeSelectionMode}
               onPlayingChange={onPlayingChange}

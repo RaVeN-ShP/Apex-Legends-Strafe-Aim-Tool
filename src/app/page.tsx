@@ -535,7 +535,7 @@ export default function Home() {
                         </div>
 
                         <StandardView
-                          gun={selectionMode === 'B' ? (selectedGunB ?? displayGun!) : (selectedGunA ?? displayGun!)}
+                          gun={selectedGunA!}
                           pattern={selectionMode === 'B' ? selectedPatternB : selectedPatternA}
                           selectedPatternKey={selectionMode === 'B' ? selectedPatternKeyB : selectedPatternKeyA}
                           onSelectMode={(k) => {

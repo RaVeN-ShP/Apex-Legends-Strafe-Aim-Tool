@@ -6,13 +6,14 @@ type DocumentPictureInPicture = {
 
 export function useDocumentPictureInPicture(
   targetRef: React.RefObject<HTMLElement | null>,
-  opts?: { width?: number; height?: number; onTogglePlay?: () => void; onToggleMode?: () => void }
+  opts?: { width?: number; height?: number; onTogglePlay?: () => void; onToggleMode?: () => void; onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void }
 ) {
   const [isPopped, setIsPopped] = useState(false);
   const pipWindowRef = useRef<Window | null>(null);
   const placeholderRef = useRef<HTMLDivElement | null>(null);
   const onTogglePlayRef = useRef(opts?.onTogglePlay);
   const onToggleModeRef = useRef(opts?.onToggleMode);
+  const onChangeSelectionModeRef = useRef(opts?.onChangeSelectionMode);
 
   useEffect(() => {
     onTogglePlayRef.current = opts?.onTogglePlay;
@@ -20,6 +21,9 @@ export function useDocumentPictureInPicture(
   useEffect(() => {
     onToggleModeRef.current = opts?.onToggleMode;
   }, [opts?.onToggleMode]);
+  useEffect(() => {
+    onChangeSelectionModeRef.current = opts?.onChangeSelectionMode;
+  }, [opts?.onChangeSelectionMode]);
 
   const open = useCallback(async () => {
     const winWithDPIP = window as Window & { documentPictureInPicture?: DocumentPictureInPicture };
@@ -87,11 +91,16 @@ export function useDocumentPictureInPicture(
             onTogglePlayRef.current?.();
             return;
           }
-          const modeBtn = (target as Element).closest('[data-central-mode]');
+          const modeBtn = (target as Element).closest('[data-central-mode]') as HTMLElement | null;
           if (modeBtn) {
             ev.preventDefault();
             ev.stopPropagation();
-            onToggleModeRef.current?.();
+            const raw = modeBtn.getAttribute('data-central-mode') as 'A' | 'B' | 'AB' | null;
+            if (raw === 'A' || raw === 'B' || raw === 'AB') {
+              onChangeSelectionModeRef.current?.(raw);
+            } else {
+              onToggleModeRef.current?.();
+            }
           }
         }
       } catch {}

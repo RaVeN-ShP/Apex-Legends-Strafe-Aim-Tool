@@ -11,8 +11,7 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
  
 import { DELAY_SLIDER_MAX_SECONDS, DELAY_SLIDER_STEP_SECONDS, RECOMMENDED_DELAY_SECONDS, DEFAULT_DELAY_SECONDS, ENABLE_AUTO_RELOAD_TIMELINE } from '@/config/constants';
-import CentralDisplay from '@/features/timer/components/central/CentralDisplay';
-import DualCentralDisplay from '@/features/timer/components/central/DualCentralDisplay';
+import UnifiedCentralDisplay from '@/features/timer/components/central/UnifiedCentralDisplay';
 import PopoutControls from '@/features/timer/components/popout/PopoutControls';
 import { getCurrentPhase, getActiveSide } from '@/features/timer/core/timeline';
 // Dual playback state is lifted to page-level and passed via props
@@ -246,6 +245,31 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     return minSec;
   }, [isAutoReloadMode, dual, gunB, patternB, pattern, waitMin, waitMax]);
 
+  // Reset delay to mode defaults whenever switching modes or toggling reload mode in dual
+  useEffect(() => {
+    setWaitTimeSeconds(() => {
+      let next = RECOMMENDED_DELAY_SECONDS; // single default 0.5s
+      if (dual) {
+        next = isAutoReloadMode ? minEffectiveDelaySeconds : DEFAULT_DELAY_SECONDS; // dual auto vs manual
+      }
+      const clamped = Math.min(waitMax, Math.max(waitMin, next));
+      return clamped;
+    });
+    // Note: stopping is handled elsewhere on dual change; reload toggle button already stops if playing
+  }, [dual, useAutoReloadTimeline]);
+
+  // Also reset delay defaults when guns change to keep auto-reload min current
+  useEffect(() => {
+    setWaitTimeSeconds(() => {
+      let next = RECOMMENDED_DELAY_SECONDS;
+      if (dual) {
+        next = isAutoReloadMode ? minEffectiveDelaySeconds : DEFAULT_DELAY_SECONDS;
+      }
+      const clamped = Math.min(waitMax, Math.max(waitMin, next));
+      return clamped;
+    });
+  }, [gun.id, gunB?.id, minEffectiveDelaySeconds]);
+
   return (
     <div className="text-white">
       <div>
@@ -259,55 +283,31 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
 
       {/* Central Display - wrapped in a stable container so PiP target doesn't unmount on mode switch */}
       <div ref={centralRef}>
-        {!dual || !gunB || !patternB ? (
-          <CentralDisplay
-            gunName={gun.name}
-            gunImage={gun.image}
-            gunBName={gunB?.name}
-            isCompact={isPopped}
-            isPlaying={isPlaying}
-            onTogglePlay={() => {
-              if (isPlaying) {
-                stopTimer();
-              } else {
-                startTimer();
-              }
-            }}
-            totalDurationMs={totalDuration}
-            currentTimeMs={currentTime}
-            pattern={pattern}
-            timeline={timelineValue}
-            currentPhase={currentPhase}
-            selectionMode={selectionMode}
-            onChangeSelectionMode={onChangeSelectionMode}
-          />
-        ) : (
-          // Dual central display
-          <DualCentralDisplay
-            gunAName={gun.name}
-            gunAImage={gun.image}
-            gunBName={gunB.name}
-            gunBImage={gunB.image}
-            isCompact={isPopped}
-            isPlaying={isPlaying}
-            onTogglePlay={() => {
-              if (isPlaying) {
-                stopTimer();
-              } else {
-                startTimer();
-              }
-            }}
-            totalDurationMs={totalDuration}
-            currentTimeMs={currentTime}
-            patternA={pattern}
-            patternB={patternB}
-            selectionMode={selectionMode}
-            onChangeSelectionMode={onChangeSelectionMode}
-            activeSide={activeSide}
-            timeline={timelineValue}
-            currentPhase={currentPhase}
-          />
-        )}
+        <UnifiedCentralDisplay
+          gunAName={gun.name}
+          gunAImage={gun.image}
+          gunBName={gunB?.name}
+          gunBImage={gunB?.image}
+          isCompact={isPopped}
+          headerSide={selectionMode === 'B' ? 'right' : 'left'}
+          isPlaying={isPlaying}
+          selectionMode={selectionMode}
+          onChangeSelectionMode={onChangeSelectionMode}
+          onTogglePlay={() => {
+            if (isPlaying) {
+              stopTimer();
+            } else {
+              startTimer();
+            }
+          }}
+          totalDurationMs={totalDuration}
+          currentTimeMs={currentTime}
+          patternA={pattern}
+          patternB={patternB}
+          timeline={timelineValue}
+          currentPhase={currentPhase}
+          activeSide={activeSide}
+        />
       </div>
 
 
@@ -341,10 +341,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 startTimer();
               }
             }}
-            onToggleMode={() => {
-              if (!onChangeSelectionMode) return;
-              const next = selectionMode === 'A' ? 'B' : (selectionMode === 'B' ? 'AB' : 'A');
-              onChangeSelectionMode(next);
+            onChangeSelectionMode={(mode) => {
+              onChangeSelectionMode?.(mode);
             }}
           />
         </div>
@@ -355,7 +353,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
         <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
           <div className="flex items-center justify-between mb-1 h-4">
             <label htmlFor="waitTimeSeconds" className="flex items-center gap-1 text-[10px] tracking-wider text-white/60">
-              {isAutoReloadMode ? 'Minimum post-swap delay' : t('settings.wait')}
+              {isAutoReloadMode ? t('settings.minPostSwap') : t('settings.wait')}
               <Popover className="relative inline-block align-middle">
                 <div
                   className="inline-block ml-1"
@@ -375,7 +373,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
             </label>
             {ENABLE_AUTO_RELOAD_TIMELINE && dual && gunB && patternB && (
               <div className="flex items-center gap-2">
-                <span className="text-[10px] tracking-wider text-white/60 select-none">Manual reload</span>
+                <span className="text-[10px] tracking-wider text-white/60 select-none">{t('settings.manualReload')}</span>
                 <button
                   type="button"
                   role="switch"
@@ -390,8 +388,8 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                   className={`relative inline-flex h-5 w-9 items-center rounded-full border transition-colors ${
                     !useAutoReloadTimeline ? 'bg-emerald-500/80 border-emerald-400/60' : 'bg-white/10 border-white/20'
                   }`}
-                  aria-label="Toggle manual reload"
-                  title="Manual reload"
+                  aria-label={t('settings.toggleManualReload')}
+                  title={t('settings.manualReload')}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${

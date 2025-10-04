@@ -89,6 +89,15 @@
   "display.play": "Воспроизвести",
   "display.stop": "Остановить",
   "footer.upToDate": "Актуально до:",
-  "footer.lastUpdate": "Последнее обновление сайта:"
+  "footer.lastUpdate": "Последнее обновление сайта:",
+  "settings.minPostSwap": "Мин. задержка после смены",
+  "settings.manualReload": "Ручная перезарядка",
+  "settings.toggleManualReload": "Переключить ручную перезарядку",
+  "display.swapTo": "Переключиться на",
+  "display.switchMode": "Режим переключения A/B/Двойной",
+  "timer.phase.swap": "Смена",
+  "timer.phase.delay": "Задержка",
+  "timer.phase.reloadBuffer": "Буфер перезарядки",
+  "attachments.mag.extendedLight": "Расширенный лёгкий магазин"
 }
 

@@ -89,5 +89,14 @@
   "display.play": "再生",
   "display.stop": "停止",
   "footer.upToDate": "対応シーズン:",
-  "footer.lastUpdate": "最終更新日:"
+  "footer.lastUpdate": "最終更新日:",
+  "settings.minPostSwap": "最小切替後ディレイ",
+  "settings.manualReload": "手動リロード",
+  "settings.toggleManualReload": "手動リロードを切り替え",
+  "display.swapTo": "切り替え先",
+  "display.switchMode": "モード切替 A/B/デュアル",
+  "timer.phase.swap": "切り替え",
+  "timer.phase.delay": "遅延",
+  "timer.phase.reloadBuffer": "リロードバッファ",
+  "attachments.mag.extendedLight": "拡張ライトマガジン"
 }

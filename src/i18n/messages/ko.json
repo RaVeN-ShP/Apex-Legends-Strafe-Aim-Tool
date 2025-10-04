@@ -89,5 +89,14 @@
   "display.play": "재생",
   "display.stop": "정지",
   "footer.upToDate": "적용 시즌:",
-  "footer.lastUpdate": "웹사이트 최종 업데이트:"
+  "footer.lastUpdate": "웹사이트 최종 업데이트:",
+  "settings.minPostSwap": "최소 전환 후 지연",
+  "settings.manualReload": "수동 재장전",
+  "settings.toggleManualReload": "수동 재장전 전환",
+  "display.swapTo": "다음으로 전환",
+  "display.switchMode": "모드 전환 A/B/듀얼",
+  "timer.phase.swap": "전환",
+  "timer.phase.delay": "지연",
+  "timer.phase.reloadBuffer": "재장전 버퍼",
+  "attachments.mag.extendedLight": "경량 확장 탄창"
 }

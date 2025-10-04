@@ -89,5 +89,14 @@
   "display.play": "Play",
   "display.stop": "Stop",
   "footer.upToDate": "Up to date with:",
-  "footer.lastUpdate": "Last website update:"
+  "footer.lastUpdate": "Last website update:",
+  "settings.minPostSwap": "Minimum Post-Swap Delay",
+  "settings.manualReload": "Manual Reload",
+  "settings.toggleManualReload": "Toggle Manual Reload",
+  "display.swapTo": "Swap To",
+  "display.switchMode": "Switch Mode A/B/Dual",
+  "timer.phase.swap": "Swap",
+  "timer.phase.delay": "Delay",
+  "timer.phase.reloadBuffer": "Reload Buffer",
+  "attachments.mag.extendedLight": "Extended Light Mag"
 }
