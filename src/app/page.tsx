@@ -202,7 +202,7 @@ export default function Home() {
       <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
         <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
         <div className="space-y-2">
-          {['q0', 'q1', 'q2', 'q3', 'q4'].map((k) => (
+          {['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6'].map((k) => (
             <Disclosure key={k}>
               {({ open }) => (
                 <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
@@ -211,7 +211,7 @@ export default function Home() {
                     <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
                   </Disclosure.Button>
                   <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
-                    {k === 'q3' ? (
+                    {k === 'q4' ? (
                       <div>
                         <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
                         <div className={`mt-1 ${UIColors.text.disabled}`}>{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>

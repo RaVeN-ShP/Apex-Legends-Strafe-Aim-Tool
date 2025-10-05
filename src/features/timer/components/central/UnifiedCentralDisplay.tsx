@@ -29,6 +29,12 @@ export type UnifiedCentralDisplayProps = {
   /** Total reload duration in ms (from empty). Used for single-mode overlay width. */
   reloadDurationMs?: number;
 
+  // Dual mode extras
+  reloadADurationMs?: number;
+  reloadBDurationMs?: number;
+  manualDualReload?: boolean;
+  autoDualReload?: boolean;
+
   // Dual mode (optional). If provided, renders dual headers and behaviors.
   gunBName?: string;
   gunBImage?: string;
@@ -53,6 +59,10 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     patternA,
     headerSide = 'left',
     reloadDurationMs,
+    reloadADurationMs,
+    reloadBDurationMs,
+    manualDualReload,
+    autoDualReload,
     gunBName,
     gunBImage,
     patternB,
@@ -84,12 +94,56 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     }
   }
 
+  // Compute auto-reload countdown subtitle (dual auto mode only)
+  let leftSubtitle: string | undefined;
+  let rightSubtitle: string | undefined;
+  if (isDual && autoDualReload) {
+    try {
+      // Find most recent swap phase start before now (wrap if needed)
+      let lastSwapIdx = -1;
+      for (let i = 0; i < timeline.phases.length; i++) {
+        const p = timeline.phases[i];
+        if (p.id === 'swap' && p.startTime <= now) lastSwapIdx = i;
+      }
+      if (lastSwapIdx === -1) {
+        for (let i = timeline.phases.length - 1; i >= 0; i--) {
+          if (timeline.phases[i].id === 'swap') { lastSwapIdx = i; break; }
+        }
+      }
+      if (lastSwapIdx >= 0) {
+        const swapPhase = timeline.phases[lastSwapIdx];
+        // Determine which side was just holstered by finding preceding pattern side
+        let prevPatternSide: 'A' | 'B' | undefined;
+        for (let j = lastSwapIdx - 1; j >= 0; j--) {
+          const q = timeline.phases[j];
+          if (q.id === 'pattern' && q.side) { prevPatternSide = q.side; break; }
+        }
+        if (!prevPatternSide) {
+          // wrap search to end if not found before
+          for (let j = timeline.phases.length - 1; j > lastSwapIdx; j--) {
+            const q = timeline.phases[j];
+            if (q.id === 'pattern' && q.side) { prevPatternSide = q.side; break; }
+          }
+        }
+        const thresholdMs = 4600; // 4000 + 600 buffer
+        const swapStart = swapPhase.startTime;
+        const elapsedSinceSwap = ((now - swapStart + totalMs) % totalMs);
+        const remainingMs = Math.max(0, thresholdMs - elapsedSinceSwap);
+        if (remainingMs > 0 && prevPatternSide) {
+          const seconds = (remainingMs / 1000).toFixed(1);
+          if (prevPatternSide === 'A') leftSubtitle = `${seconds}s`;
+          if (prevPatternSide === 'B') rightSubtitle = `${seconds}s`;
+        }
+      }
+    } catch {}
+  }
+
   const leftHeader = isDual
-    ? { name: gunAName, image: gunAImage, emphasis: activeSide === 'A', side: 'left' as const }
+    ? { name: gunAName, image: gunAImage, emphasis: activeSide === 'A', side: 'left' as const, subtitle: leftSubtitle }
     : (headerSide === 'left' ? { name: gunAName, image: gunAImage, emphasis: true, side: 'left' as const } : undefined);
 
   const rightHeader = isDual
-    ? { name: gunBName as string, image: gunBImage as string, emphasis: activeSide === 'B', side: 'right' as const }
+    ? { name: gunBName as string, image: gunBImage as string, emphasis: activeSide === 'B', side: 'right' as const, subtitle: rightSubtitle }
     : (headerSide === 'right' ? { name: gunAName, image: gunAImage, emphasis: true, side: 'right' as const } : undefined);
 
   const center = {
@@ -189,6 +243,81 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
       }
     }
   }
+
+  if (isDual && manualDualReload && timeline?.phases?.length) {
+    const total = Math.max(1, totalDurationMs);
+    const anchorPct = 10; // Must match CoreCentral anchor
+    const overlays: React.ReactNode[] = [];
+    for (let i = 0; i < timeline.phases.length; i++) {
+      const p = timeline.phases[i];
+      if (p.id !== 'reload') continue;
+      // Find preceding pattern to determine which side just fired
+      let prevPatternSide: 'A' | 'B' | undefined;
+      for (let j = i - 1; j >= 0; j--) {
+        const q = timeline.phases[j];
+        if (q.id === 'pattern' && q.side) {
+          prevPatternSide = q.side;
+          break;
+        }
+      }
+      const reloadMs = prevPatternSide === 'B'
+        ? Math.max(0, reloadBDurationMs ?? 0)
+        : Math.max(0, reloadADurationMs ?? 0);
+      if (!reloadMs) continue;
+      const startOffsetMs = ((p.startTime - now + total) % total);
+      const startPct = (anchorPct + (startOffsetMs / total) * 100) % 100;
+      const reloadPct = Math.min(100, (reloadMs / total) * 100);
+      const tailPct = Math.max(0, Math.min(reloadPct, 100 - startPct));
+      const headPct = Math.max(0, Math.min(100, reloadPct - tailPct));
+      const markerLeftPct = headPct > 0 ? headPct : (startPct + tailPct);
+
+      overlays.push(
+        <>
+          {tailPct > 0 && (
+            <div
+              className="absolute top-0 bottom-0 z-10"
+              title={t('timer.phase.end')}
+              style={{
+                left: `${startPct}%`,
+                width: `${tailPct}%`,
+                backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                backgroundBlendMode: 'overlay',
+              }}
+            />
+          )}
+          {headPct > 0 && (
+            <div
+              className="absolute top-0 bottom-0 z-10"
+              title={t('timer.phase.end')}
+              style={{
+                left: `0%`,
+                width: `${headPct}%`,
+                backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                backgroundBlendMode: 'overlay',
+              }}
+            />
+          )}
+          {(headPct > 0 || tailPct > 0) && (
+            <div className="pointer-events-none absolute z-20 top-0 bottom-0" style={{ left: `${markerLeftPct}%` }}>
+              <div className="absolute -translate-x-1/2 top-0 bottom-0 w-[3px] bg-white rounded-full" />
+            </div>
+          )}
+        </>
+      );
+    }
+    if (overlays.length > 0) {
+      progressOverlay = (
+        <div className="contents">
+          {progressOverlay}
+          {overlays.map((node, idx) => (
+            <div key={`dual-reload-${idx}`} className="contents">{node}</div>
+          ))}
+        </div>
+      );
+    }
+  }
+
+  console.log('progressOverlay', progressOverlay);
 
   return (
     <CoreCentral

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gun, Timeline, Pattern, AudioCue } from '@/features/guns/types/gun';
-import { buildTimeline, buildDualTimeline, buildAutoReloadDualTimeline, computeAutoReloadPhaseDurations } from '@/features/timer/audio/audio';
+import { buildTimeline, buildDualTimeline, buildAutoReloadDualTimeline, computeAutoReloadPhaseDurations, compareDualModes, formatTime } from '@/features/timer/audio/audio';
 import { AudioEngine } from '@/features/timer/audio/audioEngine';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
@@ -59,11 +59,16 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
   // Slider range depends on mode
   // In auto-reload dual mode the delay can be 0; otherwise dual uses 1s-5s
   const isAutoReloadMode = dual && ENABLE_AUTO_RELOAD_TIMELINE && useAutoReloadTimeline;
-  const waitMin = isAutoReloadMode ? 0 : (dual ? 1 : 0);
+  const waitMin = isAutoReloadMode ? 0 : (dual ? 0 : 0);
   const waitMax = dual ? 5 : DELAY_SLIDER_MAX_SECONDS;
   const sliderRange = Math.max(0.0001, waitMax - waitMin);
   const showRecommendedMarker = RECOMMENDED_DELAY_SECONDS >= waitMin && RECOMMENDED_DELAY_SECONDS <= waitMax;
   const showDefaultMarker = DEFAULT_DELAY_SECONDS >= waitMin && DEFAULT_DELAY_SECONDS <= waitMax;
+
+  // Tooltip key varies by mode
+  const waitInfoKey = isAutoReloadMode
+    ? 'settings.waitInfo.dualAuto'
+    : (dual ? 'settings.waitInfo.dualManual' : 'settings.waitInfo.single');
 
   // Resume audio on tab visibility change if needed
   useEffect(() => {
@@ -89,6 +94,18 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     }
     return buildTimeline(pattern, gun, waitTimeSeconds);
   }, [dual, gun, pattern, gunB, patternB, waitTimeSeconds, useAutoReloadTimeline]);
+
+  // Compute dual-mode comparison (manual vs auto) for current selection
+  const dualComparison = useMemo(() => {
+    if (dual && gunB && patternB) {
+      try {
+        return compareDualModes(pattern, gun, patternB, gunB);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [dual, gun, gunB, pattern, patternB]);
 
   const currentPhase = useMemo(() => getCurrentPhase(timelineValue, currentTime), [timelineValue, currentTime]);
 
@@ -237,7 +254,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     setWaitTimeSeconds(() => {
       let next = RECOMMENDED_DELAY_SECONDS; // single default 0.5s
       if (dual) {
-        next = isAutoReloadMode ? 0 : DEFAULT_DELAY_SECONDS; // dual auto: additional delay starts at 0s
+        next = isAutoReloadMode ? 0 : RECOMMENDED_DELAY_SECONDS; // dual auto: additional delay starts at 0s
       }
       const clamped = Math.min(waitMax, Math.max(waitMin, next));
       return clamped;
@@ -250,7 +267,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     setWaitTimeSeconds(() => {
       let next = RECOMMENDED_DELAY_SECONDS;
       if (dual) {
-        next = isAutoReloadMode ? 0 : DEFAULT_DELAY_SECONDS;
+        next = isAutoReloadMode ? 0 : RECOMMENDED_DELAY_SECONDS;
       }
       const clamped = Math.min(waitMax, Math.max(waitMin, next));
       return clamped;
@@ -295,6 +312,10 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           currentPhase={currentPhase}
           activeSide={activeSide}
           reloadDurationMs={Math.round(Math.max(0, (gun.reloadTimeSeconds ?? 0) * 1000))}
+          reloadADurationMs={Math.round(Math.max(0, (gun.reloadTimeSeconds ?? 0) * 1000))}
+          reloadBDurationMs={Math.round(Math.max(0, (gunB?.reloadTimeSeconds ?? 0) * 1000))}
+          manualDualReload={dual && !(ENABLE_AUTO_RELOAD_TIMELINE && useAutoReloadTimeline)}
+          autoDualReload={dual && ENABLE_AUTO_RELOAD_TIMELINE && useAutoReloadTimeline}
         />
       </div>
 
@@ -353,7 +374,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                   </PopoverButton>
                   {waitInfoOpen && (
                     <PopoverPanel static className="absolute left-0 mt-1 z-30 whitespace-nowrap rounded-md border border-white/10 bg-black px-2 py-1 text-[11px] text-white/80 shadow-lg">
-                      {t('settings.waitInfo')}
+                      {t(waitInfoKey)}
                     </PopoverPanel>
                   )}
                 </div>
@@ -388,6 +409,20 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
               </div>
             )}
           </div>
+          {/* {dual && gunB && patternB && dualComparison && (
+            <div className="mb-2 -mt-1 text-[11px] text-white/70 flex items-center justify-between">
+              <div>
+                <span className="text-white/60">Manual:</span> {formatTime(dualComparison.manualCycleMs)}s
+                <span className="text-white/40"> • </span>
+                <span className="text-white/60">Auto:</span> {formatTime(dualComparison.autoCycleMs)}s
+              </div>
+              <div className={`font-semibold ${dualComparison.faster === 'auto' ? 'text-emerald-300' : dualComparison.faster === 'manual' ? 'text-sky-300' : 'text-white/70'}`}>
+                {dualComparison.faster === 'equal'
+                  ? 'Equal'
+                  : `Faster: ${dualComparison.faster === 'auto' ? 'Auto' : 'Manual'} by ${(dualComparison.diffMs / 1000).toFixed(2)}s`}
+              </div>
+            </div>
+          )} */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               {/* Custom solid track (bottom layer) */}

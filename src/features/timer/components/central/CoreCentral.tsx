@@ -7,6 +7,7 @@ export type CoreCentralHeader = {
   image: string;
   emphasis?: boolean;
   side: 'left' | 'right';
+  subtitle?: string;
 };
 
 export type CoreCentralOverlaySelection = {
@@ -92,7 +93,12 @@ export default function CoreCentral(props: CoreCentralProps) {
         <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${emphasis ? '' : 'opacity-60'}`}>
           <Image src={header.image} alt={header.name} fill className="object-contain invert drop-shadow" sizes="20px" />
         </div>
-        <span className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${emphasis ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={header.name}>{header.name}</span>
+        <div className="min-w-0">
+          <div className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${emphasis ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={header.name}>{header.name}</div>
+          {header.subtitle && (
+            <div className={`${isCompact ? 'text-[10px]' : 'text-[10px]'} leading-none text-white/70 max-w-[25ch] truncate`}>{header.subtitle}</div>
+          )}
+        </div>
       </div>
     );
   };
@@ -147,12 +153,12 @@ export default function CoreCentral(props: CoreCentralProps) {
             </div>
             {/* Optional progress overlay slot (rendered above segments, below anchor marker) */}
             {progressOverlay && (
-              <div className="absolute inset-0 z-10 pointer-events-none">
+              <div className="absolute inset-0 z-20 pointer-events-none">
                 {progressOverlay}
               </div>
             )}
           </div>
-          <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-none absolute inset-0 z-30">
             <div className="absolute left-[10%] -translate-x-1/2 -top-3 text-white/80 text-xs select-none">▼</div>
             <div className="absolute left-[10%] -translate-x-1/2 top-0 h-3 w-[2px] bg-white/80" />
           </div>

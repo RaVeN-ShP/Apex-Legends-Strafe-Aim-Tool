@@ -1,3 +1,4 @@
+import { RECOMMENDED_DELAY_SECONDS } from '@/config/constants';
 import { Gun, AudioCue, Phase, Timeline, Pattern } from '@/features/guns/types/gun';
 
 export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: number): Timeline {
@@ -64,6 +65,7 @@ export function computeDualWaits(
   const userDelayMs = Math.round(waitTimeSeconds * 1000);
   const waitAB = Math.max(0, reloadAms + userDelayMs - countdownMs);
   const waitBA = Math.max(0, reloadBms + userDelayMs - countdownMs);
+  console.log('computeDualWaits', { reloadAms, reloadBms, userDelayMs, countdownMs, waitAB, waitBA });
   return { waitAB, waitBA, userDelayMs, countdownMs };
 }
 
@@ -170,6 +172,7 @@ export function buildDualTimeline(
   let currentTime = 0;
 
   const countdownMs = 1500;
+  const swapMs = 500;
   const { waitAB, waitBA } = computeDualWaits(gunA.reloadTimeSeconds, gunB.reloadTimeSeconds, waitTimeSeconds, countdownMs);
 
   const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
@@ -202,18 +205,26 @@ export function buildDualTimeline(
     phases.push({ id: 'pattern', name: 'Pattern A', startTime: start, endTime: currentTime, cues, side: 'A' });
   }
 
-  // Inter-wait A -> B (after A reload buffer)
+  // A -> B: Swap (audio cue), then Reload wait (no audio)
   {
-    const start = currentTime;
-    const cues: AudioCue[] = [];
-    if (waitAB > 0) {
+    // Swap
+    {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
       const safetyTailMs = 10;
-      const maxLen = Math.max(0, (waitAB - safetyTailMs) / 1000);
+      const maxLen = Math.max(0, (swapMs - safetyTailMs) / 1000);
       const len = Math.min(0.9, maxLen);
-      if (len > 0) cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+      if (len > 0) cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+      currentTime += swapMs;
+      phases.push({ id: 'swap', name: 'Swap A→B', startTime: start, endTime: currentTime, cues });
     }
-    currentTime += Math.max(0, waitAB);
-    phases.push({ id: 'end', name: 'Wait A→B', startTime: start, endTime: currentTime, cues });
+    // Reload wait after swap
+    {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
+      currentTime += waitAB;
+      phases.push({ id: 'reload', name: 'Reload A→B', startTime: start, endTime: currentTime, cues });
+    }
   }
 
   // B: Start
@@ -242,18 +253,26 @@ export function buildDualTimeline(
     phases.push({ id: 'pattern', name: 'Pattern B', startTime: start, endTime: currentTime, cues, side: 'B' });
   }
 
-  // Inter-wait B -> A (after B reload buffer)
+  // B -> A: Swap (audio cue), then Reload wait (no audio)
   {
-    const start = currentTime;
-    const cues: AudioCue[] = [];
-    if (waitBA > 0) {
+    // Swap
+    {
+      const start = currentTime;
+      const cues: AudioCue[] = [];
       const safetyTailMs = 10;
-      const maxLen = Math.max(0, (waitBA - safetyTailMs) / 1000);
+      const maxLen = Math.max(0, (swapMs - safetyTailMs) / 1000);
       const len = Math.min(0.9, maxLen);
-      if (len > 0) cues.push({ type: 'end', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+      if (len > 0) cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+      currentTime += swapMs;
+      phases.push({ id: 'swap', name: 'Swap B→A', startTime: start, endTime: currentTime, cues });
     }
-    currentTime += Math.max(0, waitBA);
-    phases.push({ id: 'end', name: 'Wait B→A', startTime: start, endTime: currentTime, cues });
+    // Reload wait after swap
+    {
+        const start = currentTime;
+        const cues: AudioCue[] = [];
+        currentTime += waitBA;
+        phases.push({ id: 'reload', name: 'Reload B→A', startTime: start, endTime: currentTime, cues });
+    }
   }
 
   return { phases, totalDurationMs: currentTime };
@@ -402,4 +421,67 @@ export function formatTime(ms: number): string {
   const seconds = Math.floor(ms / 1000);
   const milliseconds = ms % 1000;
   return `${seconds}.${milliseconds.toString().padStart(3, '0')}`;
+}
+
+/**
+ * Compare manual dual mode vs auto-reload dual mode for a given gun/pattern pair.
+ * Returns the minimal (userDelay=0) cycle times for both modes and which is faster.
+ *
+ * Manual cycle model (consistent with buildDualTimeline):
+ *   2*countdown + patternA + patternB + swapAB + waitAB + swapBA + waitBA
+ *   where waitXY = max(0, reloadX - countdown) and swapAB = swapBA = swapMs
+ *
+ * Auto cycle model (consistent with buildAutoReloadDualTimeline):
+ *   2*countdown + patternA + patternB + swapAB + swapBA + bufferAB + bufferBA
+ */
+export function compareDualModes(
+  patternA: Pattern[],
+  gunA: Gun,
+  patternB: Pattern[],
+  gunB: Gun,
+  options?: { countdownMs?: number; swapMs?: number; thresholdMs?: number }
+): {
+  manualCycleMs: number;
+  autoCycleMs: number;
+  faster: 'manual' | 'auto' | 'equal';
+  diffMs: number; // absolute difference between the faster and slower
+} {
+  const countdownMs = options?.countdownMs ?? 1500;
+  const swapMs = options?.swapMs ?? 500;
+  const thresholdMs = options?.thresholdMs ?? 4000 + 600; // 4.6s
+
+  const sumPattern = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
+  const patAms = sumPattern(patternA);
+  const patBms = sumPattern(patternB);
+
+  const reloadAms = Math.round((gunA.reloadTimeSeconds ?? 1) * 1000);
+  const reloadBms = Math.round((gunB.reloadTimeSeconds ?? 1) * 1000);
+
+  // Manual minimal inter-waits (userDelay=0) with explicit swaps
+  const waitABManual = Math.max(0, reloadAms - countdownMs + RECOMMENDED_DELAY_SECONDS  *1000);
+  const waitBAManual = Math.max(0, reloadBms - countdownMs + RECOMMENDED_DELAY_SECONDS  *1000);
+  const manualCycleMs = countdownMs + patAms + swapMs + waitABManual + countdownMs + patBms + swapMs + waitBAManual;
+
+  // Auto minimal inter-waits (userDelay=0), compute buffers using existing logic
+  const { bufferAB, bufferBA } = computeAutoReloadPhaseDurations(
+    patAms,
+    patBms,
+    0, // userDelayMs
+    countdownMs,
+    swapMs,
+    thresholdMs,
+  );
+  const autoCycleMs = 2 * countdownMs + patAms + patBms + swapMs + swapMs + bufferAB + bufferBA;
+
+  let faster: 'manual' | 'auto' | 'equal' = 'equal';
+  let diffMs = 0;
+  if (manualCycleMs < autoCycleMs) {
+    faster = 'manual';
+    diffMs = autoCycleMs - manualCycleMs;
+  } else if (autoCycleMs < manualCycleMs) {
+    faster = 'auto';
+    diffMs = manualCycleMs - autoCycleMs;
+  }
+
+  return { manualCycleMs, autoCycleMs, faster, diffMs };
 }
