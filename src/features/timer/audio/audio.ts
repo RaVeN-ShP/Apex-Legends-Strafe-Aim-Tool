@@ -65,7 +65,6 @@ export function computeDualWaits(
   const userDelayMs = Math.round(waitTimeSeconds * 1000);
   const waitAB = Math.max(0, reloadAms + userDelayMs - countdownMs);
   const waitBA = Math.max(0, reloadBms + userDelayMs - countdownMs);
-  console.log('computeDualWaits', { reloadAms, reloadBms, userDelayMs, countdownMs, waitAB, waitBA });
   return { waitAB, waitBA, userDelayMs, countdownMs };
 }
 
@@ -342,7 +341,12 @@ export function buildAutoReloadDualTimeline(
     {
       const start = currentTime;
       const cues: AudioCue[] = [];
-      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: (swapAB + delayAB + bufferAB - 50) / 1000, amplitude: 1.0 });
+      const safetyTailMs = 10; // keep a tiny tail before combined phase end
+      const maxLenSec = Math.max(0, (swapAB + delayAB + bufferAB - safetyTailMs) / 1000);
+      const len = Math.min(0.9, maxLenSec);
+      if (len > 0) {
+        cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+      }
       currentTime += swapAB;
       phases.push({ id: 'swap', name: 'Swap A→B', startTime: start, endTime: currentTime, cues });
     }
@@ -394,7 +398,12 @@ export function buildAutoReloadDualTimeline(
     {
       const start = currentTime;
       const cues: AudioCue[] = [];
-      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: (swapBA + delayBA + bufferBA - 50) / 1000, amplitude: 1.0 });
+      const safetyTailMs = 10; // keep a tiny tail before combined phase end
+      const maxLenSec = Math.max(0, (swapBA + delayBA + bufferBA - safetyTailMs) / 1000);
+      const len = Math.min(0.9, maxLenSec);
+      if (len > 0) {
+        cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: len, amplitude: 1.0 });
+      }
       currentTime += swapBA;
       phases.push({ id: 'swap', name: 'Swap B→A', startTime: start, endTime: currentTime, cues });
     }

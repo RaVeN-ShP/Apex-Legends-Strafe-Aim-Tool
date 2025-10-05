@@ -317,8 +317,6 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     }
   }
 
-  console.log('progressOverlay', progressOverlay);
-
   return (
     <CoreCentral
       isCompact={isCompact}
