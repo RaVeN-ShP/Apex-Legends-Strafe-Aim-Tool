@@ -52,11 +52,13 @@ export type CoreCentralProps = {
   center: CoreCentralCenter;
   progress: CoreCentralProgress;
   overlay?: CoreCentralOverlay;
+  /** Optional overlay to render on top of the progress bar (single-mode reload, etc.) */
+  progressOverlay?: React.ReactNode;
   rootRef?: React.Ref<HTMLDivElement>;
 };
 
 export default function CoreCentral(props: CoreCentralProps) {
-  const { isCompact, containerBg, leftHeader, rightHeader, center, progress, overlay, rootRef } = props;
+  const { isCompact, containerBg, leftHeader, rightHeader, center, progress, overlay, progressOverlay, rootRef } = props;
 
   const totalMs = Math.max(1, progress.totalDurationMs);
   const progressPct = ((progress.currentTimeMs % totalMs) / totalMs) * 100;
@@ -143,6 +145,12 @@ export default function CoreCentral(props: CoreCentralProps) {
               {renderCycle('curr')}
               {renderCycle('next')}
             </div>
+            {/* Optional progress overlay slot (rendered above segments, below anchor marker) */}
+            {progressOverlay && (
+              <div className="absolute inset-0 z-10 pointer-events-none">
+                {progressOverlay}
+              </div>
+            )}
           </div>
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute left-[10%] -translate-x-1/2 -top-3 text-white/80 text-xs select-none">▼</div>

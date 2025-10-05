@@ -29,9 +29,9 @@ export function timelineToSegments(
       const unit = Math.max(0, Math.floor(total / 3));
       const remainder = Math.max(0, total - unit * 3);
       const durations = [unit, unit, unit + remainder];
-      segments.push({ duration: durations[0], colorClass: st.barColor ?? 'bg-white/10', textColor: st.textColor ?? 'text-black', title: p.name || label, symbol: '3' });
-      segments.push({ duration: durations[1], colorClass: st.barColor ?? 'bg-white/10', textColor: st.textColor ?? 'text-black', title: p.name || label, symbol: '2' });
-      segments.push({ duration: durations[2], colorClass: st.barColor ?? 'bg-white/10', textColor: st.textColor ?? 'text-black', title: p.name || label, symbol: '1' });
+      segments.push({ duration: durations[0], colorClass: st.barColor ?? 'bg-white/10', textColor: st.textColor ?? 'text-black', title: p.name || label, symbol: '' });
+      segments.push({ duration: durations[1], colorClass: st.barColor ?? 'bg-white/10', textColor: st.textColor ?? 'text-black', title: p.name || label, symbol: '' });
+      segments.push({ duration: durations[2], colorClass: st.barColor ?? 'bg-white/10', textColor: st.textColor ?? 'text-black', title: p.name || label, symbol: '' });
       continue;
     }
     if (p.id === 'pattern' && p.side) {
@@ -60,6 +60,28 @@ export function timelineToSegments(
         const label = t ? t(st.label) : st.label;
         segments.push({ duration: total, colorClass: st.barColor ?? 'bg-white/10', title: label, symbol: st.symbol });
       }
+    } 
+    else if (p.id === 'end') {
+      const st = getPhaseStyle(p.id);
+      const label = t ? t(st.label) : st.label;
+      segments.push({
+        duration: p.endTime - p.startTime,
+        colorClass: st.barColor ?? 'bg-white/10',
+        title: p.name || label,
+        symbol: '',
+        icon: st.icon === 'goldMag' ? 'goldMag' : undefined,
+      });
+    } 
+    else if (p.id === "swap") {
+      const st = getPhaseStyle(p.id);
+      const label = t ? t(st.label) : st.label;
+      segments.push({
+        duration: p.endTime - p.startTime,
+        colorClass: st.barColor ?? 'bg-white/10',
+        title: p.name || label,
+        symbol: '↔',
+        icon: st.icon === 'goldMag' ? 'goldMag' : undefined,
+      });
     } else {
       const st = getPhaseStyle(p.id);
       const label = t ? t(st.label) : st.label;
@@ -67,7 +89,7 @@ export function timelineToSegments(
         duration: p.endTime - p.startTime,
         colorClass: st.barColor ?? 'bg-white/10',
         title: p.name || label,
-        symbol: st.symbol,
+        symbol: '',
         icon: st.icon === 'goldMag' ? 'goldMag' : undefined,
       });
     }

@@ -137,13 +137,10 @@ export function computeAutoReloadPhaseDurations(
   const bufferAB = Math.max(0, thresholdMs - holsterToEndA);
   const bufferBA = Math.max(0, thresholdMs - holsterToEndB);
 
-  // User-defined post-swap delay should only add time beyond the mandatory wait
-  // Mandatory wait before next shots: Reload buffer + countdown
-  const desiredPostSwapDelayMs = Math.max(0, userDelayMs);
-  const baseWaitAB = bufferAB + countdownMs;
-  const baseWaitBA = bufferBA + countdownMs;
-  const delayAB = Math.max(0, desiredPostSwapDelayMs - baseWaitAB);
-  const delayBA = Math.max(0, desiredPostSwapDelayMs - baseWaitBA);
+  // Treat provided userDelayMs as additional post-swap delay
+  // It is added on top of the mandatory wait (reload buffer + countdown)
+  const delayAB = Math.max(0, userDelayMs);
+  const delayBA = Math.max(0, userDelayMs);
   return {
     swapAB: swapMs,
     delayAB,
@@ -326,7 +323,7 @@ export function buildAutoReloadDualTimeline(
     {
       const start = currentTime;
       const cues: AudioCue[] = [];
-      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: swapAB / 1000  - 0.05, amplitude: 1.0 });
+      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: (swapAB + delayAB + bufferAB - 50) / 1000, amplitude: 1.0 });
       currentTime += swapAB;
       phases.push({ id: 'swap', name: 'Swap A→B', startTime: start, endTime: currentTime, cues });
     }
@@ -378,7 +375,7 @@ export function buildAutoReloadDualTimeline(
     {
       const start = currentTime;
       const cues: AudioCue[] = [];
-      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: swapBA / 1000 - 0.05, amplitude: 1.0 });
+      cues.push({ type: 'end', timestamp: currentTime, phase: 'swap', frequencyHz: 1500, lengthSec: (swapBA + delayBA + bufferBA - 50) / 1000, amplitude: 1.0 });
       currentTime += swapBA;
       phases.push({ id: 'swap', name: 'Swap B→A', startTime: start, endTime: currentTime, cues });
     }

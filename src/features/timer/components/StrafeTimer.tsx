@@ -230,27 +230,14 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     }
   }, [volume]);
 
-  // Auto-reload minimum effective post-swap delay (dead zone) in seconds
-  const minEffectiveDelaySeconds = useMemo(() => {
-    if (!(isAutoReloadMode && dual && gunB && patternB)) return waitMin;
-    const patternDur = (p: Pattern[]) => p.reduce((acc, s) => acc + Math.max(0, s.duration), 0);
-    const patAms = patternDur(pattern);
-    const patBms = patternDur(patternB);
-    const { bufferAB, bufferBA } = computeAutoReloadPhaseDurations(patAms, patBms, 0);
-    const countdownMs = 1500;
-    const baseAB = bufferAB + countdownMs;
-    const baseBA = bufferBA + countdownMs;
-    const minMs = Math.min(baseAB, baseBA);
-    const minSec = Math.max(waitMin, Math.min(waitMax, minMs / 1000));
-    return minSec;
-  }, [isAutoReloadMode, dual, gunB, patternB, pattern, waitMin, waitMax]);
+  // Auto-reload mode uses additional post-swap delay; minimum is 0s
 
   // Reset delay to mode defaults whenever switching modes or toggling reload mode in dual
   useEffect(() => {
     setWaitTimeSeconds(() => {
       let next = RECOMMENDED_DELAY_SECONDS; // single default 0.5s
       if (dual) {
-        next = isAutoReloadMode ? minEffectiveDelaySeconds : DEFAULT_DELAY_SECONDS; // dual auto vs manual
+        next = isAutoReloadMode ? 0 : DEFAULT_DELAY_SECONDS; // dual auto: additional delay starts at 0s
       }
       const clamped = Math.min(waitMax, Math.max(waitMin, next));
       return clamped;
@@ -263,12 +250,12 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
     setWaitTimeSeconds(() => {
       let next = RECOMMENDED_DELAY_SECONDS;
       if (dual) {
-        next = isAutoReloadMode ? minEffectiveDelaySeconds : DEFAULT_DELAY_SECONDS;
+        next = isAutoReloadMode ? 0 : DEFAULT_DELAY_SECONDS;
       }
       const clamped = Math.min(waitMax, Math.max(waitMin, next));
       return clamped;
     });
-  }, [gun.id, gunB?.id, minEffectiveDelaySeconds]);
+  }, [gun.id, gunB?.id]);
 
   return (
     <div className="text-white">
@@ -307,6 +294,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
           timeline={timelineValue}
           currentPhase={currentPhase}
           activeSide={activeSide}
+          reloadDurationMs={Math.round(Math.max(0, (gun.reloadTimeSeconds ?? 0) * 1000))}
         />
       </div>
 
@@ -422,15 +410,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 }}
                 className="uniform-slider relative z-20 w-full h-2 cursor-pointer appearance-none rounded outline-none"
               />
-              {/* Auto-reload: green dead-zone overlay up to minimum effective delay */}
-              {isAutoReloadMode && (
-                <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 h-2 bg-amber-500/60 rounded"
-                    style={{ left: 0, width: `${Math.max(0, Math.min(1, (minEffectiveDelaySeconds - waitMin) / sliderRange)) * 100}%` }}
-                  />
-                </div>
-              )}
+              {/* Auto-reload additional delay has no minimum dead-zone overlay */}
               {/* Markers overlay (account for 14px thumb: 7px inset on both sides) */}
               {!isAutoReloadMode && (
                 <div className="pointer-events-none absolute top-1 bottom-0 z-10 left-[7px] right-[7px]">

@@ -26,6 +26,8 @@ export type UnifiedCentralDisplayProps = {
   gunAImage: string;
   patternA: Pattern[];
   headerSide?: 'left' | 'right';
+  /** Total reload duration in ms (from empty). Used for single-mode overlay width. */
+  reloadDurationMs?: number;
 
   // Dual mode (optional). If provided, renders dual headers and behaviors.
   gunBName?: string;
@@ -50,6 +52,7 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     gunAImage,
     patternA,
     headerSide = 'left',
+    reloadDurationMs,
     gunBName,
     gunBImage,
     patternB,
@@ -93,7 +96,7 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     title: centralTheme.title,
     badgeIconSrc: currentPhase?.id === 'reload' ? '/attachments/magazine/Extended_Light_Mag.svg' : undefined,
     badgeAlt: currentPhase?.id === 'reload' ? t('attachments.mag.extendedLight') : undefined,
-    symbol: swapDisplay ? '↔' : centralTheme.symbol,
+    symbol: swapDisplay ? t("timer.phase.swap") : centralTheme.symbol,
     subtitle: swapDisplay
       ? (
           <span className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'} font-semibold ${centralTheme.subtitleColor} flex items-center justify-center gap-2`}>
@@ -134,6 +137,59 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     selection,
   };
 
+  // Single-mode reload overlay over the progress bar
+  let progressOverlay: React.ReactNode | undefined;
+  if (!isDual && timeline?.phases?.length) {
+    const endPhase = timeline.phases.find(p => p.id === 'end');
+    if (endPhase) {
+      const total = Math.max(1, totalDurationMs);
+      const reloadMs = Math.max(0, reloadDurationMs ?? 0);
+      if (reloadMs > 0) {
+        const anchorPct = 10; // Must match CoreCentral anchor
+        const startOffsetMs = ((endPhase.startTime - now + total) % total);
+        const endPhaseStartPct = (anchorPct + (startOffsetMs / total) * 100) % 100;
+        const reloadPct = Math.min(100, (reloadMs / total) * 100);
+        const tailPct = Math.max(0, Math.min(reloadPct, 100 - endPhaseStartPct));
+        const headPct = Math.max(0, Math.min(100, reloadPct - tailPct));
+        const markerLeftPct = headPct > 0 ? headPct : (endPhaseStartPct + tailPct);
+
+        progressOverlay = (
+          <>
+            {tailPct > 0 && (
+              <div
+                className="absolute top-0 bottom-0 z-10"
+                title={t('timer.phase.end')}
+                style={{
+                  left: `${endPhaseStartPct}%`,
+                  width: `${tailPct}%`,
+                  backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                  backgroundBlendMode: 'overlay',
+                }}
+              />
+            )}
+            {headPct > 0 && (
+              <div
+                className="absolute top-0 bottom-0 z-10"
+                title={t('timer.phase.end')}
+                style={{
+                  left: `0%`,
+                  width: `${headPct}%`,
+                  backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 12px)',
+                  backgroundBlendMode: 'overlay',
+                }}
+              />
+            )}
+            {(headPct > 0 || tailPct > 0) && (
+              <div className="pointer-events-none absolute z-20 top-0 bottom-0" style={{ left: `${markerLeftPct}%` }}>
+                <div className="absolute -translate-x-1/2 top-0 bottom-0 w-[3px] bg-white rounded-full" />
+              </div>
+            )}
+          </>
+        );
+      }
+    }
+  }
+
   return (
     <CoreCentral
       isCompact={isCompact}
@@ -142,6 +198,7 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
       rightHeader={rightHeader}
       center={center}
       progress={{ totalDurationMs, currentTimeMs, segments }}
+      progressOverlay={progressOverlay}
       overlay={overlay}
       rootRef={rootRef}
     />
