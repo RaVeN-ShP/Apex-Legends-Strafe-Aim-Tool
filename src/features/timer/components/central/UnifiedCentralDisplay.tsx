@@ -82,6 +82,7 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
   const centralTheme = useCentralTheme({ timeline, pattern: themePattern, currentTimeMs });
 
   const [firstCycle, setFirstCycle] = useState(true);
+  const [goldMagDelayOk, setGoldMagDelayOk] = useState(false);
   const prevNowRef = useRef<number>(now);
 
   // Build progress segments
@@ -103,6 +104,19 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
       setFirstCycle(true)  ;
   }, [isPlaying]);
 
+  // After each swap, delay showing gold mag by ~400ms to avoid competing with active emphasis
+  useEffect(() => {
+    if (!isDual) { setGoldMagDelayOk(false); return; }
+    // Detect swap by phase id
+    if (currentPhase?.id === 'swap') {
+      setGoldMagDelayOk(false);
+      const timer = setTimeout(() => setGoldMagDelayOk(true), 400);
+      return () => clearTimeout(timer);
+    }
+    // If not in swap, allow showing (e.g., during delay/reload following swap)
+    setGoldMagDelayOk(true);
+  }, [currentPhase?.id, isDual]);
+
   // Detect wrap-around to mark completion of the first full cycle while playing
   useEffect(() => {
     const prev = prevNowRef.current;
@@ -119,11 +133,24 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
   if (isDual && autoDualReload) {
     const thresholdMs = 4600; // 4000 + 600 buffer
 
-    const renderGoldMagBadge = (progress: number) => {
+    const renderGoldMagBadge = (progress: number, active: boolean) => {
+      if (!active) {
+        return (
+          <span className="relative inline-flex items-center justify-center rounded-md border border-white/10 bg-black/10 text-white/70 px-1.5 py-1 align-middle shadow-none">
+            <Image
+              src="/attachments/magazine/Extended_Light_Mag.svg"
+              alt={t('attachments.mag.extendedLight')}
+              width={12}
+              height={12}
+              className="invert"
+            />
+          </span>
+        );
+      }
       const clamped = Math.max(0, Math.min(1, progress));
       const maskHeightPct = (1 - clamped) * 100;
       return (
-        <span className="relative inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-1 py-0.5 overflow-hidden align-middle">
+        <span className="relative inline-flex items-center justify-center rounded-md border border-amber-400/30 bg-amber-500/10 text-amber-200 px-1.5 py-1 overflow-hidden align-middle shadow-none">
           <span className="absolute inset-x-0 top-0 bg-black/30" style={{ height: `${maskHeightPct}%` }} />
           <Image
             src="/attachments/magazine/Extended_Light_Mag.svg"
@@ -147,10 +174,14 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
       if (timeline.phases[i].id === 'swap') { lastSwapIdxWrapped = i; break; }
     }
 
-    // Suppress on very first cycle before the first swap, unless we just wrapped
+    // Always show inactive badges by default
+    leftSubtitle = renderGoldMagBadge(0, false);
+    rightSubtitle = renderGoldMagBadge(0, false);
+
+    // Suppress active state on very first cycle before the first swap, unless we just wrapped
     const hasWrappedThisRender = now < prevNowRef.current;
     const suppressBeforeFirstSwap = firstCycle && !hasWrappedThisRender && lastSwapIdxRaw === -1;
-    if (!suppressBeforeFirstSwap) {
+    if (!suppressBeforeFirstSwap && goldMagDelayOk) {
       const swapIdx = lastSwapIdxRaw >= 0 ? lastSwapIdxRaw : lastSwapIdxWrapped;
       if (swapIdx >= 0) {
         // Determine which side was just holstered by finding preceding pattern side
@@ -172,8 +203,12 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
           const remainingMs = Math.max(0, thresholdMs - elapsedSinceSwap);
           if (remainingMs > 0) {
             const progress = (thresholdMs - remainingMs) / thresholdMs;
-            if (prevPatternSide === 'A') leftSubtitle = renderGoldMagBadge(progress);
-            if (prevPatternSide === 'B') rightSubtitle = renderGoldMagBadge(progress);
+            if (prevPatternSide === 'A') {
+              leftSubtitle = renderGoldMagBadge(progress, true);
+            }
+            if (prevPatternSide === 'B') {
+              rightSubtitle = renderGoldMagBadge(progress, true);
+            }
           }
         }
       }
@@ -190,7 +225,8 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
 
   const center = {
     title: centralTheme.title,
-    badgeIconSrc: currentPhase?.id === 'reload' ? '/attachments/magazine/Extended_Light_Mag.svg' : undefined,
+    badgeIconSrc: undefined,
+    // badgeIconSrc: currentPhase?.id === 'reload' ? '/attachments/magazine/Extended_Light_Mag.svg' : undefined,
     badgeAlt: currentPhase?.id === 'reload' ? t('attachments.mag.extendedLight') : undefined,
     symbol: swapDisplay ? t("timer.phase.swap") : centralTheme.symbol,
     subtitle: swapDisplay

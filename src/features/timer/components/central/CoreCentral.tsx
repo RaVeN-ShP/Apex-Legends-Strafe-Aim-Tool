@@ -91,17 +91,17 @@ export default function CoreCentral(props: CoreCentralProps) {
     const emphasis = header.emphasis !== false;
     return (
       <div className={`${sideClass} ${headerTopClass}`}>
-        <div className={`flex flex items-center gap-2`}>
+        <div className={`inline-flex items-center gap-2 rounded-md border px-1.5 py-1 ${emphasis ? 'border-amber-300/50 bg-amber-400/10' : 'border-white/10 bg-black/10'}`}>
           <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${emphasis ? '' : 'opacity-60'}`}>
-            <Image src={header.image} alt={header.name} fill className="object-contain invert drop-shadow" sizes="20px" />
+            <Image src={header.image} alt={header.name} fill className={`object-contain invert ${emphasis ? 'drop-shadow' : 'drop-shadow-none'}`} sizes="20px" />
           </div>
           <div className="min-w-0">
-            <div className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${emphasis ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={header.name}>{header.name}</div>
+            <div className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${emphasis ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/70'}`} title={header.name}>{header.name}</div>
           </div>
         </div>
-          {header.subtitle && (
-            <div className={`${sideClassSubtitle}`}>{header.subtitle}</div>
-          )}
+        {header.subtitle && (
+          <div className={`filter saturate-[.7] ${sideClassSubtitle}`}>{header.subtitle}</div>
+        )}
       </div>
     );
   };
