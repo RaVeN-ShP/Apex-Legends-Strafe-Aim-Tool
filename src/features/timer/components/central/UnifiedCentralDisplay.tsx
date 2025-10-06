@@ -7,6 +7,7 @@ import { timelineToSegments } from '@/features/timer/core/timelineView';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useCentralTheme } from '@/features/timer/hooks/useCentralTheme';
 import { findNextStartSide, getActiveSide } from '@/features/timer/core/timeline';
+import { useEffect, useRef, useState } from 'react';
 
 export type UnifiedCentralDisplayProps = {
   // Common
@@ -80,6 +81,9 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
   const themePattern = themeSide === 'B' && isDual && patternB ? patternB : patternA;
   const centralTheme = useCentralTheme({ timeline, pattern: themePattern, currentTimeMs });
 
+  const [firstCycle, setFirstCycle] = useState(true);
+  const prevNowRef = useRef<number>(now);
+
   // Build progress segments
   const segments = isDual
     ? timelineToSegments(timeline, { patternA, patternB, t })
@@ -94,48 +98,86 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     }
   }
 
-  // Compute auto-reload countdown subtitle (dual auto mode only)
-  let leftSubtitle: string | undefined;
-  let rightSubtitle: string | undefined;
+  useEffect(() => {
+    if(isPlaying === false)
+      setFirstCycle(true)  ;
+  }, [isPlaying]);
+
+  // Detect wrap-around to mark completion of the first full cycle while playing
+  useEffect(() => {
+    const prev = prevNowRef.current;
+    // when time wraps from near end back to start, now will be less than prev
+    if (isPlaying && firstCycle && now < prev) {
+      setFirstCycle(false);
+    }
+    prevNowRef.current = now;
+  }, [now, isPlaying, firstCycle]);
+
+  // Compute auto-reload gold-mag icon (dual auto mode only)
+  let leftSubtitle: string | React.ReactNode | undefined;
+  let rightSubtitle: string | React.ReactNode | undefined;
   if (isDual && autoDualReload) {
-    try {
-      // Find most recent swap phase start before now (wrap if needed)
-      let lastSwapIdx = -1;
-      for (let i = 0; i < timeline.phases.length; i++) {
-        const p = timeline.phases[i];
-        if (p.id === 'swap' && p.startTime <= now) lastSwapIdx = i;
-      }
-      if (lastSwapIdx === -1) {
-        for (let i = timeline.phases.length - 1; i >= 0; i--) {
-          if (timeline.phases[i].id === 'swap') { lastSwapIdx = i; break; }
-        }
-      }
-      if (lastSwapIdx >= 0) {
-        const swapPhase = timeline.phases[lastSwapIdx];
+    const thresholdMs = 4600; // 4000 + 600 buffer
+
+    const renderGoldMagBadge = (progress: number) => {
+      const clamped = Math.max(0, Math.min(1, progress));
+      const maskHeightPct = (1 - clamped) * 100;
+      return (
+        <span className="relative inline-flex items-center justify-center rounded-md border border-amber-400/50 bg-amber-500/30 text-amber-200 px-1 py-0.5 overflow-hidden align-middle">
+          <span className="absolute inset-x-0 top-0 bg-black/30" style={{ height: `${maskHeightPct}%` }} />
+          <Image
+            src="/attachments/magazine/Extended_Light_Mag.svg"
+            alt={t('attachments.mag.extendedLight')}
+            width={12}
+            height={12}
+            className="invert relative z-10"
+          />
+        </span>
+      );
+    };
+
+    // Find last swap in current cycle (raw) and global last swap (wrapped)
+    let lastSwapIdxRaw = -1;
+    for (let i = 0; i < timeline.phases.length; i++) {
+      const p = timeline.phases[i];
+      if (p.id === 'swap' && p.startTime <= now) lastSwapIdxRaw = i;
+    }
+    let lastSwapIdxWrapped = -1;
+    for (let i = timeline.phases.length - 1; i >= 0; i--) {
+      if (timeline.phases[i].id === 'swap') { lastSwapIdxWrapped = i; break; }
+    }
+
+    // Suppress on very first cycle before the first swap, unless we just wrapped
+    const hasWrappedThisRender = now < prevNowRef.current;
+    const suppressBeforeFirstSwap = firstCycle && !hasWrappedThisRender && lastSwapIdxRaw === -1;
+    if (!suppressBeforeFirstSwap) {
+      const swapIdx = lastSwapIdxRaw >= 0 ? lastSwapIdxRaw : lastSwapIdxWrapped;
+      if (swapIdx >= 0) {
         // Determine which side was just holstered by finding preceding pattern side
         let prevPatternSide: 'A' | 'B' | undefined;
-        for (let j = lastSwapIdx - 1; j >= 0; j--) {
+        for (let j = swapIdx - 1; j >= 0; j--) {
           const q = timeline.phases[j];
           if (q.id === 'pattern' && q.side) { prevPatternSide = q.side; break; }
         }
         if (!prevPatternSide) {
-          // wrap search to end if not found before
-          for (let j = timeline.phases.length - 1; j > lastSwapIdx; j--) {
+          for (let j = timeline.phases.length - 1; j > swapIdx; j--) {
             const q = timeline.phases[j];
             if (q.id === 'pattern' && q.side) { prevPatternSide = q.side; break; }
           }
         }
-        const thresholdMs = 4600; // 4000 + 600 buffer
-        const swapStart = swapPhase.startTime;
-        const elapsedSinceSwap = ((now - swapStart + totalMs) % totalMs);
-        const remainingMs = Math.max(0, thresholdMs - elapsedSinceSwap);
-        if (remainingMs > 0 && prevPatternSide) {
-          const seconds = (remainingMs / 1000).toFixed(1);
-          if (prevPatternSide === 'A') leftSubtitle = `${seconds}s`;
-          if (prevPatternSide === 'B') rightSubtitle = `${seconds}s`;
+
+        if (prevPatternSide) {
+          const swapStart = timeline.phases[swapIdx].startTime;
+          const elapsedSinceSwap = ((now - swapStart + totalMs) % totalMs);
+          const remainingMs = Math.max(0, thresholdMs - elapsedSinceSwap);
+          if (remainingMs > 0) {
+            const progress = (thresholdMs - remainingMs) / thresholdMs;
+            if (prevPatternSide === 'A') leftSubtitle = renderGoldMagBadge(progress);
+            if (prevPatternSide === 'B') rightSubtitle = renderGoldMagBadge(progress);
+          }
         }
       }
-    } catch {}
+    }
   }
 
   const leftHeader = isDual
@@ -199,9 +241,9 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
       const total = Math.max(1, totalDurationMs);
       const reloadMs = Math.max(0, reloadDurationMs ?? 0);
       if (reloadMs > 0) {
-        const anchorPct = 10; // Must match CoreCentral anchor
-        const startOffsetMs = ((endPhase.startTime - now + total) % total);
-        const endPhaseStartPct = (anchorPct + (startOffsetMs / total) * 100) % 100;
+        // Position overlay relative to the cycle (not time), since it will
+        // be rendered within the moving 300% container alongside segments.
+        const endPhaseStartPct = ((endPhase.startTime / total) * 100) % 100;
         const reloadPct = Math.min(100, (reloadMs / total) * 100);
         const tailPct = Math.max(0, Math.min(reloadPct, 100 - endPhaseStartPct));
         const headPct = Math.max(0, Math.min(100, reloadPct - tailPct));
@@ -246,7 +288,6 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
 
   if (isDual && manualDualReload && timeline?.phases?.length) {
     const total = Math.max(1, totalDurationMs);
-    const anchorPct = 10; // Must match CoreCentral anchor
     const overlays: React.ReactNode[] = [];
     for (let i = 0; i < timeline.phases.length; i++) {
       const p = timeline.phases[i];
@@ -264,8 +305,9 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
         ? Math.max(0, reloadBDurationMs ?? 0)
         : Math.max(0, reloadADurationMs ?? 0);
       if (!reloadMs) continue;
-      const startOffsetMs = ((p.startTime - now + total) % total);
-      const startPct = (anchorPct + (startOffsetMs / total) * 100) % 100;
+      // Position overlay relative to the cycle (not time), since it will
+      // be rendered within the moving 300% container alongside segments.
+      const startPct = ((p.startTime / total) * 100) % 100;
       const reloadPct = Math.min(100, (reloadMs / total) * 100);
       const tailPct = Math.max(0, Math.min(reloadPct, 100 - startPct));
       const headPct = Math.max(0, Math.min(100, reloadPct - tailPct));

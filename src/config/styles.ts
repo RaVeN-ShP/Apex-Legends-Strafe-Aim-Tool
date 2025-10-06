@@ -36,8 +36,8 @@ export const PhaseStyles: Record<PhaseId, { label: string; textColor?: string; b
   pattern: { label: 'timer.phase.pattern', subtitleColor: 'text-white/70' },
   end: { label: 'timer.phase.end', barColor: 'bg-emerald-600', gradient: 'from-emerald-500/20 to-emerald-500/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
   swap: { label: 'timer.phase.swap', barColor: 'bg-emerald-500', gradient: 'from-emerald-500/20 to-emerald-500/5', subtitleColor: 'text-emerald-200', symbol: '↔', icon: 'swap' },
-  delay: { label: 'timer.phase.delay', barColor: 'bg-emerald-600', gradient: 'from-emerald-600/20 to-emerald-600/5', subtitleColor: 'text-emerald-200', symbol: '✔', icon: 'delay' },
-  reload: { label: 'timer.phase.reloadBuffer', barColor: 'bg-emerald-700', gradient: 'from-emerald-700/20 to-emerald-700/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
+  delay: { label: 'timer.phase.delay', barColor: 'bg-emerald-700', gradient: 'from-emerald-700/20 to-emerald-700/5', subtitleColor: 'text-emerald-200', symbol: '✔', icon: 'delay' },
+  reload: { label: 'timer.phase.reloadBuffer', barColor: 'bg-emerald-600', gradient: 'from-emerald-600/20 to-emerald-600/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
 };
 
 export function getStepStyle(step: Pattern): { barColor: string; symbol: string | null; label: string } {

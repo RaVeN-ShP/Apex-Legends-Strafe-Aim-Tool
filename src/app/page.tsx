@@ -198,11 +198,44 @@ export default function Home() {
 
   const FaqSection = () => {
     if (isEditing || !displayGun) return null;
+    const renderFaqContent = (key: string) => {
+      const answerRaw = t(`faq.${key}.answer`);
+      // Detect inline bullet formatting using " - " separators
+      const bulletIdx = answerRaw.indexOf(" - ");
+      const hasBullets = bulletIdx !== -1;
+
+      if (!hasBullets && key !== 'q4') {
+        return answerRaw;
+      }
+
+      const intro = hasBullets ? answerRaw.slice(0, bulletIdx).trim() : '';
+      const bulletsString = hasBullets ? answerRaw.slice(bulletIdx).trim() : '';
+      const normalized = bulletsString.replace(/^\-\s*/, '');
+      const bullets = hasBullets ? normalized.split(" - ").map((s) => s.trim()).filter(Boolean) : [];
+
+      return (
+        <div>
+          {intro && (<div>{intro}</div>)}
+          {hasBullets && bullets.length > 0 && (
+            <ul className="list-disc pl-4 mt-1 space-y-1">
+              {bullets.map((text, idx) => (
+                <li key={idx}>{text}</li>
+              ))}
+            </ul>
+          )}
+          {/* {key === 'q4' && (
+            <div className={`mt-1 ${UIColors.text.disabled}`}>
+              {t(`faq.${key}.formula`, { weapon: displayGun?.name ?? '-' })}
+            </div>
+          )} */}
+        </div>
+      );
+    };
     return (
       <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
         <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
         <div className="space-y-2">
-          {['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6'].map((k) => (
+          {['q0', 'q1', 'q2', 'q4', 'q6'].map((k) => (
             <Disclosure key={k}>
               {({ open }) => (
                 <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
@@ -211,12 +244,7 @@ export default function Home() {
                     <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
                   </Disclosure.Button>
                   <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
-                    {k === 'q4' ? (
-                      <div>
-                        <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
-                        <div className={`mt-1 ${UIColors.text.disabled}`}>{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
-                      </div>
-                    ) : t(`faq.${k}.answer`)}
+                    {renderFaqContent(k)}
                   </Disclosure.Panel>
                 </div>
               )}

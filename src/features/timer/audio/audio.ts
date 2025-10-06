@@ -27,24 +27,38 @@ export function buildTimeline(pattern: Pattern[], gun: Gun, waitTimeSeconds: num
   }
   phases.push({ id: 'pattern', name: 'Pattern', startTime: patternStartTime, endTime: currentTime, cues: patternCues, side: 'A' });
 
-  // End phase: duration = reload - 1.5s + user delay (clamped to 0)
-  const endStartTime = currentTime;
+  // Post-pattern phases: split into Reloading buffer and Delay
+  // Reloading buffer: max(0, reload - countdown)
+  // Delay: max(0, userDelay)
   const reloadMs = Math.round((gun.reloadTimeSeconds ?? 1) * 1000);
   const countdownMs = 1500; // 1.5s countdown
-  const userDelayMs = Math.round(waitTimeSeconds * 1000);
-  const endPhaseMs = Math.max(0, reloadMs - countdownMs + userDelayMs);
-  const endCues: AudioCue[] = [];
-  if (endPhaseMs > 0) {
-    // Shorten end cue length if end phase is short to avoid spillover
+  const userDelayMs = Math.round(Math.max(0, waitTimeSeconds) * 1000);
+  const totalPostMs = Math.max(0, reloadMs - countdownMs + userDelayMs);
+  const reloadingMs = Math.min(reloadMs, totalPostMs);
+  const delayMs = Math.max(0, totalPostMs - reloadingMs);
+
+  // Reloading phase (with end cue)
+  if (reloadingMs > 0) {
+    const reloadStartTime = currentTime;
+    const reloadCues: AudioCue[] = [];
+    // Shorten end cue length if phase is short to avoid spillover
     const safetyTailMs = 10; // keep a tiny tail before phase end
-    const maxCueLenSec = Math.max(0, (endPhaseMs - safetyTailMs) / 1000);
+    const maxCueLenSec = Math.max(0, (reloadingMs - safetyTailMs) / 1000);
     const endCueLenSec = Math.min(0.9, maxCueLenSec);
     if (endCueLenSec > 0) {
-      endCues.push({ type: 'end', direction: 'left', timestamp: currentTime, phase: 'end', frequencyHz: 1500, lengthSec: endCueLenSec, amplitude: 1.0 });
+      reloadCues.push({ type: 'end', direction: 'left', timestamp: currentTime, phase: 'reload', frequencyHz: 1500, lengthSec: endCueLenSec, amplitude: 1.0 });
     }
+    currentTime += reloadingMs;
+    phases.push({ id: 'end', name: 'Reloading', startTime: reloadStartTime, endTime: currentTime, cues: reloadCues });
   }
-  currentTime += endPhaseMs;
-  phases.push({ id: 'end', name: 'End', startTime: endStartTime, endTime: currentTime, cues: endCues });
+
+  // Delay phase (only if user delay contributes additional time)
+  if (delayMs > 0) {
+    const delayStartTime = currentTime;
+    const delayCues: AudioCue[] = [];
+    currentTime += delayMs;
+    phases.push({ id: 'delay', name: 'Delay', startTime: delayStartTime, endTime: currentTime, cues: delayCues });
+  }
 
   return { phases, totalDurationMs: currentTime };
 }

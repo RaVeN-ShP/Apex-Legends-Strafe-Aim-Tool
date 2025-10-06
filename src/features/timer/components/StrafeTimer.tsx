@@ -380,7 +380,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                 </div>
               </Popover>
             </label>
-            {ENABLE_AUTO_RELOAD_TIMELINE && dual && gunB && patternB && (
+            {/* {ENABLE_AUTO_RELOAD_TIMELINE && dual && gunB && patternB && (
               <div className="flex items-center gap-2">
                 <span className="text-[10px] tracking-wider text-white/60 select-none">{t('settings.manualReload')}</span>
                 <button
@@ -407,7 +407,7 @@ export default function StrafeTimer({ gun, pattern, volume = 0.8, onVolumeChange
                   />
                 </button>
               </div>
-            )}
+            )} */}
           </div>
           {/* {dual && gunB && patternB && dualComparison && (
             <div className="mb-2 -mt-1 text-[11px] text-white/70 flex items-center justify-between">

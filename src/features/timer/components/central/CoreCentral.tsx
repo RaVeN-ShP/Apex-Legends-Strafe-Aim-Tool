@@ -7,7 +7,7 @@ export type CoreCentralHeader = {
   image: string;
   emphasis?: boolean;
   side: 'left' | 'right';
-  subtitle?: string;
+  subtitle?: string | React.ReactNode;
 };
 
 export type CoreCentralOverlaySelection = {
@@ -87,18 +87,21 @@ export default function CoreCentral(props: CoreCentralProps) {
   const renderHeader = (header?: CoreCentralHeader) => {
     if (!header) return null;
     const sideClass = header.side === 'right' ? `absolute right-3` : `absolute left-3`;
+    const sideClassSubtitle= header.side === 'right' ? `absolute right-0` : `absolute left-0`;
     const emphasis = header.emphasis !== false;
     return (
-      <div className={`${sideClass} flex items-center gap-2 ${headerTopClass}`}>
-        <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${emphasis ? '' : 'opacity-60'}`}>
-          <Image src={header.image} alt={header.name} fill className="object-contain invert drop-shadow" sizes="20px" />
+      <div className={`${sideClass} ${headerTopClass}`}>
+        <div className={`flex flex items-center gap-2`}>
+          <div className={`${isCompact ? 'w-5 h-5' : 'w-5 h-5'} relative ${emphasis ? '' : 'opacity-60'}`}>
+            <Image src={header.image} alt={header.name} fill className="object-contain invert drop-shadow" sizes="20px" />
+          </div>
+          <div className="min-w-0">
+            <div className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${emphasis ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={header.name}>{header.name}</div>
+          </div>
         </div>
-        <div className="min-w-0">
-          <div className={`${isCompact ? 'text-[11px]' : 'text-[11px]'} font-semibold max-w-[25ch] truncate ${emphasis ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]' : 'text-white/60'}`} title={header.name}>{header.name}</div>
           {header.subtitle && (
-            <div className={`${isCompact ? 'text-[10px]' : 'text-[10px]'} leading-none text-white/70 max-w-[25ch] truncate`}>{header.subtitle}</div>
+            <div className={`${sideClassSubtitle}`}>{header.subtitle}</div>
           )}
-        </div>
       </div>
     );
   };
@@ -151,10 +154,24 @@ export default function CoreCentral(props: CoreCentralProps) {
               {renderCycle('curr')}
               {renderCycle('next')}
             </div>
-            {/* Optional progress overlay slot (rendered above segments, below anchor marker) */}
+            {/* Overlay duplicated per cycle in a sibling 300% container with identical offset */}
             {progressOverlay && (
-              <div className="absolute inset-0 z-20 pointer-events-none">
-                {progressOverlay}
+              <div className="h-full flex absolute top-0 left-0 z-20 pointer-events-none" style={{ width: '300%', left: `${leftPct.toFixed(2)}%` }}>
+                <div className="relative h-full" style={{ width: '100%' }}>
+                  <div className="absolute inset-0">
+                    {progressOverlay}
+                  </div>
+                </div>
+                <div className="relative h-full" style={{ width: '100%' }}>
+                  <div className="absolute inset-0">
+                    {progressOverlay}
+                  </div>
+                </div>
+                <div className="relative h-full" style={{ width: '100%' }}>
+                  <div className="absolute inset-0">
+                    {progressOverlay}
+                  </div>
+                </div>
               </div>
             )}
           </div>
