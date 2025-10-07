@@ -106,13 +106,32 @@ export function useCentralTheme(args: {
     };
   }
 
+  // Support additional phases defined in styles.ts (swap, delay, reload)
+  if (phaseId === 'swap' || phaseId === 'delay' || phaseId === 'reload') {
+    const phaseStyle = getPhaseStyle(phaseId);
+    const titleKey =
+      phaseId === 'swap'
+        ? 'timer.phase.swap'
+        : phaseId === 'delay'
+          ? 'timer.phase.delay'
+          : 'timer.phase.reloadBuffer';
+    return {
+      ...base,
+      title: t(titleKey),
+      subtitle: '',
+      symbol: phaseStyle.symbol ?? base.symbol,
+      containerBg: phaseStyle.gradient ?? base.containerBg,
+      subtitleColor: phaseStyle.subtitleColor ?? base.subtitleColor,
+    };
+  }
+
   if (phaseId === 'end') {
     const phaseStyle = getPhaseStyle('end');
     return {
       ...base,
       title: t('timer.phase.end'),
       subtitle: '',
-      symbol: '✔',
+      symbol: phaseStyle.symbol ?? base.symbol,
       containerBg: phaseStyle.gradient ?? base.containerBg,
       subtitleColor: phaseStyle.subtitleColor ?? base.subtitleColor,
     };

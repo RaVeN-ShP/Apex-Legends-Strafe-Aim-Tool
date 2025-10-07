@@ -5,7 +5,7 @@ export const PatternTypeStyles = {
     barColor: 'bg-purple-500',
     symbol: '●',
     centralSymbol: '●',
-    label: 'Shoot',
+    label: 'timer.subtitle.shoot',
     textColor: 'text-purple-500',
     subtitleColor: 'text-purple-200',
   },
@@ -14,7 +14,7 @@ export const PatternTypeStyles = {
       barColor: 'bg-blue-500',
       symbol: '◄',
       centralSymbol: 'A ←',
-      label: 'Left',
+      label: 'timer.subtitle.moveLeft',
       textColor: 'text-blue-200',
       subtitleColor: 'text-blue-200',
       gradient: 'from-blue-500/20 to-blue-500/5',
@@ -23,7 +23,7 @@ export const PatternTypeStyles = {
       barColor: 'bg-rose-500',
       symbol: '►',
       centralSymbol: '→ D',
-      label: 'Right',
+      label: 'timer.subtitle.moveRight',
       textColor: 'text-rose-200',
       subtitleColor: 'text-rose-200',
       gradient: 'from-rose-500/20 to-rose-500/5',
@@ -31,10 +31,13 @@ export const PatternTypeStyles = {
   },
 } as const;
 
-export const PhaseStyles: Record<PhaseId, { label: string; barColor?: string; gradient?: string; subtitleColor?: string }> = {
-  start: { label: 'Start', barColor: 'bg-amber-500', gradient: 'from-amber-500/20 to-amber-500/5', subtitleColor: 'text-white/70' },
-  pattern: { label: 'Pattern', subtitleColor: 'text-white/70' },
-  end: { label: 'Reload+Wait', barColor: 'bg-green-600', gradient: 'from-green-500/20 to-green-500/5', subtitleColor: 'text-green-200' },
+export const PhaseStyles: Record<PhaseId, { label: string; textColor?: string; barColor?: string; gradient?: string; subtitleColor?: string; symbol?: string; icon?: 'goldMag' | 'swap' | 'delay' | 'clock'; iconImage?: string }> = {
+  start: { label: 'timer.phase.start', barColor: 'bg-amber-500', textColor: 'text-amber-800', gradient: 'from-amber-500/20 to-amber-500/5', subtitleColor: 'text-white/70', symbol: '', icon: 'clock' },
+  pattern: { label: 'timer.phase.pattern', subtitleColor: 'text-white/70' },
+  end: { label: 'timer.phase.end', barColor: 'bg-emerald-600', gradient: 'from-emerald-500/20 to-emerald-500/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
+  swap: { label: 'timer.phase.swap', barColor: 'bg-emerald-500', gradient: 'from-emerald-500/20 to-emerald-500/5', subtitleColor: 'text-emerald-200', symbol: '↔', icon: 'swap' },
+  delay: { label: 'timer.phase.delay', barColor: 'bg-emerald-700', gradient: 'from-emerald-700/20 to-emerald-700/5', subtitleColor: 'text-emerald-200', symbol: '✔', icon: 'delay' },
+  reload: { label: 'timer.phase.reloadBuffer', barColor: 'bg-emerald-600', gradient: 'from-emerald-600/20 to-emerald-600/5', subtitleColor: 'text-emerald-200', symbol: "✔" },
 };
 
 export function getStepStyle(step: Pattern): { barColor: string; symbol: string | null; label: string } {
@@ -45,7 +48,7 @@ export function getStepStyle(step: Pattern): { barColor: string; symbol: string 
   return { barColor: d.barColor, symbol: d.symbol, label: d.label };
 }
 
-export function getPhaseStyle(id: PhaseId): { label: string; barColor?: string; gradient?: string; subtitleColor?: string } {
+export function getPhaseStyle(id: PhaseId): { label: string; textColor?: string; barColor?: string; gradient?: string; subtitleColor?: string; symbol?: string; icon?: 'goldMag' | 'swap' | 'delay' | 'clock'; iconImage?: string } {
   return PhaseStyles[id];
 }
 

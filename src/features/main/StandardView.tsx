@@ -27,6 +27,8 @@ export default function StandardView({
   activeSide = null,
   onPlayingChange,
   onActiveSideChange,
+  useAutoReloadTimeline = false,
+  onChangeAutoReloadTimeline,
 }: {
   gun: Gun;
   pattern: Pattern[];
@@ -45,6 +47,8 @@ export default function StandardView({
   activeSide?: 'A' | 'B' | null;
   onPlayingChange?: (playing: boolean) => void;
   onActiveSideChange?: (side: 'A' | 'B' | null) => void;
+  useAutoReloadTimeline?: boolean;
+  onChangeAutoReloadTimeline?: (v: boolean) => void;
 }) {
   const { t } = useI18n();
   return (
@@ -80,7 +84,6 @@ export default function StandardView({
         <>
           <DualPatternVisualizer patternA={pattern} patternB={patternB ?? []} activeSide={activeSide ?? undefined} />
           <div className="pt-2">
-            {gunB ? (
               <StrafeTimer
                 gun={gun}
                 pattern={pattern}
@@ -88,27 +91,16 @@ export default function StandardView({
                 onVolumeChange={onVolumeChange}
                 resetToken={`${selectedPatternKey ?? 'default'}|${selectedPatternKeyB ?? 'default'}`}
                 dual
-                gunB={gunB}
+                gunB={gunB!}
                 patternB={patternB ?? []}
                 selectionMode={selectionMode}
                 onChangeSelectionMode={onChangeSelectionMode}
                 onPlayingChange={onPlayingChange}
                 onActiveSideChange={onActiveSideChange}
+                useAutoReloadTimeline={useAutoReloadTimeline}
+                onChangeAutoReloadTimeline={onChangeAutoReloadTimeline}
+                activeSide={activeSide}
               />
-            ) : (
-              <StrafeTimer
-                gun={gun}
-                pattern={pattern}
-                volume={volume}
-                onVolumeChange={onVolumeChange}
-                resetToken={selectedPatternKey ?? undefined}
-                gunB={gunB ?? undefined}
-                selectionMode={selectionMode}
-                onChangeSelectionMode={onChangeSelectionMode}
-                onPlayingChange={onPlayingChange}
-                onActiveSideChange={onActiveSideChange}
-              />
-            )}
           </div>
         </>
       ) : (
@@ -121,7 +113,7 @@ export default function StandardView({
               volume={volume}
               onVolumeChange={onVolumeChange}
               resetToken={selectedPatternKey ?? undefined}
-              gunB={gunB ?? undefined}
+              gunB={gunB!}
               selectionMode={selectionMode}
               onChangeSelectionMode={onChangeSelectionMode}
               onPlayingChange={onPlayingChange}

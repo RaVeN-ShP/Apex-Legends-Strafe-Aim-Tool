@@ -17,10 +17,71 @@ import PatternModeSwitcher from "@/features/patterns/components/PatternModeSwitc
 import Image from "next/image";
 // Dual playback context removed; state is lifted locally
 import { UIColors } from "@/config/styles";
-import { BUILD_DATE_ISO, CURRENT_APEX_SEASON } from "@/config/constants";
+import { BUILD_DATE_ISO, CURRENT_APEX_SEASON, ENABLE_AUTO_RELOAD_TIMELINE } from "@/config/constants";
 // Custom profiles are managed via hook for storage compatibility
 
 type SelectionMode = 'A' | 'B' | 'AB';
+
+type TranslateFn = ReturnType<typeof useI18n>['t'];
+
+function FaqSection({ isEditing, displayGun, t }: { isEditing: boolean; displayGun: Gun | null; t: TranslateFn }) {
+  if (isEditing || !displayGun) return null;
+  const renderFaqContent = (key: string) => {
+    const answerRaw = t(`faq.${key}.answer`);
+    // Detect inline bullet formatting using " - " separators
+    const bulletIdx = answerRaw.indexOf(" - ");
+    const hasBullets = bulletIdx !== -1;
+
+    if (!hasBullets && key !== 'q4') {
+      return answerRaw;
+    }
+
+    const intro = hasBullets ? answerRaw.slice(0, bulletIdx).trim() : '';
+    const bulletsString = hasBullets ? answerRaw.slice(bulletIdx).trim() : '';
+    const normalized = bulletsString.replace(/^\-\s*/, '');
+    const bullets = hasBullets ? normalized.split(" - ").map((s) => s.trim()).filter(Boolean) : [];
+
+    return (
+      <div>
+        {intro && (<div>{intro}</div>)}
+        {hasBullets && bullets.length > 0 && (
+          <ul className="list-disc pl-4 mt-1 space-y-1">
+            {bullets.map((text, idx) => (
+              <li key={idx}>{text}</li>
+            ))}
+          </ul>
+        )}
+        {/* {key === 'q4' && (
+          <div className={`mt-1 ${UIColors.text.disabled}`}>
+            {t(`faq.${key}.formula`, { weapon: displayGun?.name ?? '-' })}
+          </div>
+        )} */}
+      </div>
+    );
+  };
+  return (
+    <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
+      <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
+      <div className="space-y-2">
+        {['q0', 'q1', 'q2', 'q4', 'q6'].map((k) => (
+          <Disclosure key={k}>
+            {({ open }) => (
+              <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
+                <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
+                  <span className={`text-sm font-semibold ${UIColors.text.secondary}`}>{t(`faq.${k}.question`)}</span>
+                  <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
+                </Disclosure.Button>
+                <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
+                  {renderFaqContent(k)}
+                </Disclosure.Panel>
+              </div>
+            )}
+          </Disclosure>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   // Two gun slots
@@ -41,6 +102,7 @@ export default function Home() {
   const [isEditing, setIsEditing] = useState(false);
   const [editorContext, setEditorContext] = useState<{ id: string | null; name: string; steps: Pattern[]; reloadTimeSeconds?: number }>({ id: null, name: "", steps: [{ type: 'direction', direction: 'left', duration: 200 }], reloadTimeSeconds: undefined });
   const [editorResetToken, setEditorResetToken] = useState<number>(0);
+  const [useAutoReloadTimeline, setUseAutoReloadTimeline] = useState<boolean>(true);
 
 
   const allGuns: Gun[] = useMemo(() => {
@@ -195,36 +257,7 @@ export default function Home() {
     setIsEditing(false);
   };
 
-  const FaqSection = () => {
-    if (isEditing || !displayGun) return null;
-    return (
-      <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
-        <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
-        <div className="space-y-2">
-          {['q0', 'q1', 'q2', 'q3', 'q4'].map((k) => (
-            <Disclosure key={k}>
-              {({ open }) => (
-                <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
-                  <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
-                    <span className={`text-sm font-semibold ${UIColors.text.secondary}`}>{t(`faq.${k}.question`)}</span>
-                    <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
-                  </Disclosure.Button>
-                  <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
-                    {k === 'q3' ? (
-                      <div>
-                        <div>{t(`faq.${k}.answer`, { weapon: displayGun?.name ?? '-' })}</div>
-                        <div className={`mt-1 ${UIColors.text.disabled}`}>{t(`faq.${k}.formula`, { weapon: displayGun?.name ?? '-' })}</div>
-                      </div>
-                    ) : t(`faq.${k}.answer`)}
-                  </Disclosure.Panel>
-                </div>
-              )}
-            </Disclosure>
-          ))}
-        </div>
-      </section>
-    );
-  };
+  
 
   // Dual playback state lifted here
   const [activeSide, setActiveSide] = useState<'A' | 'B' | null>(null);
@@ -465,6 +498,8 @@ export default function Home() {
                                 </div>
                               </div>
                             </button>
+                            
+                          {/* Auto-reload toggle moved into StrafeTimer controls */}
                           </div>
 
                           {/* Gun B box */}
@@ -532,7 +567,7 @@ export default function Home() {
                         </div>
 
                         <StandardView
-                          gun={selectionMode === 'B' ? (selectedGunB ?? displayGun!) : (selectedGunA ?? displayGun!)}
+                          gun={selectedGunA!}
                           pattern={selectionMode === 'B' ? selectedPatternB : selectedPatternA}
                           selectedPatternKey={selectionMode === 'B' ? selectedPatternKeyB : selectedPatternKeyA}
                           onSelectMode={(k) => {
@@ -551,6 +586,11 @@ export default function Home() {
                           activeSide={activeSide}
                           onPlayingChange={setIsPlaying}
                           onActiveSideChange={setActiveSide}
+                          useAutoReloadTimeline={useAutoReloadTimeline}
+                          onChangeAutoReloadTimeline={(v) => {
+                            triggerHaptic();
+                            setUseAutoReloadTimeline(v);
+                          }}
                         />
 
                       </div>
@@ -561,14 +601,14 @@ export default function Home() {
             </section>
             {/* FAQ: visible here on md+ only */}
             <div className="hidden md:block">
-              <FaqSection />
+              <FaqSection isEditing={isEditing} displayGun={displayGun} t={t} />
             </div>
           </div>
         </div>
 
         {/* FAQ: move to bottom on mobile */}
         <div className="md:hidden mt-6">
-          <FaqSection />
+          <FaqSection isEditing={isEditing} displayGun={displayGun} t={t} />
         </div>
 
         {/* Footer */}
