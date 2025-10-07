@@ -31,7 +31,10 @@ export function useDocumentPictureInPicture(
       alert('Popout not supported in this browser. Use latest Chrome/Edge.');
       return;
     }
-    const pipWin: Window = await winWithDPIP.documentPictureInPicture.requestWindow({ width: opts?.width ?? 300, height: opts?.height ?? 150 });
+    const targetWidth = opts?.width ?? 300;
+    const targetHeight = opts?.height ?? 150;
+    const clampedWidth = Math.min(targetWidth, 690);
+    const pipWin: Window = await winWithDPIP.documentPictureInPicture.requestWindow({ width: clampedWidth, height: targetHeight });
     pipWindowRef.current = pipWin;
     // Copy same-origin styles
     Array.from(document.styleSheets).forEach((styleSheet) => {
@@ -57,10 +60,14 @@ export function useDocumentPictureInPicture(
     pipWin.document.body.style.overflow = 'hidden';
     pipWin.document.documentElement.style.height = '100%';
     pipWin.document.body.style.height = '100%';
-    pipWin.document.documentElement.style.minWidth = '0';
-    pipWin.document.body.style.minWidth = '0';
-    pipWin.document.documentElement.style.minHeight = '0';
-    pipWin.document.body.style.minHeight = '0';
+    pipWin.document.documentElement.style.minWidth = `${clampedWidth}px`;
+    pipWin.document.body.style.minWidth = `${clampedWidth}px`;
+    pipWin.document.documentElement.style.maxWidth = '690px';
+    pipWin.document.body.style.maxWidth = '690px';
+    pipWin.document.documentElement.style.minHeight = `${targetHeight}px`;
+    pipWin.document.body.style.minHeight = `${targetHeight}px`;
+    pipWin.document.documentElement.style.maxHeight = `${targetHeight}px`;
+    pipWin.document.body.style.maxHeight = `${targetHeight}px`;
     pipWin.document.body.style.padding = '0';
 
     // Insert placeholder and move node
@@ -73,8 +80,10 @@ export function useDocumentPictureInPicture(
     container.id = '__pip-root';
     container.style.display = 'block';
     container.style.width = '100%';
-    container.style.minWidth = '0';
-    container.style.minHeight = '0';
+    container.style.minWidth = `${clampedWidth}px`;
+    container.style.maxWidth = '690px';
+    container.style.minHeight = `${targetHeight}px`;
+    container.style.maxHeight = `${targetHeight}px`;
     container.appendChild(pipWin.document.adoptNode(originalNode));
     pipWin.document.body.appendChild(container);
     setIsPopped(true);

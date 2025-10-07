@@ -1,6 +1,7 @@
 "use client";
 import Image from 'next/image';
 import { UISegment } from '@/features/timer/core/timelineView';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export type CoreCentralHeader = {
   name: string;
@@ -60,6 +61,8 @@ export type CoreCentralProps = {
 
 export default function CoreCentral(props: CoreCentralProps) {
   const { isCompact, containerBg, leftHeader, rightHeader, center, progress, overlay, progressOverlay, rootRef } = props;
+
+  const { t } = useI18n();
 
   const totalMs = Math.max(1, progress.totalDurationMs);
   const progressPct = ((progress.currentTimeMs % totalMs) / totalMs) * 100;
@@ -238,13 +241,13 @@ export default function CoreCentral(props: CoreCentralProps) {
                       <Image src={overlay.selection.a.image} alt={overlay.selection.a.name} fill className={`object-contain ${invertFor('AB', overlay.selection)}`} sizes="16px" />
                     )}
                   </span>
-                  <span className="max-w-[24ch] truncate">{`${overlay.selection?.a?.name ?? 'A'} + `}</span>
+                  <span className="max-w-[24ch] truncate">{` + `}</span>
                   <span className="relative w-4 h-4 inline-block align-middle">
                     {overlay.selection?.b?.image && (
                       <Image src={overlay.selection.b.image} alt={overlay.selection.b.name} fill className={`object-contain ${invertFor('AB', overlay.selection)}`} sizes="16px" />
                     )}
                   </span>
-                  <span className="max-w-[24ch] truncate">{`${overlay.selection?.b?.name ?? 'B'}`}</span>
+                  <span className="max-w-[24ch] truncate">{t('tabs.dual')}</span>
 
                 </button>
               </div>

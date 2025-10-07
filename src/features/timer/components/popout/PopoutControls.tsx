@@ -8,7 +8,7 @@ import { useHapticFeedback } from '@/shared/hooks/useHapticFeedback';
 export default function PopoutControls({ targetRef, onStateChange, onTogglePlay, onChangeSelectionMode }: { targetRef: React.RefObject<HTMLElement | null>; onStateChange?: (isPopped: boolean) => void; onTogglePlay?: () => void; onChangeSelectionMode?: (mode: 'A' | 'B' | 'AB') => void;}) {
   const { t } = useI18n();
   const triggerHaptic = useHapticFeedback({ duration: 'light' });
-  const { isPopped, open, close } = useDocumentPictureInPicture(targetRef, { width: 380, height: 150, onTogglePlay, onChangeSelectionMode });
+  const { isPopped, open, close } = useDocumentPictureInPicture(targetRef, { width: 380, height: 133, onTogglePlay, onChangeSelectionMode });
   // Notify parent when state changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { onStateChange?.(isPopped); }, [isPopped]);
