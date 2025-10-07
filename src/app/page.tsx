@@ -22,6 +22,67 @@ import { BUILD_DATE_ISO, CURRENT_APEX_SEASON, ENABLE_AUTO_RELOAD_TIMELINE } from
 
 type SelectionMode = 'A' | 'B' | 'AB';
 
+type TranslateFn = ReturnType<typeof useI18n>['t'];
+
+function FaqSection({ isEditing, displayGun, t }: { isEditing: boolean; displayGun: Gun | null; t: TranslateFn }) {
+  if (isEditing || !displayGun) return null;
+  const renderFaqContent = (key: string) => {
+    const answerRaw = t(`faq.${key}.answer`);
+    // Detect inline bullet formatting using " - " separators
+    const bulletIdx = answerRaw.indexOf(" - ");
+    const hasBullets = bulletIdx !== -1;
+
+    if (!hasBullets && key !== 'q4') {
+      return answerRaw;
+    }
+
+    const intro = hasBullets ? answerRaw.slice(0, bulletIdx).trim() : '';
+    const bulletsString = hasBullets ? answerRaw.slice(bulletIdx).trim() : '';
+    const normalized = bulletsString.replace(/^\-\s*/, '');
+    const bullets = hasBullets ? normalized.split(" - ").map((s) => s.trim()).filter(Boolean) : [];
+
+    return (
+      <div>
+        {intro && (<div>{intro}</div>)}
+        {hasBullets && bullets.length > 0 && (
+          <ul className="list-disc pl-4 mt-1 space-y-1">
+            {bullets.map((text, idx) => (
+              <li key={idx}>{text}</li>
+            ))}
+          </ul>
+        )}
+        {/* {key === 'q4' && (
+          <div className={`mt-1 ${UIColors.text.disabled}`}>
+            {t(`faq.${key}.formula`, { weapon: displayGun?.name ?? '-' })}
+          </div>
+        )} */}
+      </div>
+    );
+  };
+  return (
+    <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
+      <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
+      <div className="space-y-2">
+        {['q0', 'q1', 'q2', 'q4', 'q6'].map((k) => (
+          <Disclosure key={k}>
+            {({ open }) => (
+              <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
+                <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
+                  <span className={`text-sm font-semibold ${UIColors.text.secondary}`}>{t(`faq.${k}.question`)}</span>
+                  <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
+                </Disclosure.Button>
+                <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
+                  {renderFaqContent(k)}
+                </Disclosure.Panel>
+              </div>
+            )}
+          </Disclosure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   // Two gun slots
   const [selectedGunA, setSelectedGunA] = useState<Gun | null>(guns[0] ?? null);
@@ -196,64 +257,7 @@ export default function Home() {
     setIsEditing(false);
   };
 
-  const FaqSection = () => {
-    if (isEditing || !displayGun) return null;
-    const renderFaqContent = (key: string) => {
-      const answerRaw = t(`faq.${key}.answer`);
-      // Detect inline bullet formatting using " - " separators
-      const bulletIdx = answerRaw.indexOf(" - ");
-      const hasBullets = bulletIdx !== -1;
-
-      if (!hasBullets && key !== 'q4') {
-        return answerRaw;
-      }
-
-      const intro = hasBullets ? answerRaw.slice(0, bulletIdx).trim() : '';
-      const bulletsString = hasBullets ? answerRaw.slice(bulletIdx).trim() : '';
-      const normalized = bulletsString.replace(/^\-\s*/, '');
-      const bullets = hasBullets ? normalized.split(" - ").map((s) => s.trim()).filter(Boolean) : [];
-
-      return (
-        <div>
-          {intro && (<div>{intro}</div>)}
-          {hasBullets && bullets.length > 0 && (
-            <ul className="list-disc pl-4 mt-1 space-y-1">
-              {bullets.map((text, idx) => (
-                <li key={idx}>{text}</li>
-              ))}
-            </ul>
-          )}
-          {/* {key === 'q4' && (
-            <div className={`mt-1 ${UIColors.text.disabled}`}>
-              {t(`faq.${key}.formula`, { weapon: displayGun?.name ?? '-' })}
-            </div>
-          )} */}
-        </div>
-      );
-    };
-    return (
-      <section className={`rounded-xl border ${UIColors.border.primary} ${UIColors.background.primary} p-4 md:p-6 ${UIColors.text.primary}`}>
-        <h2 className="text-lg font-bold mb-4">{t('faq.title')}</h2>
-        <div className="space-y-2">
-          {['q0', 'q1', 'q2', 'q4', 'q6'].map((k) => (
-            <Disclosure key={k}>
-              {({ open }) => (
-                <div className={`rounded-md border ${UIColors.border.primary} ${UIColors.background.secondary}`}>
-                  <Disclosure.Button className="w-full flex items-center justify-between px-3 py-2 text-left">
-                    <span className={`text-sm font-semibold ${UIColors.text.secondary}`}>{t(`faq.${k}.question`)}</span>
-                    <ChevronDownIcon className={`w-4 h-4 ${UIColors.text.muted} transition-transform ${open ? 'rotate-180' : ''}`} />
-                  </Disclosure.Button>
-                  <Disclosure.Panel className={`px-3 pb-3 text-xs ${UIColors.text.muted}`}>
-                    {renderFaqContent(k)}
-                  </Disclosure.Panel>
-                </div>
-              )}
-            </Disclosure>
-          ))}
-        </div>
-      </section>
-    );
-  };
+  
 
   // Dual playback state lifted here
   const [activeSide, setActiveSide] = useState<'A' | 'B' | null>(null);
@@ -597,14 +601,14 @@ export default function Home() {
             </section>
             {/* FAQ: visible here on md+ only */}
             <div className="hidden md:block">
-              <FaqSection />
+              <FaqSection isEditing={isEditing} displayGun={displayGun} t={t} />
             </div>
           </div>
         </div>
 
         {/* FAQ: move to bottom on mobile */}
         <div className="md:hidden mt-6">
-          <FaqSection />
+          <FaqSection isEditing={isEditing} displayGun={displayGun} t={t} />
         </div>
 
         {/* Footer */}

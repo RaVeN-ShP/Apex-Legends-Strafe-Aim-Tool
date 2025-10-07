@@ -221,7 +221,7 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
 
   const rightHeader = isDual
     ? { name: gunBName as string, image: gunBImage as string, emphasis: activeSide === 'B', side: 'right' as const, subtitle: rightSubtitle }
-    : (headerSide === 'right' ? { name: gunAName, image: gunAImage, emphasis: true, side: 'right' as const } : undefined);
+    : (headerSide === 'right' ? { name: gunBName || 'B', image: gunBImage || '', emphasis: true, side: 'right' as const } : undefined);
 
   const center = {
     title: centralTheme.title,
