@@ -136,7 +136,7 @@ export default function UnifiedCentralDisplay(props: UnifiedCentralDisplayProps)
     const renderGoldMagBadge = (progress: number, active: boolean) => {
       if (!active) {
         return (
-          <span className="relative inline-flex items-center justify-center rounded-md border border-white/10 bg-black/10 text-white/70 px-1.5 py-1 align-middle shadow-none">
+          <span className="opacity-60 relative inline-flex items-center justify-center rounded-md border border-white/10 bg-black/10 text-white/70 px-1.5 py-1 align-middle shadow-none">
             <Image
               src="/attachments/magazine/Extended_Light_Mag.svg"
               alt={t('attachments.mag.extendedLight')}
