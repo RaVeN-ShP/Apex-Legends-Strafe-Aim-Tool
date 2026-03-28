@@ -7,6 +7,6 @@ export const DEFAULT_DELAY_SECONDS = 1.5;
 export const ENABLE_AUTO_RELOAD_TIMELINE = true;
 
 // Content freshness indicators
-export const CURRENT_APEX_SEASON = 'Season 26.1';
+export const CURRENT_APEX_SEASON = 'Season 28.1';
 export const BUILD_DATE_ISO = process.env.NEXT_PUBLIC_BUILD_DATE ?? '';
 

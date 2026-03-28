@@ -65,6 +65,12 @@ export const guns: Gun[] = [
         { type: 'direction', direction: 'left', duration: 800 },
         { type: 'direction', direction: 'right', duration: 710 },
       ],
+      doubleTap: [
+        { type: 'direction', direction: 'left', duration: 450 },
+        { type: 'direction', direction: 'right', duration: 525 },
+        { type: 'direction', direction: 'left', duration: 600 },
+        { type: 'direction', direction: 'right', duration: 530 },
+      ],
     },
   },
   {
@@ -269,7 +275,14 @@ export const guns: Gun[] = [
     ammo: 'heavy',
     reloadTimeSeconds: 2.57,
     pattern: {
-      default: [
+      "auto": [
+        { type: 'direction', direction: 'left', duration: 1310 },
+        { type: 'direction', direction: 'right', duration: 660 },
+        { type: 'direction', direction: 'left', duration: 650 },
+        { type: 'direction', direction: 'right', duration: 660 },
+        { type: 'direction', direction: 'left', duration: 390 },
+      ],
+      "burst": [
         { type: 'direction', direction: 'left', duration: 370 },
         { type: 'direction', direction: 'left', duration: 370 },
         { type: 'direction', direction: 'left', duration: 370 },
