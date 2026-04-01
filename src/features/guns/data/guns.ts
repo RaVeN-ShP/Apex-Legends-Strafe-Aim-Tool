@@ -271,29 +271,47 @@ export const guns: Gun[] = [
     id: 'hemlok',
     name: 'Hemlok',
     category: 'ar',
-    image: '/weapons/ar/Hemlok_Burst_AR_Icon.svg',
+    image: '/weapons/ar/Hemlok_Breach_AR_Icon.svg',
     ammo: 'heavy',
     reloadTimeSeconds: 2.57,
     pattern: {
-      "auto": [
+      "default": [
         { type: 'direction', direction: 'left', duration: 1310 },
         { type: 'direction', direction: 'right', duration: 660 },
         { type: 'direction', direction: 'left', duration: 650 },
         { type: 'direction', direction: 'right', duration: 660 },
         { type: 'direction', direction: 'left', duration: 390 },
-      ],
-      "burst": [
-        { type: 'direction', direction: 'left', duration: 370 },
-        { type: 'direction', direction: 'left', duration: 370 },
-        { type: 'direction', direction: 'left', duration: 370 },
-        { type: 'direction', direction: 'right', duration: 370 },
-        { type: 'direction', direction: 'right', duration: 370 },
-        { type: 'direction', direction: 'left', duration: 370 },
-        { type: 'direction', direction: 'left', duration: 370 },
-        { type: 'direction', direction: 'right', duration: 370 },
-        { type: 'direction', direction: 'right', duration: 370 },
-        { type: 'direction', direction: 'right', duration: 370 },
-      ],
+      ]
     },
   }
+  
+  // {
+  //   id: 'hemlok',
+  //   name: 'Hemlok',
+  //   category: 'ar',
+  //   image: '/weapons/ar/Hemlok_Burst_AR_Icon.svg',
+  //   ammo: 'heavy',
+  //   reloadTimeSeconds: 2.57,
+  //   pattern: {
+  //     "auto": [
+  //       { type: 'direction', direction: 'left', duration: 1310 },
+  //       { type: 'direction', direction: 'right', duration: 660 },
+  //       { type: 'direction', direction: 'left', duration: 650 },
+  //       { type: 'direction', direction: 'right', duration: 660 },
+  //       { type: 'direction', direction: 'left', duration: 390 },
+  //     ],
+  //     "burst": [
+  //       { type: 'direction', direction: 'left', duration: 370 },
+  //       { type: 'direction', direction: 'left', duration: 370 },
+  //       { type: 'direction', direction: 'left', duration: 370 },
+  //       { type: 'direction', direction: 'right', duration: 370 },
+  //       { type: 'direction', direction: 'right', duration: 370 },
+  //       { type: 'direction', direction: 'left', duration: 370 },
+  //       { type: 'direction', direction: 'left', duration: 370 },
+  //       { type: 'direction', direction: 'right', duration: 370 },
+  //       { type: 'direction', direction: 'right', duration: 370 },
+  //       { type: 'direction', direction: 'right', duration: 370 },
+  //     ],
+  //   },
+  // }
 ];

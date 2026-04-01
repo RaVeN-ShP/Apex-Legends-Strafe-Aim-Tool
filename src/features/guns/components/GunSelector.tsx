@@ -41,6 +41,8 @@ const highlightClassMap: Record<string, { bgClass: string; borderClass: string }
   'none': { bgClass: '', borderClass: 'border-transparent' },
 };
 
+const updatedGunIds = new Set(['hemlok']);
+
 function getGunHighlightClasses(isA: boolean, isB: boolean, activeSlot: 'A' | 'B' | 'AB') {
   if (activeSlot === 'AB' && (isA || isB)) return highlightClassMap['dual-either'];
   if (isA && isB) return highlightClassMap[activeSlot === 'A' ? 'A-active' : 'B-active'];
@@ -243,6 +245,7 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                 {group.items.sort((a, b) => a.name.localeCompare(b.name)).map((gun) => {
                   const isA = highlightGunIdA === gun.id;
                   const isB = highlightGunIdB === gun.id;
+                  const isUpdated = updatedGunIds.has(gun.id);
 
                   const both = isA && isB;
                   const { bgClass, borderClass } = getGunHighlightClasses(isA, isB, activeSlot);
@@ -297,7 +300,20 @@ export default function GunSelector({ guns, selectedGun, onGunSelect, listMode =
                         <Image src={gun.image} alt={gun.name} fill className="object-contain invert" sizes="40px" />
                       </div>
                       <div className="min-w-0 pr-6 md:pr-8 text-center">
-                        <div className="text-sm font-medium truncate max-w-[10ch]" title={gun.name}>{gun.name}</div>
+                        <div className="inline-flex max-w-[10ch] items-center gap-1 text-sm font-medium" title={gun.name}>
+                          <span className="truncate">{gun.name}</span>
+                          {isUpdated && (
+                            <span className="relative -translate-y-1 inline-block h-3 w-3 shrink-0 align-middle">
+                              <Image
+                                src="/star.png"
+                                alt=""
+                                fill
+                                className="object-contain"
+                                sizes="12px"
+                              />
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-white/60 uppercase tracking-wider">{categoryLabel[gun.category]}</div>
                       </div>
 
