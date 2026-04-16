@@ -41,7 +41,7 @@ const highlightClassMap: Record<string, { bgClass: string; borderClass: string }
   'none': { bgClass: '', borderClass: 'border-transparent' },
 };
 
-const updatedGunIds = new Set(['hemlok']);
+const updatedGunIds = new Set(['hemlok', 'prowler']);
 
 function getGunHighlightClasses(isA: boolean, isB: boolean, activeSlot: 'A' | 'B' | 'AB') {
   if (activeSlot === 'AB' && (isA || isB)) return highlightClassMap['dual-either'];

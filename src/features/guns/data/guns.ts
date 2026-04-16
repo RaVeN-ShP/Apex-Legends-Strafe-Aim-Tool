@@ -231,13 +231,13 @@ export const guns: Gun[] = [
     reloadTimeSeconds: 2.34,
     pattern: {
       burst: [
-        { type: 'direction', direction: 'left', duration: 450 },
-        { type: 'direction', direction: 'left', duration: 450 },
-        { type: 'direction', direction: 'left', duration: 450 },
-        { type: 'direction', direction: 'right', duration: 450 },
-        { type: 'direction', direction: 'right', duration: 450 },
-        { type: 'direction', direction: 'right', duration: 450 },
-        { type: 'direction', direction: 'left', duration: 450 },
+        { type: 'direction', direction: 'left', duration: 440 },
+        { type: 'direction', direction: 'left', duration: 520 },
+        { type: 'direction', direction: 'left', duration: 320 },
+        { type: 'direction', direction: 'right', duration: 180 },
+        { type: 'direction', direction: 'right', duration: 660 },
+        { type: 'direction', direction: 'right', duration: 210 },
+        { type: 'direction', direction: 'left', duration: 410 },
       ],
       auto: [
         { type: 'direction', direction: 'left', duration: 990 },
